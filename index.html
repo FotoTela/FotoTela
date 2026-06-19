@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fototela Events</title>
+<link rel="icon" href="data:,">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#F4F5F7}
+:root{--brand:#1543E5;--brand-dark:#0A1F66;--brand-light:#E8EDFC;--ink:#15171C;--ink-soft:#5B5E68;--line:#E4E5E9;--surface:#F4F5F7}
+
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--ink)}
+.login-card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo-mark{width:48px;height:48px;background:var(--brand);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#fff;font-weight:600}
+.login-logo-text{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.login-title{font-size:17px;font-weight:600;margin-bottom:4px;text-align:center;color:var(--ink)}
+.login-desc{font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:26px}
+.fgroup{margin-bottom:14px}
+.fgroup label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.fgroup input{width:100%;font-size:14px;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.fgroup input:focus{outline:none;border-color:var(--brand)}
+.btn-login{width:100%;background:var(--brand);color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+.btn-login:hover{background:var(--brand-dark)}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-error{font-size:12px;color:#A32D2D;background:#FCEBEB;border-radius:8px;padding:9px 12px;margin-bottom:14px;display:none}
+.login-status{font-size:11px;color:#9CA0AA;text-align:center;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:#22C55E}
+
+.app{display:none;height:100vh}
+.app.show{display:flex}
+.sidebar{width:228px;min-width:228px;background:var(--ink);display:flex;flex-direction:column;overflow-y:auto}
+.logo{padding:20px 18px;display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:var(--brand);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#fff;font-weight:600}
+.logo-text{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.01em}
+.nav-section{padding:6px 10px}
+.nav-group-title{font-size:10px;color:#6B6E78;padding:14px 10px 6px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;font-size:13px;color:#B4B6BE;cursor:pointer;border-radius:8px;margin-bottom:1px}
+.nav-item:hover{background:#22242C;color:#fff}
+.nav-item.active{background:var(--brand);color:#fff;font-weight:600}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.user-foot{margin-top:auto;padding:14px 16px;border-top:1px solid #22242C;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--brand-light);color:var(--brand-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.user-email{font-size:11px;color:#9CA0AA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.logout-btn{background:none;border:none;cursor:pointer;color:#6B6E78;font-size:16px}
+.logout-btn:hover{color:#fff}
+.content{flex:1;overflow-y:auto;padding:28px;background:var(--surface)}
+.page{display:none}
+.page.active{display:block}
+.page-header{margin-bottom:24px;display:flex;justify-content:space-between;align-items:center}
+.page-title{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.page-sub{font-size:13px;color:var(--ink-soft);margin-top:3px}
+.btn-primary{background:var(--brand);color:#fff;border:none;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-primary:hover{background:var(--brand-dark)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-secondary{background:#fff;color:var(--ink);border:1.5px solid var(--line);padding:9px 16px;border-radius:10px;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:11px 14px;font-size:11px;font-weight:600;color:var(--ink-soft);border-bottom:1px solid var(--line);background:#FAFAFB;text-transform:uppercase;letter-spacing:.03em}
+td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFF}
+.table-wrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.badge-blue{background:var(--brand-light);color:var(--brand-dark)}
+.badge-gray{background:#EEEFF2;color:#5B5E68}
+.badge-dark{background:var(--ink);color:#fff}
+.search-bar{display:flex;gap:8px;margin-bottom:16px}
+.search-bar input{flex:1;font-size:13px;padding:9px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.search-bar input:focus{outline:none;border-color:var(--brand)}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
+.metric-card{background:#fff;border-radius:14px;padding:16px 18px;border:1px solid var(--line)}
+.metric-card.accent{background:var(--brand);border:none}
+.metric-card.accent .metric-label{color:rgba(255,255,255,.7)}
+.metric-card.accent .metric-value{color:#fff}
+.metric-label{font-size:11px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.metric-value{font-size:24px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.empty{text-align:center;padding:48px 20px;color:#9CA0AA;font-size:13px}
+.modal-overlay{position:fixed;inset:0;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-size:15px;font-weight:600;color:var(--ink)}
+.modal-body{padding:22px}
+.modal-footer{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.form-row.full{grid-template-columns:1fr}
+.flabel{font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;display:block}
+.finput{width:100%;font-size:13px;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+.finput:focus{outline:none;border-color:var(--brand)}
+.finput[readonly]{background:var(--surface)}
+.action-btn{background:none;border:none;cursor:pointer;padding:5px;color:var(--ink-soft);font-size:15px;border-radius:6px}
+.action-btn:hover{color:var(--brand);background:var(--brand-light)}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .6s linear infinite;margin-right:6px;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cal-cell{min-height:64px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;font-size:12px}
+.cal-evt{background:var(--brand-light);color:var(--brand-dark);border-radius:5px;padding:2px 5px;font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.cal-head{font-size:11px;font-weight:600;color:var(--ink-soft);text-align:center;padding:6px;text-transform:uppercase;letter-spacing:.03em}
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%);transition:transform .2s}
+  .sidebar.open{transform:translateX(0)}
+  .content{padding:16px}
+  .mobile-menu-btn{display:flex!important}
+}
+.mobile-menu-btn{display:none;background:#fff;border:1px solid var(--line);border-radius:8px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark">F</div>
+      <div class="login-logo-text">Fototela Events</div>
+    </div>
+    <div class="login-title">Iniciar sesión</div>
+    <div class="login-desc">Accede a tu panel de gestión</div>
+    <div id="login-error" class="login-error"></div>
+    <div class="fgroup">
+      <label>Email</label>
+      <input id="login-email" type="email" placeholder="tu@email.com">
+    </div>
+    <div class="fgroup">
+      <label>Contraseña</label>
+      <input id="login-pass" type="password" placeholder="••••••••">
+    </div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-status"><span class="dot"></span> Conectado · datos cifrados</div>
+  </div>
+</div>
+
+<div id="app" class="app">
+<nav class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">F</div>
+    <span class="logo-text">Fototela</span>
+  </div>
+  <div class="nav-section">
+    <div class="nav-item active" onclick="nav('dashboard',this)">Inicio</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-group-title">Negocio</div>
+    <div class="nav-item" onclick="nav('clientes',this)">Clientes</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-group-title">Finanzas</div>
+    <div class="nav-item" onclick="nav('presupuestos',this)">Presupuestos</div>
+    <div class="nav-item" onclick="nav('facturas',this)">Facturas</div>
+    <div class="nav-item" onclick="nav('cobros',this)">Cobros</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-group-title">Operaciones</div>
+    <div class="nav-item" onclick="nav('calendario',this)">Calendario</div>
+  </div>
+  <div class="user-foot">
+    <div class="user-avatar" id="user-avatar"></div>
+    <span class="user-email" id="user-email-display"></span>
+    <button class="logout-btn" onclick="doLogout()" aria-label="Cerrar sesión" title="Cerrar sesión">⏻</button>
+  </div>
+</nav>
+
+<main class="content">
+  <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<div id="dashboard" class="page active">
+  <div class="page-header"><div><div class="page-title">Dashboard</div><div class="page-sub">Resumen de tu negocio</div></div></div>
+  <div class="metrics-grid" id="dash-metrics"></div>
+  <div id="dash-empty-hint" class="empty" style="display:none">Aún no tienes datos. Empieza creando tu primer cliente.</div>
+</div>
+
+<div id="clientes" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Clientes</div><div class="page-sub">Tus clientes guardados en la base de datos</div></div>
+    <button class="btn-primary" onclick="openModal('modal-cliente')">+ Nuevo cliente</button>
+  </div>
+  <div class="search-bar"><input type="text" id="cli-search" placeholder="Buscar cliente..." oninput="renderClientes()"></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Evento</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+    <tbody id="cli-tbody"></tbody>
+  </table></div>
+</div>
+
+<div id="presupuestos" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Presupuestos</div></div>
+    <button class="btn-primary" onclick="openModal('modal-presupuesto')">+ Nuevo presupuesto</button>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nº</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+    <tbody id="pres-tbody"></tbody>
+  </table></div>
+</div>
+
+<div id="facturas" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Facturas</div></div>
+    <button class="btn-primary" onclick="openModal('modal-factura')">+ Nueva factura</button>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nº Factura</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+    <tbody id="fac-tbody"></tbody>
+  </table></div>
+</div>
+
+<div id="cobros" class="page">
+  <div class="page-header"><div><div class="page-title">Cobros</div></div></div>
+  <div class="metrics-grid" id="cobros-metrics"></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Total</th><th>Cobrado</th><th>Pendiente</th></tr></thead>
+    <tbody id="cobros-tbody"></tbody>
+  </table></div>
+</div>
+
+<div id="calendario" class="page">
+  <div class="page-header"><div><div class="page-title">Calendario</div></div></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <button class="btn-secondary" onclick="changeMonth(-1)" aria-label="Mes anterior">←</button>
+    <span id="month-label" style="font-size:14px;font-weight:600;min-width:130px;text-align:center;color:var(--ink)"></span>
+    <button class="btn-secondary" onclick="changeMonth(1)" aria-label="Mes siguiente">→</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px" id="cal-headers"></div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px" id="cal-body"></div>
+</div>
+
+</main>
+</div>
+
+<div id="modal-cliente" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-cliente')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Nuevo cliente</span><button class="action-btn" onclick="closeModal('modal-cliente')" aria-label="Cerrar">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div><label class="flabel">Nombre *</label><input id="f-nombre" class="finput"></div>
+      <div><label class="flabel">DNI</label><input id="f-dni" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Teléfono</label><input id="f-tel" class="finput"></div>
+      <div><label class="flabel">Email</label><input id="f-email" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Dirección</label><input id="f-dir" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Ciudad</label><input id="f-ciudad" class="finput"></div>
+      <div><label class="flabel">CP</label><input id="f-cp" class="finput"></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Tipo de evento</label>
+          <select id="f-tipo" class="finput">
+            <option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option>
+          </select>
+        </div>
+        <div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Servicio</label>
+          <select id="f-servicio" class="finput">
+            <option>Fotomaton 2h</option><option>Fotomaton 3h</option><option>360° Platform</option><option>Fotomaton + Teléfono</option><option>Pack completo</option>
+          </select>
+        </div>
+        <div><label class="flabel">Importe total (€)</label><input id="f-importe" type="number" class="finput"></div>
+      </div>
+      <div class="form-row"><div><label class="flabel">Reserva (€)</label><input id="f-reserva" type="number" class="finput"></div>
+      <div><label class="flabel">Notas</label><input id="f-notas" class="finput"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn-primary" id="save-cliente-btn" onclick="guardarCliente()">Guardar cliente</button></div>
+  </div>
+</div>
+
+<div id="modal-presupuesto" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-presupuesto')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Nuevo presupuesto</span><button class="action-btn" onclick="closeModal('modal-presupuesto')" aria-label="Cerrar">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="p-cliente" onchange="autoFillPres()" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Servicio</label><input id="p-servicio" class="finput"></div>
+        <div><label class="flabel">Fecha evento</label><input id="p-fecha" type="date" class="finput"></div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Base (€) *</label><input id="p-base" type="number" oninput="calcPres()" class="finput"></div>
+        <div><label class="flabel">IVA %</label><select id="p-iva" onchange="calcPres()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+      </div>
+      <div class="form-row"><div><label class="flabel">Total (€)</label><input id="p-total" readonly class="finput"></div>
+      <div><label class="flabel">Señal (€)</label><input id="p-senal" type="number" class="finput"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-presupuesto')">Cancelar</button><button class="btn-primary" id="save-pres-btn" onclick="guardarPresupuesto()">Guardar</button></div>
+  </div>
+</div>
+
+<div id="modal-factura" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-factura')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Nueva factura</span><button class="action-btn" onclick="closeModal('modal-factura')" aria-label="Cerrar">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="fc-cliente" onchange="autoFillFac()" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Nº factura</label><input id="fc-numero" class="finput"></div>
+        <div><label class="flabel">Fecha factura</label><input id="fc-fecha" type="date" class="finput"></div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Descripción</label><input id="fc-desc" class="finput"></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Base (€) *</label><input id="fc-base" type="number" oninput="calcFac()" class="finput"></div>
+        <div><label class="flabel">IVA %</label><select id="fc-iva" onchange="calcFac()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+      </div>
+      <div class="form-row"><div><label class="flabel">Total (€)</label><input id="fc-total" readonly class="finput"></div>
+      <div><label class="flabel">Cobrado (€)</label><input id="fc-cobrado" type="number" value="0" class="finput"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-factura')">Cancelar</button><button class="btn-primary" id="save-fac-btn" onclick="guardarFactura()">Guardar factura</button></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://iizchzmoujzzuxwdhybr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ek702DJegaKBkZg4107YPw_bTHrsjKT';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let CLIENTES = [], PRESUPUESTOS = [], FACTURAS = [];
+let calMonth = new Date().getMonth()+1, calYear = new Date().getFullYear();
+let currentUser = null;
+
+function fmt(n){return Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtDate(s){if(!s)return '';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function badge(e){if(e==='Cobrada'||e==='Completado')return `<span class="badge badge-blue">${e}</span>`;if(e==='Pendiente'||e==='Activo')return `<span class="badge badge-gray">${e}</span>`;return `<span class="badge badge-dark">${e}</span>`;}
+
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const btn = document.getElementById('login-btn');
+  const errBox = document.getElementById('login-error');
+  errBox.style.display='none';
+  if(!email||!pass){errBox.textContent='Introduce email y contraseña';errBox.style.display='block';return;}
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Entrando...';
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;
+  btn.textContent='Entrar';
+  if(error){
+    errBox.textContent = error.message==='Invalid login credentials' ? 'Email o contraseña incorrectos' : error.message;
+    errBox.style.display='block';
+    return;
+  }
+  currentUser = data.user;
+  showApp();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser=null;
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+}
+
+async function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('user-email-display').textContent = currentUser.email;
+  document.getElementById('user-avatar').textContent = currentUser.email.slice(0,2).toUpperCase();
+  await loadAllData();
+  renderDashboard();
+}
+
+async function checkSession(){
+  const {data} = await sb.auth.getSession();
+  if(data.session){
+    currentUser = data.session.user;
+    showApp();
+  }
+}
+
+async function loadAllData(){
+  const [c,p,f] = await Promise.all([
+    sb.from('clientes').select('*').order('created_at',{ascending:false}),
+    sb.from('presupuestos').select('*').order('created_at',{ascending:false}),
+    sb.from('facturas').select('*').order('created_at',{ascending:false})
+  ]);
+  CLIENTES = c.data||[];
+  PRESUPUESTOS = p.data||[];
+  FACTURAS = f.data||[];
+}
+
+function openModal(id){
+  document.getElementById(id).style.display='flex';
+  if(id==='modal-presupuesto'||id==='modal-factura') populateSelects();
+}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+function populateSelects(){
+  ['p-cliente','fc-cliente'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='<option value="">Seleccionar...</option>';
+    CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  });
+}
+
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  if(el)el.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,facturas:renderFacturas,cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario};
+  if(r[page])r[page]();
+}
+
+function renderDashboard(){
+  const totalFac = FACTURAS.reduce((a,f)=>a+Number(f.total||0),0);
+  const totalCob = FACTURAS.reduce((a,f)=>a+Number(f.cobrado||0),0);
+  const totalPend = FACTURAS.reduce((a,f)=>a+Number(f.pendiente||0),0);
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric-card accent"><div class="metric-label">Clientes</div><div class="metric-value">${CLIENTES.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Presupuestos</div><div class="metric-value">${PRESUPUESTOS.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Facturas</div><div class="metric-value">${FACTURAS.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(totalFac)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(totalCob)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(totalPend)} €</div></div>
+  `;
+  document.getElementById('dash-empty-hint').style.display = CLIENTES.length===0?'block':'none';
+}
+
+function renderClientes(){
+  const q=(document.getElementById('cli-search').value||'').toLowerCase();
+  const data = CLIENTES.filter(c=>!q||c.nombre.toLowerCase().includes(q));
+  document.getElementById('cli-tbody').innerHTML = data.length? data.map(c=>`<tr>
+    <td style="font-weight:600">${c.nombre}</td>
+    <td>${c.tipo_evento||''} · ${c.servicio||''}</td>
+    <td>${fmtDate(c.fecha_evento)}</td>
+    <td>${fmt(c.importe)} €</td>
+    <td>${badge(c.estado||'Activo')}</td>
+    <td><button class="action-btn" title="Eliminar" onclick="eliminarCliente('${c.id}')">🗑</button></td>
+  </tr>`).join('') : '<tr><td colspan="6"><div class="empty">Sin clientes todavía. Crea el primero.</div></td></tr>';
+}
+
+async function guardarCliente(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+  const btn=document.getElementById('save-cliente-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const payload={
+    user_id: currentUser.id,
+    nombre,
+    dni:document.getElementById('f-dni').value,
+    telefono:document.getElementById('f-tel').value,
+    email:document.getElementById('f-email').value,
+    direccion:document.getElementById('f-dir').value,
+    ciudad:document.getElementById('f-ciudad').value,
+    cp:document.getElementById('f-cp').value,
+    tipo_evento:document.getElementById('f-tipo').value,
+    fecha_evento:document.getElementById('f-fecha').value||null,
+    servicio:document.getElementById('f-servicio').value,
+    importe:parseFloat(document.getElementById('f-importe').value)||0,
+    reserva:parseFloat(document.getElementById('f-reserva').value)||0,
+    notas:document.getElementById('f-notas').value,
+    estado:'Activo'
+  };
+  const {error} = await sb.from('clientes').insert(payload);
+  btn.disabled=false;btn.textContent='Guardar cliente';
+  if(error){alert('Error al guardar: '+error.message);return;}
+  closeModal('modal-cliente');
+  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-importe','f-reserva','f-notas','f-fecha'].forEach(id=>document.getElementById(id).value='');
+  await loadAllData();
+  renderClientes();renderDashboard();
+}
+
+async function eliminarCliente(id){
+  if(!confirm('¿Eliminar este cliente?'))return;
+  await sb.from('clientes').delete().eq('id',id);
+  await loadAllData();renderClientes();renderDashboard();
+}
+
+function autoFillPres(){
+  const id=document.getElementById('p-cliente').value;
+  const c=CLIENTES.find(x=>x.id===id);if(!c)return;
+  document.getElementById('p-fecha').value=c.fecha_evento||'';
+  document.getElementById('p-servicio').value=c.servicio||'';
+  const base=c.importe?+(c.importe/1.21).toFixed(2):0;
+  document.getElementById('p-base').value=base||'';
+  calcPres();
+}
+function calcPres(){
+  const base=parseFloat(document.getElementById('p-base').value)||0;
+  const iva=parseFloat(document.getElementById('p-iva').value)||21;
+  document.getElementById('p-total').value=fmt(base+base*iva/100)+' €';
+}
+async function guardarPresupuesto(){
+  const clienteId=document.getElementById('p-cliente').value;
+  const c=CLIENTES.find(x=>x.id===clienteId);
+  if(!c){alert('Selecciona un cliente');return;}
+  const base=parseFloat(document.getElementById('p-base').value)||0;
+  const ivaPct=parseFloat(document.getElementById('p-iva').value)||21;
+  const ivaEur=+(base*ivaPct/100).toFixed(2);
+  const total=+(base+ivaEur).toFixed(2);
+  const btn=document.getElementById('save-pres-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const payload={
+    user_id:currentUser.id,
+    numero:'P'+new Date().getFullYear()+String(PRESUPUESTOS.length+1).padStart(2,'0'),
+    cliente_id:clienteId,
+    servicio:document.getElementById('p-servicio').value,
+    fecha_evento:document.getElementById('p-fecha').value||null,
+    base,iva_pct:ivaPct,iva_eur:ivaEur,total,
+    senal:parseFloat(document.getElementById('p-senal').value)||0,
+    estado:'Pendiente'
+  };
+  const {error}=await sb.from('presupuestos').insert(payload);
+  btn.disabled=false;btn.textContent='Guardar';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-presupuesto');
+  await loadAllData();renderPresupuestos();renderDashboard();
+}
+function renderPresupuestos(){
+  document.getElementById('pres-tbody').innerHTML = PRESUPUESTOS.length? PRESUPUESTOS.map(p=>{
+    const c=CLIENTES.find(x=>x.id===p.cliente_id);
+    return `<tr><td style="font-weight:600;color:var(--brand)">${p.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmt(p.total)} €</td><td>${badge(p.estado)}</td><td><button class="action-btn" onclick="eliminarPres('${p.id}')">🗑</button></td></tr>`;
+  }).join('') : '<tr><td colspan="5"><div class="empty">Sin presupuestos todavía.</div></td></tr>';
+}
+async function eliminarPres(id){await sb.from('presupuestos').delete().eq('id',id);await loadAllData();renderPresupuestos();}
+
+function autoFillFac(){
+  const id=document.getElementById('fc-cliente').value;
+  const c=CLIENTES.find(x=>x.id===id);if(!c)return;
+  document.getElementById('fc-desc').value=c.servicio||'';
+  document.getElementById('fc-fecha').value=new Date().toISOString().split('T')[0];
+  const base=c.importe?+(c.importe/1.21).toFixed(2):0;
+  document.getElementById('fc-base').value=base;
+  document.getElementById('fc-cobrado').value=c.reserva||0;
+  document.getElementById('fc-numero').value='F'+new Date().getFullYear()+String(FACTURAS.length+1).padStart(2,'0');
+  calcFac();
+}
+function calcFac(){
+  const base=parseFloat(document.getElementById('fc-base').value)||0;
+  const iva=parseFloat(document.getElementById('fc-iva').value)||21;
+  document.getElementById('fc-total').value=fmt(base+base*iva/100)+' €';
+}
+async function guardarFactura(){
+  const clienteId=document.getElementById('fc-cliente').value;
+  const c=CLIENTES.find(x=>x.id===clienteId);
+  if(!c){alert('Selecciona un cliente');return;}
+  const base=parseFloat(document.getElementById('fc-base').value)||0;
+  const ivaPct=parseFloat(document.getElementById('fc-iva').value)||21;
+  const ivaEur=+(base*ivaPct/100).toFixed(2);
+  const total=+(base+ivaEur).toFixed(2);
+  const cobrado=parseFloat(document.getElementById('fc-cobrado').value)||0;
+  const btn=document.getElementById('save-fac-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const payload={
+    user_id:currentUser.id,
+    numero:document.getElementById('fc-numero').value,
+    cliente_id:clienteId,
+    fecha_factura:document.getElementById('fc-fecha').value||null,
+    descripcion:document.getElementById('fc-desc').value,
+    base,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,
+    pendiente:+(total-cobrado).toFixed(2),
+    estado:cobrado>=total?'Cobrada':'Pendiente'
+  };
+  const {error}=await sb.from('facturas').insert(payload);
+  btn.disabled=false;btn.textContent='Guardar factura';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-factura');
+  await loadAllData();renderFacturas();renderDashboard();
+}
+function renderFacturas(){
+  document.getElementById('fac-tbody').innerHTML = FACTURAS.length? FACTURAS.map(f=>{
+    const c=CLIENTES.find(x=>x.id===f.cliente_id);
+    return `<tr><td style="font-weight:600;color:var(--brand)">${f.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${badge(f.estado)}</td><td><button class="action-btn" onclick="eliminarFac('${f.id}')">🗑</button></td></tr>`;
+  }).join('') : '<tr><td colspan="5"><div class="empty">Sin facturas todavía.</div></td></tr>';
+}
+async function eliminarFac(id){await sb.from('facturas').delete().eq('id',id);await loadAllData();renderFacturas();}
+
+function renderCobros(){
+  const total=FACTURAS.reduce((a,f)=>a+Number(f.total||0),0);
+  const cobrado=FACTURAS.reduce((a,f)=>a+Number(f.cobrado||0),0);
+  const pendiente=FACTURAS.reduce((a,f)=>a+Number(f.pendiente||0),0);
+  document.getElementById('cobros-metrics').innerHTML=`
+    <div class="metric-card accent"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(total)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(cobrado)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(pendiente)} €</div></div>
+  `;
+  document.getElementById('cobros-tbody').innerHTML = FACTURAS.length? FACTURAS.map(f=>{
+    const c=CLIENTES.find(x=>x.id===f.cliente_id);
+    return `<tr><td style="font-weight:600">${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${fmt(f.cobrado)} €</td><td style="color:${f.pendiente>0?'#A32D2D':'var(--ink-soft)'}">${f.pendiente>0?fmt(f.pendiente)+' €':'—'}</td></tr>`;
+  }).join('') : '<tr><td colspan="4"><div class="empty">Sin facturas todavía.</div></td></tr>';
+}
+
+function renderCalendario(){
+  const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('month-label').textContent=months[calMonth-1]+' '+calYear;
+  document.getElementById('cal-headers').innerHTML=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div class="cal-head">${d}</div>`).join('');
+  const firstDow=(new Date(calYear,calMonth-1,1).getDay()+6)%7;
+  const daysInMonth=new Date(calYear,calMonth,0).getDate();
+  const today=new Date();
+  const byDay={};
+  CLIENTES.forEach(c=>{
+    if(!c.fecha_evento)return;
+    const d=new Date(c.fecha_evento+'T00:00:00');
+    if(d.getFullYear()===calYear&&d.getMonth()===calMonth-1){
+      if(!byDay[d.getDate()])byDay[d.getDate()]=[];
+      byDay[d.getDate()].push(c.nombre);
+    }
+  });
+  let html='';
+  for(let i=0;i<firstDow;i++)html+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const isT=today.getDate()===d&&today.getMonth()===calMonth-1&&today.getFullYear()===calYear;
+    const evs=byDay[d]||[];
+    html+=`<div class="cal-cell">
+      <div style="font-size:11px;${isT?'background:var(--brand);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center':'color:var(--ink-soft)'}">${d}</div>
+      ${evs.slice(0,2).map(e=>`<div class="cal-evt">${e}</div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('cal-body').innerHTML=html;
+}
+function changeMonth(d){calMonth+=d;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}renderCalendario();}
+
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+checkSession();
+</script>
+</body>
+</html>
