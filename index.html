@@ -423,6 +423,7 @@ tr:hover td{background:#FAFBFF}
 const SUPABASE_URL = 'https://iizchzmoujzzuxwdhybr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ek702DJegaKBkZg4107YPw_bTHrsjKT';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sbPublic = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 
 const EMISOR = {nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
 
@@ -440,6 +441,7 @@ function badge(e){if(e==='Cobrada'||e==='Completado'||e==='Aceptado')return `<sp
 function checkPublicFormURL(){
   const params = new URLSearchParams(window.location.search);
   if(params.get('formulario')==='1'){
+    document.getElementById('login-screen').style.display='none';
     document.getElementById('public-form-screen').classList.add('show');
     return true;
   }
@@ -469,7 +471,7 @@ async function submitPublicForm(){
     estado:'Activo',
     origen:'formulario_publico'
   };
-  const {error} = await sb.from('clientes').insert(payload);
+  const {error} = await sbPublic.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Enviar';
   if(error){errBox.textContent='Ha ocurrido un error. Inténtalo de nuevo.';errBox.style.display='block';console.error(error);return;}
   document.getElementById('public-form-inner').style.display='none';
