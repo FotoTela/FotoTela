@@ -40,7 +40,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;font-size:13px;color:#B4B6BE;cursor:pointer;border-radius:8px;margin-bottom:1px}
 .nav-item:hover{background:#22242C;color:#fff}
 .nav-item.active{background:var(--brand);color:#fff;font-weight:600}
-.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#E24B4A;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;display:none}
+.nav-badge.show{display:inline-block}
 .user-foot{margin-top:auto;padding:14px 16px;border-top:1px solid #22242C;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--brand-light);color:var(--brand-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
 .user-email{font-size:11px;color:#9CA0AA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
@@ -49,24 +50,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .content{flex:1;overflow-y:auto;padding:28px;background:var(--surface)}
 .page{display:none}
 .page.active{display:block}
-.page-header{margin-bottom:24px;display:flex;justify-content:space-between;align-items:center}
+.page-header{margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
 .page-title{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
 .page-sub{font-size:13px;color:var(--ink-soft);margin-top:3px}
+.header-actions{display:flex;gap:8px}
 .btn-primary{background:var(--brand);color:#fff;border:none;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn-primary:hover{background:var(--brand-dark)}
 .btn-primary:disabled{opacity:.6;cursor:not-allowed}
-.btn-secondary{background:#fff;color:var(--ink);border:1.5px solid var(--line);padding:9px 16px;border-radius:10px;font-size:13px;cursor:pointer}
+.btn-secondary{background:#fff;color:var(--ink);border:1.5px solid var(--line);padding:9px 16px;border-radius:10px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn-secondary:hover{background:var(--surface)}
+.btn-ghost{background:none;border:none;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;padding:6px 0}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;padding:11px 14px;font-size:11px;font-weight:600;color:var(--ink-soft);border-bottom:1px solid var(--line);background:#FAFAFB;text-transform:uppercase;letter-spacing:.03em}
 td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink)}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#FAFBFF}
-.table-wrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.table-wrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;overflow-x:auto}
+.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
 .badge-blue{background:var(--brand-light);color:var(--brand-dark)}
 .badge-gray{background:#EEEFF2;color:#5B5E68}
 .badge-dark{background:var(--ink);color:#fff}
+.badge-amber{background:#FEF3E2;color:#92400E}
 .search-bar{display:flex;gap:8px;margin-bottom:16px}
 .search-bar input{flex:1;font-size:13px;padding:9px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 .search-bar input:focus{outline:none;border-color:var(--brand)}
@@ -78,35 +82,107 @@ tr:hover td{background:#FAFBFF}
 .metric-label{font-size:11px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
 .metric-value{font-size:24px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
 .empty{text-align:center;padding:48px 20px;color:#9CA0AA;font-size:13px}
-.modal-overlay{position:fixed;inset:0;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
-.modal-header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-overlay{position:fixed;inset:0;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;overflow-y:auto}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;margin:auto}
+.modal.wide{max-width:760px}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}
 .modal-title{font-size:15px;font-weight:600;color:var(--ink)}
 .modal-body{padding:22px}
-.modal-footer{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.modal-footer{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .form-row.full{grid-template-columns:1fr}
+.form-row.three{grid-template-columns:2fr 1fr 1fr}
 .flabel{font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;display:block}
 .finput{width:100%;font-size:13px;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
 .finput:focus{outline:none;border-color:var(--brand)}
 .finput[readonly]{background:var(--surface)}
-.action-btn{background:none;border:none;cursor:pointer;padding:5px;color:var(--ink-soft);font-size:15px;border-radius:6px}
+.action-btn{background:none;border:none;cursor:pointer;padding:5px 7px;color:var(--ink-soft);font-size:13px;border-radius:6px}
 .action-btn:hover{color:var(--brand);background:var(--brand-light)}
 .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .6s linear infinite;margin-right:6px;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .cal-cell{min-height:64px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;font-size:12px}
 .cal-evt{background:var(--brand-light);color:var(--brand-dark);border-radius:5px;padding:2px 5px;font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .cal-head{font-size:11px;font-weight:600;color:var(--ink-soft);text-align:center;padding:6px;text-transform:uppercase;letter-spacing:.03em}
+.lineas-wrap{border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.linea-row{display:grid;grid-template-columns:2fr 90px 90px 90px 28px;gap:8px;padding:10px;border-bottom:1px solid var(--line);align-items:start}
+.linea-row:last-child{border-bottom:none}
+.linea-row input,.linea-row textarea{font-size:12px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;width:100%;font-family:inherit}
+.linea-row textarea{resize:vertical;min-height:32px}
+.linea-del{background:none;border:none;color:#A32D2D;cursor:pointer;font-size:14px;padding:4px}
+.linea-subtotal{font-size:11px;color:var(--ink-soft);text-align:right;margin-top:4px}
+.add-linea-btn{background:var(--brand-light);color:var(--brand-dark);border:none;padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;width:100%}
+.totales-box{background:var(--surface);border-radius:10px;padding:14px 16px;margin-top:10px}
+.totales-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.totales-row.final{font-weight:600;font-size:15px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+.select-source-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--surface);padding:4px;border-radius:10px}
+.select-source-tab{flex:1;text-align:center;padding:8px;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;border-radius:8px}
+.select-source-tab.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.share-box{background:var(--brand-light);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.share-box input{flex:1;font-size:12px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink-soft)}
+.copy-btn{background:var(--brand);color:#fff;border:none;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 @media(max-width:768px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%);transition:transform .2s}
   .sidebar.open{transform:translateX(0)}
   .content{padding:16px}
   .mobile-menu-btn{display:flex!important}
+  .linea-row{grid-template-columns:1fr;gap:6px}
+  .form-row{grid-template-columns:1fr}
+  .form-row.three{grid-template-columns:1fr}
 }
 .mobile-menu-btn{display:none;background:#fff;border:1px solid var(--line);border-radius:8px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-bottom:14px}
+
+.public-form-screen{min-height:100vh;background:var(--surface);padding:32px 16px;display:none}
+.public-form-screen.show{display:block}
+.public-form-card{max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;border:1px solid var(--line)}
+.public-form-logo{text-align:center;margin-bottom:8px}
+.public-form-logo-mark{width:48px;height:48px;background:var(--brand);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#fff;font-weight:600}
+.public-form-title{font-size:19px;font-weight:600;text-align:center;color:var(--ink);margin-bottom:4px}
+.public-form-desc{font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:28px}
+.public-success{text-align:center;padding:40px 20px;display:none}
+.public-success.show{display:block}
+.public-success-icon{width:56px;height:56px;background:#E1F5EE;color:#0F6E56;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
 </style>
 </head>
 <body>
+
+<div id="public-form-screen" class="public-form-screen">
+  <div class="public-form-card">
+    <div id="public-form-inner">
+      <div class="public-form-logo"><div class="public-form-logo-mark">F</div></div>
+      <div class="public-form-title">Cuéntanos sobre tu evento</div>
+      <div class="public-form-desc">Rellena tus datos y nos pondremos en contacto contigo lo antes posible</div>
+      <div id="public-error" class="login-error"></div>
+      <div class="form-row">
+        <div><label class="flabel">Nombre completo *</label><input id="pf-nombre" class="finput"></div>
+        <div><label class="flabel">DNI</label><input id="pf-dni" class="finput"></div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Teléfono *</label><input id="pf-tel" class="finput"></div>
+        <div><label class="flabel">Email</label><input id="pf-email" type="email" class="finput"></div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Dirección</label><input id="pf-dir" class="finput"></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Ciudad</label><input id="pf-ciudad" class="finput"></div>
+        <div><label class="flabel">CP</label><input id="pf-cp" class="finput"></div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Tipo de evento</label>
+          <select id="pf-tipo" class="finput">
+            <option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option>
+          </select>
+        </div>
+        <div><label class="flabel">Fecha del evento</label><input id="pf-fecha" type="date" class="finput"></div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Cuéntanos sobre tu evento</label><textarea id="pf-notas" class="finput" rows="3" style="resize:vertical"></textarea></div></div>
+      <button class="btn-primary" id="pf-submit-btn" style="width:100%;justify-content:center;margin-top:6px" onclick="submitPublicForm()">Enviar</button>
+    </div>
+    <div id="public-success" class="public-success">
+      <div class="public-success-icon">✓</div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px">¡Gracias!</div>
+      <div style="font-size:13px;color:var(--ink-soft)">Hemos recibido tus datos. Nos pondremos en contacto contigo muy pronto.</div>
+    </div>
+  </div>
+</div>
 
 <div id="login-screen" class="login-screen">
   <div class="login-card">
@@ -141,7 +217,7 @@ tr:hover td{background:#FAFBFF}
   </div>
   <div class="nav-section">
     <div class="nav-group-title">Negocio</div>
-    <div class="nav-item" onclick="nav('clientes',this)">Clientes</div>
+    <div class="nav-item" onclick="nav('clientes',this)">Clientes <span class="nav-badge" id="leads-badge"></span></div>
   </div>
   <div class="nav-section">
     <div class="nav-group-title">Finanzas</div>
@@ -172,11 +248,14 @@ tr:hover td{background:#FAFBFF}
 <div id="clientes" class="page">
   <div class="page-header">
     <div><div class="page-title">Clientes</div><div class="page-sub">Tus clientes guardados en la base de datos</div></div>
-    <button class="btn-primary" onclick="openModal('modal-cliente')">+ Nuevo cliente</button>
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="openShareModal()">Compartir formulario</button>
+      <button class="btn-primary" onclick="openModal('modal-cliente')">+ Nuevo cliente</button>
+    </div>
   </div>
   <div class="search-bar"><input type="text" id="cli-search" placeholder="Buscar cliente..." oninput="renderClientes()"></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Cliente</th><th>Evento</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Evento</th><th>Fecha</th><th>Contacto</th><th>Origen</th><th></th></tr></thead>
     <tbody id="cli-tbody"></tbody>
   </table></div>
 </div>
@@ -184,10 +263,10 @@ tr:hover td{background:#FAFBFF}
 <div id="presupuestos" class="page">
   <div class="page-header">
     <div><div class="page-title">Presupuestos</div></div>
-    <button class="btn-primary" onclick="openModal('modal-presupuesto')">+ Nuevo presupuesto</button>
+    <button class="btn-primary" onclick="abrirNuevoPresupuesto()">+ Nuevo presupuesto</button>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Nº</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+    <thead><tr><th>Nº</th><th>Cliente</th><th>Evento</th><th>Total</th><th>Estado</th><th></th></tr></thead>
     <tbody id="pres-tbody"></tbody>
   </table></div>
 </div>
@@ -195,7 +274,7 @@ tr:hover td{background:#FAFBFF}
 <div id="facturas" class="page">
   <div class="page-header">
     <div><div class="page-title">Facturas</div></div>
-    <button class="btn-primary" onclick="openModal('modal-factura')">+ Nueva factura</button>
+    <button class="btn-primary" onclick="abrirNuevaFactura()">+ Nueva factura</button>
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº Factura</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead>
@@ -245,59 +324,98 @@ tr:hover td{background:#FAFBFF}
         </div>
         <div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div>
       </div>
-      <div class="form-row">
-        <div><label class="flabel">Servicio</label>
-          <select id="f-servicio" class="finput">
-            <option>Fotomaton 2h</option><option>Fotomaton 3h</option><option>360° Platform</option><option>Fotomaton + Teléfono</option><option>Pack completo</option>
-          </select>
-        </div>
-        <div><label class="flabel">Importe total (€)</label><input id="f-importe" type="number" class="finput"></div>
-      </div>
-      <div class="form-row"><div><label class="flabel">Reserva (€)</label><input id="f-reserva" type="number" class="finput"></div>
-      <div><label class="flabel">Notas</label><input id="f-notas" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Notas</label><input id="f-notas" class="finput"></div></div>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn-primary" id="save-cliente-btn" onclick="guardarCliente()">Guardar cliente</button></div>
   </div>
 </div>
 
-<div id="modal-presupuesto" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-presupuesto')">
+<div id="modal-share" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-share')">
   <div class="modal">
-    <div class="modal-header"><span class="modal-title">Nuevo presupuesto</span><button class="action-btn" onclick="closeModal('modal-presupuesto')" aria-label="Cerrar">✕</button></div>
+    <div class="modal-header"><span class="modal-title">Compartir formulario con tu cliente</span><button class="action-btn" onclick="closeModal('modal-share')" aria-label="Cerrar">✕</button></div>
     <div class="modal-body">
-      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="p-cliente" onchange="autoFillPres()" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">Envía este enlace a tu cliente. Cuando lo rellene, aparecerá automáticamente en tu lista de clientes marcado como "Formulario".</p>
+      <div class="share-box">
+        <input id="share-link" readonly>
+        <button class="copy-btn" onclick="copyShareLink()">Copiar</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-share')">Cerrar</button></div>
+  </div>
+</div>
+
+<div id="modal-presupuesto" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-presupuesto')">
+  <div class="modal wide">
+    <div class="modal-header"><span class="modal-title" id="pres-modal-title">Nuevo presupuesto</span><button class="action-btn" onclick="closeModal('modal-presupuesto')" aria-label="Cerrar">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="p-cliente" class="finput"><option value="">Seleccionar...</option></select></div></div>
       <div class="form-row">
-        <div><label class="flabel">Servicio</label><input id="p-servicio" class="finput"></div>
+        <div><label class="flabel">Lugar del evento</label><input id="p-lugar" class="finput"></div>
         <div><label class="flabel">Fecha evento</label><input id="p-fecha" type="date" class="finput"></div>
       </div>
-      <div class="form-row">
-        <div><label class="flabel">Base (€) *</label><input id="p-base" type="number" oninput="calcPres()" class="finput"></div>
-        <div><label class="flabel">IVA %</label><select id="p-iva" onchange="calcPres()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+      <label class="flabel">Conceptos</label>
+      <div class="lineas-wrap" id="p-lineas"></div>
+      <button class="add-linea-btn" onclick="addLineaPres()">+ Añadir concepto</button>
+      <div class="form-row" style="margin-top:14px">
+        <div><label class="flabel">IVA %</label><select id="p-iva" onchange="calcPresTotales()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+        <div><label class="flabel">Validez (días)</label><input id="p-validez" type="number" value="15" class="finput"></div>
       </div>
-      <div class="form-row"><div><label class="flabel">Total (€)</label><input id="p-total" readonly class="finput"></div>
-      <div><label class="flabel">Señal (€)</label><input id="p-senal" type="number" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Notas</label><input id="p-notas" class="finput"></div></div>
+      <div class="totales-box">
+        <div class="totales-row"><span>Total neto</span><span id="p-total-neto">0,00 €</span></div>
+        <div class="totales-row"><span id="p-iva-label">IVA 21%</span><span id="p-total-iva">0,00 €</span></div>
+        <div class="totales-row final"><span>Total</span><span id="p-total-final">0,00 €</span></div>
+      </div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-presupuesto')">Cancelar</button><button class="btn-primary" id="save-pres-btn" onclick="guardarPresupuesto()">Guardar</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-presupuesto')">Cancelar</button><button class="btn-primary" id="save-pres-btn" onclick="guardarPresupuesto()">Guardar presupuesto</button></div>
   </div>
 </div>
 
 <div id="modal-factura" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-factura')">
-  <div class="modal">
+  <div class="modal wide">
     <div class="modal-header"><span class="modal-title">Nueva factura</span><button class="action-btn" onclick="closeModal('modal-factura')" aria-label="Cerrar">✕</button></div>
     <div class="modal-body">
-      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="fc-cliente" onchange="autoFillFac()" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <div class="select-source-tabs">
+        <div class="select-source-tab active" id="tab-desde-cero" onclick="switchFacSource('cero')">Desde cero</div>
+        <div class="select-source-tab" id="tab-desde-pres" onclick="switchFacSource('presupuesto')">Desde presupuesto</div>
+        <div class="select-source-tab" id="tab-desde-cliente" onclick="switchFacSource('cliente')">Desde cliente</div>
+      </div>
+      <div class="form-row full" id="fac-pres-selector" style="display:none"><div><label class="flabel">Presupuesto</label><select id="fc-presupuesto" onchange="autoFillFacDesdePres()" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="fc-cliente" class="finput"><option value="">Seleccionar...</option></select></div></div>
       <div class="form-row">
         <div><label class="flabel">Nº factura</label><input id="fc-numero" class="finput"></div>
         <div><label class="flabel">Fecha factura</label><input id="fc-fecha" type="date" class="finput"></div>
       </div>
-      <div class="form-row full"><div><label class="flabel">Descripción</label><input id="fc-desc" class="finput"></div></div>
-      <div class="form-row">
-        <div><label class="flabel">Base (€) *</label><input id="fc-base" type="number" oninput="calcFac()" class="finput"></div>
-        <div><label class="flabel">IVA %</label><select id="fc-iva" onchange="calcFac()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+      <div class="form-row full"><div><label class="flabel">Lugar del evento</label><input id="fc-lugar" class="finput"></div></div>
+      <label class="flabel">Conceptos</label>
+      <div class="lineas-wrap" id="fc-lineas"></div>
+      <button class="add-linea-btn" onclick="addLineaFac()">+ Añadir concepto</button>
+      <div class="form-row" style="margin-top:14px">
+        <div><label class="flabel">IVA %</label><select id="fc-iva" onchange="calcFacTotales()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div>
+        <div><label class="flabel">Cobrado (€)</label><input id="fc-cobrado" type="number" value="0" class="finput"></div>
       </div>
-      <div class="form-row"><div><label class="flabel">Total (€)</label><input id="fc-total" readonly class="finput"></div>
-      <div><label class="flabel">Cobrado (€)</label><input id="fc-cobrado" type="number" value="0" class="finput"></div></div>
+      <div class="totales-box">
+        <div class="totales-row"><span>Base imponible</span><span id="fc-total-neto">0,00 €</span></div>
+        <div class="totales-row"><span id="fc-iva-label">IVA 21%</span><span id="fc-total-iva">0,00 €</span></div>
+        <div class="totales-row final"><span>Total</span><span id="fc-total-final">0,00 €</span></div>
+      </div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-factura')">Cancelar</button><button class="btn-primary" id="save-fac-btn" onclick="guardarFactura()">Guardar factura</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-factura')">Cancelar</button><button class="btn-primary" id="save-fac-btn" onclick="guardarFactura()">Guardar y ver factura</button></div>
+  </div>
+</div>
+
+<div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title" id="pdf-modal-title">Documento</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-primary" onclick="downloadPDF()">Descargar PDF</button>
+        <button class="action-btn" onclick="closeModal('modal-pdf')" aria-label="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" style="background:#EAEBEE;padding:24px">
+      <div id="pdf-preview"></div>
+    </div>
   </div>
 </div>
 
@@ -306,13 +424,72 @@ const SUPABASE_URL = 'https://iizchzmoujzzuxwdhybr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ek702DJegaKBkZg4107YPw_bTHrsjKT';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const EMISOR = {nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
+
 let CLIENTES = [], PRESUPUESTOS = [], FACTURAS = [];
 let calMonth = new Date().getMonth()+1, calYear = new Date().getFullYear();
 let currentUser = null;
+let presLineas = [], facLineas = [];
+let lineaIdCounter = 0;
+let activeDoc = null, activeDocType = null;
 
 function fmt(n){return Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtDate(s){if(!s)return '';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});}
-function badge(e){if(e==='Cobrada'||e==='Completado')return `<span class="badge badge-blue">${e}</span>`;if(e==='Pendiente'||e==='Activo')return `<span class="badge badge-gray">${e}</span>`;return `<span class="badge badge-dark">${e}</span>`;}
+function badge(e){if(e==='Cobrada'||e==='Completado'||e==='Aceptado')return `<span class="badge badge-blue">${e}</span>`;if(e==='Pendiente'||e==='Activo')return `<span class="badge badge-gray">${e}</span>`;return `<span class="badge badge-dark">${e}</span>`;}
+
+function checkPublicFormURL(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('formulario')==='1'){
+    document.getElementById('public-form-screen').classList.add('show');
+    return true;
+  }
+  return false;
+}
+
+async function submitPublicForm(){
+  const nombre = document.getElementById('pf-nombre').value.trim();
+  const tel = document.getElementById('pf-tel').value.trim();
+  const errBox = document.getElementById('public-error');
+  errBox.style.display='none';
+  if(!nombre||!tel){errBox.textContent='El nombre y el teléfono son obligatorios';errBox.style.display='block';return;}
+  const btn = document.getElementById('pf-submit-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Enviando...';
+  const payload = {
+    user_id:null,
+    nombre,
+    dni:document.getElementById('pf-dni').value.trim(),
+    telefono:tel,
+    email:document.getElementById('pf-email').value.trim(),
+    direccion:document.getElementById('pf-dir').value.trim(),
+    ciudad:document.getElementById('pf-ciudad').value.trim(),
+    cp:document.getElementById('pf-cp').value.trim(),
+    tipo_evento:document.getElementById('pf-tipo').value,
+    fecha_evento:document.getElementById('pf-fecha').value||null,
+    notas:document.getElementById('pf-notas').value.trim(),
+    estado:'Activo',
+    origen:'formulario_publico'
+  };
+  const {error} = await sb.from('clientes').insert(payload);
+  btn.disabled=false;btn.textContent='Enviar';
+  if(error){errBox.textContent='Ha ocurrido un error. Inténtalo de nuevo.';errBox.style.display='block';console.error(error);return;}
+  document.getElementById('public-form-inner').style.display='none';
+  document.getElementById('public-success').classList.add('show');
+}
+
+function openShareModal(){
+  const url = window.location.origin + window.location.pathname + '?formulario=1';
+  document.getElementById('share-link').value = url;
+  openModal('modal-share');
+}
+function copyShareLink(){
+  const input = document.getElementById('share-link');
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent='¡Copiado!';
+  setTimeout(()=>btn.textContent=orig,1500);
+}
 
 async function doLogin(){
   const email = document.getElementById('login-email').value.trim();
@@ -353,6 +530,7 @@ async function showApp(){
 }
 
 async function checkSession(){
+  if(checkPublicFormURL())return;
   const {data} = await sb.auth.getSession();
   if(data.session){
     currentUser = data.session.user;
@@ -369,19 +547,27 @@ async function loadAllData(){
   CLIENTES = c.data||[];
   PRESUPUESTOS = p.data||[];
   FACTURAS = f.data||[];
+  const leadsCount = CLIENTES.filter(c=>c.origen==='formulario_publico').length;
+  const badge = document.getElementById('leads-badge');
+  if(leadsCount>0){badge.textContent=leadsCount;badge.classList.add('show');}else{badge.classList.remove('show');}
 }
 
-function openModal(id){
-  document.getElementById(id).style.display='flex';
-  if(id==='modal-presupuesto'||id==='modal-factura') populateSelects();
-}
+function openModal(id){document.getElementById(id).style.display='flex';}
 function closeModal(id){document.getElementById(id).style.display='none';}
 
-function populateSelects(){
+function populateClientSelects(){
   ['p-cliente','fc-cliente'].forEach(id=>{
     const sel=document.getElementById(id);
     sel.innerHTML='<option value="">Seleccionar...</option>';
     CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  });
+}
+function populatePresupuestoSelect(){
+  const sel=document.getElementById('fc-presupuesto');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  PRESUPUESTOS.forEach(p=>{
+    const c=CLIENTES.find(x=>x.id===p.cliente_id);
+    sel.innerHTML+=`<option value="${p.id}">${p.numero} — ${c?c.nombre:'—'}</option>`;
   });
 }
 
@@ -414,13 +600,13 @@ function renderClientes(){
   const q=(document.getElementById('cli-search').value||'').toLowerCase();
   const data = CLIENTES.filter(c=>!q||c.nombre.toLowerCase().includes(q));
   document.getElementById('cli-tbody').innerHTML = data.length? data.map(c=>`<tr>
-    <td style="font-weight:600">${c.nombre}</td>
-    <td>${c.tipo_evento||''} · ${c.servicio||''}</td>
-    <td>${fmtDate(c.fecha_evento)}</td>
-    <td>${fmt(c.importe)} €</td>
-    <td>${badge(c.estado||'Activo')}</td>
+    <td style="font-weight:600">${c.nombre}${c.dni?'<br><span style=\"font-size:11px;color:var(--ink-soft);font-weight:400\">'+c.dni+'</span>':''}</td>
+    <td>${c.tipo_evento||'—'}</td>
+    <td>${fmtDate(c.fecha_evento)||'—'}</td>
+    <td style="font-size:12px">${c.telefono||''}${c.telefono&&c.email?'<br>':''}${c.email||''}</td>
+    <td>${c.origen==='formulario_publico'?'<span class="badge badge-amber">Formulario</span>':'<span class="badge badge-gray">Manual</span>'}</td>
     <td><button class="action-btn" title="Eliminar" onclick="eliminarCliente('${c.id}')">🗑</button></td>
-  </tr>`).join('') : '<tr><td colspan="6"><div class="empty">Sin clientes todavía. Crea el primero.</div></td></tr>';
+  </tr>`).join('') : '<tr><td colspan="6"><div class="empty">Sin clientes todavía. Crea el primero o comparte tu formulario.</div></td></tr>';
 }
 
 async function guardarCliente(){
@@ -439,17 +625,15 @@ async function guardarCliente(){
     cp:document.getElementById('f-cp').value,
     tipo_evento:document.getElementById('f-tipo').value,
     fecha_evento:document.getElementById('f-fecha').value||null,
-    servicio:document.getElementById('f-servicio').value,
-    importe:parseFloat(document.getElementById('f-importe').value)||0,
-    reserva:parseFloat(document.getElementById('f-reserva').value)||0,
     notas:document.getElementById('f-notas').value,
-    estado:'Activo'
+    estado:'Activo',
+    origen:'manual'
   };
   const {error} = await sb.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Guardar cliente';
   if(error){alert('Error al guardar: '+error.message);return;}
   closeModal('modal-cliente');
-  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-importe','f-reserva','f-notas','f-fecha'].forEach(id=>document.getElementById(id).value='');
+  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha'].forEach(id=>document.getElementById(id).value='');
   await loadAllData();
   renderClientes();renderDashboard();
 }
@@ -460,79 +644,192 @@ async function eliminarCliente(id){
   await loadAllData();renderClientes();renderDashboard();
 }
 
-function autoFillPres(){
-  const id=document.getElementById('p-cliente').value;
-  const c=CLIENTES.find(x=>x.id===id);if(!c)return;
-  document.getElementById('p-fecha').value=c.fecha_evento||'';
-  document.getElementById('p-servicio').value=c.servicio||'';
-  const base=c.importe?+(c.importe/1.21).toFixed(2):0;
-  document.getElementById('p-base').value=base||'';
-  calcPres();
+function lineaRowHTML(linea,tipo){
+  return `<div class="linea-row" data-id="${linea.id}">
+    <div>
+      <input placeholder="Concepto (ej. Fotomatón Boda 3h)" value="${linea.descripcion||''}" oninput="updateLinea('${tipo}','${linea.id}','descripcion',this.value)">
+      <textarea placeholder="Detalle (opcional, una línea por punto)" oninput="updateLinea('${tipo}','${linea.id}','detalle',this.value)" style="margin-top:6px">${linea.detalle||''}</textarea>
+    </div>
+    <input type="number" placeholder="Precio" value="${linea.precio_unitario||''}" oninput="updateLinea('${tipo}','${linea.id}','precio_unitario',this.value)">
+    <input type="number" placeholder="Uds" value="${linea.unidades||1}" oninput="updateLinea('${tipo}','${linea.id}','unidades',this.value)">
+    <div class="linea-subtotal">${fmt((linea.precio_unitario||0)*(linea.unidades||1))} €</div>
+    <button class="linea-del" onclick="delLinea('${tipo}','${linea.id}')" aria-label="Eliminar concepto">🗑</button>
+  </div>`;
 }
-function calcPres(){
-  const base=parseFloat(document.getElementById('p-base').value)||0;
-  const iva=parseFloat(document.getElementById('p-iva').value)||21;
-  document.getElementById('p-total').value=fmt(base+base*iva/100)+' €';
+
+function addLineaPres(){
+  presLineas.push({id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1});
+  renderLineasPres();
 }
+function renderLineasPres(){
+  document.getElementById('p-lineas').innerHTML = presLineas.map(l=>lineaRowHTML(l,'pres')).join('') || '<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-soft)">Añade al menos un concepto</div>';
+}
+function addLineaFac(){
+  facLineas.push({id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1});
+  renderLineasFac();
+}
+function renderLineasFac(){
+  document.getElementById('fc-lineas').innerHTML = facLineas.map(l=>lineaRowHTML(l,'fac')).join('') || '<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-soft)">Añade al menos un concepto</div>';
+}
+function updateLinea(tipo,id,campo,valor){
+  const arr = tipo==='pres'?presLineas:facLineas;
+  const l = arr.find(x=>x.id===id);
+  if(!l)return;
+  l[campo] = (campo==='precio_unitario'||campo==='unidades') ? parseFloat(valor)||0 : valor;
+  if(tipo==='pres'){renderLineasPres();calcPresTotales();}else{renderLineasFac();calcFacTotales();}
+}
+function delLinea(tipo,id){
+  if(tipo==='pres'){presLineas=presLineas.filter(x=>x.id!==id);renderLineasPres();calcPresTotales();}
+  else{facLineas=facLineas.filter(x=>x.id!==id);renderLineasFac();calcFacTotales();}
+}
+
+function calcPresTotales(){
+  const neto = presLineas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const ivaPct = parseFloat(document.getElementById('p-iva').value)||21;
+  const iva = neto*ivaPct/100;
+  document.getElementById('p-total-neto').textContent = fmt(neto)+' €';
+  document.getElementById('p-iva-label').textContent = 'IVA '+ivaPct+'%';
+  document.getElementById('p-total-iva').textContent = fmt(iva)+' €';
+  document.getElementById('p-total-final').textContent = fmt(neto+iva)+' €';
+}
+function calcFacTotales(){
+  const neto = facLineas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const ivaPct = parseFloat(document.getElementById('fc-iva').value)||21;
+  const iva = neto*ivaPct/100;
+  document.getElementById('fc-total-neto').textContent = fmt(neto)+' €';
+  document.getElementById('fc-iva-label').textContent = 'IVA '+ivaPct+'%';
+  document.getElementById('fc-total-iva').textContent = fmt(iva)+' €';
+  document.getElementById('fc-total-final').textContent = fmt(neto+iva)+' €';
+}
+
+function abrirNuevoPresupuesto(){
+  populateClientSelects();
+  presLineas = [{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  document.getElementById('p-cliente').value='';
+  document.getElementById('p-lugar').value='';
+  document.getElementById('p-fecha').value='';
+  document.getElementById('p-notas').value='';
+  document.getElementById('p-iva').value='21';
+  document.getElementById('p-validez').value='15';
+  renderLineasPres();calcPresTotales();
+  openModal('modal-presupuesto');
+}
+
 async function guardarPresupuesto(){
   const clienteId=document.getElementById('p-cliente').value;
   const c=CLIENTES.find(x=>x.id===clienteId);
   if(!c){alert('Selecciona un cliente');return;}
-  const base=parseFloat(document.getElementById('p-base').value)||0;
-  const ivaPct=parseFloat(document.getElementById('p-iva').value)||21;
-  const ivaEur=+(base*ivaPct/100).toFixed(2);
-  const total=+(base+ivaEur).toFixed(2);
+  const lineasValidas = presLineas.filter(l=>l.descripcion.trim());
+  if(lineasValidas.length===0){alert('Añade al menos un concepto con descripción');return;}
+  const neto = lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const ivaPct = parseFloat(document.getElementById('p-iva').value)||21;
+  const ivaEur = +(neto*ivaPct/100).toFixed(2);
+  const total = +(neto+ivaEur).toFixed(2);
   const btn=document.getElementById('save-pres-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const numero = 'P'+new Date().getFullYear()+String(PRESUPUESTOS.length+1).padStart(2,'0');
   const payload={
-    user_id:currentUser.id,
-    numero:'P'+new Date().getFullYear()+String(PRESUPUESTOS.length+1).padStart(2,'0'),
-    cliente_id:clienteId,
-    servicio:document.getElementById('p-servicio').value,
+    user_id:currentUser.id,numero,cliente_id:clienteId,
     fecha_evento:document.getElementById('p-fecha').value||null,
-    base,iva_pct:ivaPct,iva_eur:ivaEur,total,
-    senal:parseFloat(document.getElementById('p-senal').value)||0,
+    lugar:document.getElementById('p-lugar').value,
+    base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,
+    validez_dias:parseInt(document.getElementById('p-validez').value)||15,
+    notas:document.getElementById('p-notas').value,
     estado:'Pendiente'
   };
-  const {error}=await sb.from('presupuestos').insert(payload);
-  btn.disabled=false;btn.textContent='Guardar';
-  if(error){alert('Error: '+error.message);return;}
+  const {data,error}=await sb.from('presupuestos').insert(payload).select().single();
+  if(error){btn.disabled=false;btn.textContent='Guardar presupuesto';alert('Error: '+error.message);return;}
+  const lineasPayload = lineasValidas.map((l,i)=>({
+    user_id:currentUser.id,presupuesto_id:data.id,
+    descripcion:l.descripcion,detalle:l.detalle||'',
+    precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i
+  }));
+  await sb.from('presupuesto_lineas').insert(lineasPayload);
+  btn.disabled=false;btn.textContent='Guardar presupuesto';
   closeModal('modal-presupuesto');
   await loadAllData();renderPresupuestos();renderDashboard();
 }
+
 function renderPresupuestos(){
   document.getElementById('pres-tbody').innerHTML = PRESUPUESTOS.length? PRESUPUESTOS.map(p=>{
     const c=CLIENTES.find(x=>x.id===p.cliente_id);
-    return `<tr><td style="font-weight:600;color:var(--brand)">${p.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmt(p.total)} €</td><td>${badge(p.estado)}</td><td><button class="action-btn" onclick="eliminarPres('${p.id}')">🗑</button></td></tr>`;
-  }).join('') : '<tr><td colspan="5"><div class="empty">Sin presupuestos todavía.</div></td></tr>';
+    return `<tr><td style="font-weight:600;color:var(--brand)">${p.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmtDate(p.fecha_evento)||'—'}</td><td>${fmt(p.total)} €</td><td>${badge(p.estado)}</td><td>
+      <button class="action-btn" title="Ver / descargar" onclick="verPresupuesto('${p.id}')">👁</button>
+      <button class="action-btn" title="Crear factura" onclick="crearFacturaDesdePresupuestoId('${p.id}')">📄</button>
+      <button class="action-btn" title="Eliminar" onclick="eliminarPres('${p.id}')">🗑</button>
+    </td></tr>`;
+  }).join('') : '<tr><td colspan="6"><div class="empty">Sin presupuestos todavía.</div></td></tr>';
 }
-async function eliminarPres(id){await sb.from('presupuestos').delete().eq('id',id);await loadAllData();renderPresupuestos();}
+async function eliminarPres(id){if(!confirm('¿Eliminar este presupuesto?'))return;await sb.from('presupuestos').delete().eq('id',id);await loadAllData();renderPresupuestos();}
 
-function autoFillFac(){
-  const id=document.getElementById('fc-cliente').value;
-  const c=CLIENTES.find(x=>x.id===id);if(!c)return;
-  document.getElementById('fc-desc').value=c.servicio||'';
+async function verPresupuesto(id){
+  const {data:lineas} = await sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',id).order('orden');
+  const p = PRESUPUESTOS.find(x=>x.id===id);
+  const c = CLIENTES.find(x=>x.id===p.cliente_id);
+  activeDoc = {doc:p,cliente:c,lineas:lineas||[]};
+  activeDocType = 'presupuesto';
+  document.getElementById('pdf-modal-title').textContent = 'Presupuesto '+p.numero;
+  document.getElementById('pdf-preview').innerHTML = buildPresupuestoHTML(p,c,lineas||[]);
+  openModal('modal-pdf');
+}
+
+function crearFacturaDesdePresupuestoId(presId){
+  abrirNuevaFactura();
+  setTimeout(()=>{
+    switchFacSource('presupuesto');
+    document.getElementById('fc-presupuesto').value = presId;
+    autoFillFacDesdePres();
+  },80);
+}
+
+function switchFacSource(tipo){
+  document.querySelectorAll('.select-source-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('fac-pres-selector').style.display = tipo==='presupuesto'?'grid':'none';
+  if(tipo==='cero')document.getElementById('tab-desde-cero').classList.add('active');
+  if(tipo==='presupuesto')document.getElementById('tab-desde-pres').classList.add('active');
+  if(tipo==='cliente')document.getElementById('tab-desde-cliente').classList.add('active');
+}
+
+function abrirNuevaFactura(){
+  populateClientSelects();
+  populatePresupuestoSelect();
+  facLineas = [{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  document.getElementById('fc-cliente').value='';
+  document.getElementById('fc-presupuesto').value='';
+  document.getElementById('fc-lugar').value='';
+  document.getElementById('fc-cobrado').value='0';
+  document.getElementById('fc-iva').value='21';
   document.getElementById('fc-fecha').value=new Date().toISOString().split('T')[0];
-  const base=c.importe?+(c.importe/1.21).toFixed(2):0;
-  document.getElementById('fc-base').value=base;
-  document.getElementById('fc-cobrado').value=c.reserva||0;
   document.getElementById('fc-numero').value='F'+new Date().getFullYear()+String(FACTURAS.length+1).padStart(2,'0');
-  calcFac();
+  switchFacSource('cero');
+  renderLineasFac();calcFacTotales();
+  openModal('modal-factura');
 }
-function calcFac(){
-  const base=parseFloat(document.getElementById('fc-base').value)||0;
-  const iva=parseFloat(document.getElementById('fc-iva').value)||21;
-  document.getElementById('fc-total').value=fmt(base+base*iva/100)+' €';
+
+async function autoFillFacDesdePres(){
+  const presId = document.getElementById('fc-presupuesto').value;
+  const p = PRESUPUESTOS.find(x=>x.id===presId);
+  if(!p)return;
+  document.getElementById('fc-cliente').value = p.cliente_id;
+  document.getElementById('fc-lugar').value = p.lugar||'';
+  document.getElementById('fc-iva').value = p.iva_pct||21;
+  const {data:lineas} = await sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',presId).order('orden');
+  facLineas = (lineas||[]).map(l=>({id:'tmp'+(lineaIdCounter++),descripcion:l.descripcion,detalle:l.detalle,precio_unitario:l.precio_unitario,unidades:l.unidades}));
+  if(facLineas.length===0)facLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  renderLineasFac();calcFacTotales();
 }
+
 async function guardarFactura(){
   const clienteId=document.getElementById('fc-cliente').value;
   const c=CLIENTES.find(x=>x.id===clienteId);
   if(!c){alert('Selecciona un cliente');return;}
-  const base=parseFloat(document.getElementById('fc-base').value)||0;
-  const ivaPct=parseFloat(document.getElementById('fc-iva').value)||21;
-  const ivaEur=+(base*ivaPct/100).toFixed(2);
-  const total=+(base+ivaEur).toFixed(2);
-  const cobrado=parseFloat(document.getElementById('fc-cobrado').value)||0;
+  const lineasValidas = facLineas.filter(l=>l.descripcion.trim());
+  if(lineasValidas.length===0){alert('Añade al menos un concepto con descripción');return;}
+  const neto = lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const ivaPct = parseFloat(document.getElementById('fc-iva').value)||21;
+  const ivaEur = +(neto*ivaPct/100).toFixed(2);
+  const total = +(neto+ivaEur).toFixed(2);
+  const cobrado = parseFloat(document.getElementById('fc-cobrado').value)||0;
   const btn=document.getElementById('save-fac-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const payload={
@@ -540,24 +837,46 @@ async function guardarFactura(){
     numero:document.getElementById('fc-numero').value,
     cliente_id:clienteId,
     fecha_factura:document.getElementById('fc-fecha').value||null,
-    descripcion:document.getElementById('fc-desc').value,
-    base,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,
+    lugar:document.getElementById('fc-lugar').value,
+    base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,
     pendiente:+(total-cobrado).toFixed(2),
     estado:cobrado>=total?'Cobrada':'Pendiente'
   };
-  const {error}=await sb.from('facturas').insert(payload);
-  btn.disabled=false;btn.textContent='Guardar factura';
-  if(error){alert('Error: '+error.message);return;}
+  const {data,error}=await sb.from('facturas').insert(payload).select().single();
+  if(error){btn.disabled=false;btn.textContent='Guardar y ver factura';alert('Error: '+error.message);return;}
+  const lineasPayload = lineasValidas.map((l,i)=>({
+    user_id:currentUser.id,factura_id:data.id,
+    descripcion:l.descripcion,detalle:l.detalle||'',
+    precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i
+  }));
+  await sb.from('factura_lineas').insert(lineasPayload);
+  btn.disabled=false;btn.textContent='Guardar y ver factura';
   closeModal('modal-factura');
   await loadAllData();renderFacturas();renderDashboard();
+  verFactura(data.id);
 }
+
 function renderFacturas(){
   document.getElementById('fac-tbody').innerHTML = FACTURAS.length? FACTURAS.map(f=>{
     const c=CLIENTES.find(x=>x.id===f.cliente_id);
-    return `<tr><td style="font-weight:600;color:var(--brand)">${f.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${badge(f.estado)}</td><td><button class="action-btn" onclick="eliminarFac('${f.id}')">🗑</button></td></tr>`;
+    return `<tr><td style="font-weight:600;color:var(--brand)">${f.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${badge(f.estado)}</td><td>
+      <button class="action-btn" title="Ver / descargar" onclick="verFactura('${f.id}')">👁</button>
+      <button class="action-btn" title="Eliminar" onclick="eliminarFac('${f.id}')">🗑</button>
+    </td></tr>`;
   }).join('') : '<tr><td colspan="5"><div class="empty">Sin facturas todavía.</div></td></tr>';
 }
-async function eliminarFac(id){await sb.from('facturas').delete().eq('id',id);await loadAllData();renderFacturas();}
+async function eliminarFac(id){if(!confirm('¿Eliminar esta factura?'))return;await sb.from('facturas').delete().eq('id',id);await loadAllData();renderFacturas();}
+
+async function verFactura(id){
+  const {data:lineas} = await sb.from('factura_lineas').select('*').eq('factura_id',id).order('orden');
+  const f = FACTURAS.find(x=>x.id===id);
+  const c = CLIENTES.find(x=>x.id===f.cliente_id);
+  activeDoc = {doc:f,cliente:c,lineas:lineas||[]};
+  activeDocType = 'factura';
+  document.getElementById('pdf-modal-title').textContent = 'Factura '+f.numero;
+  document.getElementById('pdf-preview').innerHTML = buildFacturaHTML(f,c,lineas||[]);
+  openModal('modal-pdf');
+}
 
 function renderCobros(){
   const total=FACTURAS.reduce((a,f)=>a+Number(f.total||0),0);
@@ -603,6 +922,155 @@ function renderCalendario(){
   document.getElementById('cal-body').innerHTML=html;
 }
 function changeMonth(d){calMonth+=d;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}renderCalendario();}
+
+function pdfStyles(){
+  return `
+  .pdfdoc{background:#fff;max-width:760px;margin:0 auto;padding:36px;font-family:Arial,Helvetica,sans-serif;color:#222}
+  .pdf-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid #eee}
+  .pdf-brand{font-size:26px;font-weight:700;letter-spacing:-1px;color:#15171C}
+  .pdf-brand span{color:#1543E5}
+  .pdf-brand-sub{font-size:9px;color:#999;letter-spacing:.12em;margin-top:2px}
+  .pdf-emisor{text-align:right;font-size:11px;line-height:1.7;color:#555}
+  .pdf-sections{display:grid;grid-template-columns:1fr 1fr;margin-bottom:20px;border:1px solid #ddd;border-radius:4px;overflow:hidden}
+  .pdf-box{padding:14px 18px}
+  .pdf-box:first-child{border-right:1px solid #ddd}
+  .pdf-label{font-size:9px;letter-spacing:.08em;color:#888;margin-bottom:8px;font-weight:700}
+  .pdf-name{font-size:13px;font-weight:700;color:#222;margin-bottom:3px}
+  .pdf-detail{font-size:11px;color:#555;line-height:1.6}
+  .pdf-row{display:flex;justify-content:space-between;margin-bottom:4px}
+  .pdf-row-label{font-size:11px;color:#888}
+  .pdf-row-val{font-size:11px;color:#222;font-weight:700}
+  .pdf-table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:11.5px}
+  .pdf-table thead tr{background:#15171C}
+  .pdf-table th{padding:9px 10px;text-align:left;font-size:9.5px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.03em}
+  .pdf-table th:last-child,.pdf-table td:last-child{text-align:right}
+  .pdf-table th:nth-child(2),.pdf-table td:nth-child(2),.pdf-table th:nth-child(3),.pdf-table td:nth-child(3){text-align:center}
+  .pdf-table td{padding:10px;border-bottom:1px solid #eee;vertical-align:top}
+  .pdf-concepto{font-weight:700;color:#15171C;margin-bottom:3px}
+  .pdf-concepto-detalle{font-size:10.5px;color:#666;white-space:pre-line;line-height:1.5}
+  .pdf-totales{margin-left:auto;width:230px}
+  .pdf-trow{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid #eee}
+  .pdf-trow.final{border:none;font-weight:700;font-size:14px;border-top:2px solid #15171C;margin-top:6px;padding-top:10px}
+  .pdf-footbox{border:1px solid #ddd;border-radius:4px;padding:11px 16px;margin-top:18px;font-size:10.5px;color:#666;line-height:1.6}
+  .pdf-footlabel{font-size:9px;font-weight:700;letter-spacing:.06em;color:#999;margin-bottom:3px}
+  .pdf-obs{border:1px solid #ddd;border-radius:4px;padding:11px 16px;margin-top:8px;font-size:10px;color:#666;line-height:1.5}
+  .pdf-pagenum{text-align:right;font-size:10px;color:#999;margin-top:18px;border-top:1px solid #eee;padding-top:10px}
+  .pdf-validez{display:inline-block;background:#FEF3E2;color:#92400E;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:8px}
+  `;
+}
+
+function clienteDetailHTML(c){
+  let lines=[];
+  if(c.dni)lines.push(c.dni);
+  if(c.direccion)lines.push(c.direccion);
+  let cityLine='';
+  if(c.cp)cityLine+=c.cp+' ';
+  if(c.ciudad)cityLine+=c.ciudad;
+  if(cityLine)lines.push(cityLine+', España');
+  return lines.join('<br>');
+}
+
+function buildFacturaHTML(f,c,lineas){
+  const rows = lineas.map(l=>`<tr>
+    <td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td>
+    <td>${fmt(l.unidades)}</td>
+    <td>${fmt(l.precio_unitario)}€</td>
+    <td>${fmt(l.precio_unitario*l.unidades)} €</td>
+  </tr>`).join('');
+  return `<style>${pdfStyles()}</style>
+  <div class="pdfdoc" id="pdf-to-print">
+    <div class="pdf-top">
+      <div><div class="pdf-brand">foto<span>tela</span></div><div class="pdf-brand-sub">EVENTS</div></div>
+      <div class="pdf-emisor">
+        <div style="font-weight:700;font-size:12px;color:#222">${EMISOR.nombre}</div>
+        <div>${EMISOR.nif}</div><div>${EMISOR.dir}</div><div>${EMISOR.ciudad}</div><div>Telf. ${EMISOR.tel}</div>
+      </div>
+    </div>
+    <div class="pdf-sections">
+      <div class="pdf-box">
+        <div class="pdf-label">CLIENTE</div>
+        <div class="pdf-name">${c?c.nombre:'—'}</div>
+        <div class="pdf-detail">${c?clienteDetailHTML(c):''}</div>
+      </div>
+      <div class="pdf-box">
+        <div class="pdf-label">FACTURA</div>
+        <div class="pdf-row"><span class="pdf-row-label">Nº de factura</span><span class="pdf-row-val">${f.numero}</span></div>
+        <div class="pdf-row"><span class="pdf-row-label">Fecha factura</span><span class="pdf-row-val">${fmtDate(f.fecha_factura)}</span></div>
+        ${f.lugar?'<div class="pdf-row"><span class="pdf-row-label">Lugar</span><span class="pdf-row-val">'+f.lugar+'</span></div>':''}
+      </div>
+    </div>
+    <table class="pdf-table">
+      <thead><tr><th>Concepto</th><th>Uds</th><th>Precio</th><th>Subtotal</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="pdf-totales">
+      <div class="pdf-trow"><span>Base imponible</span><span>${fmt(f.base)} €</span></div>
+      <div class="pdf-trow"><span>IVA ${f.iva_pct}%</span><span>${fmt(f.iva_eur)} €</span></div>
+      <div class="pdf-trow final"><span>Total</span><span>${fmt(f.total)} €</span></div>
+    </div>
+    <div class="pdf-footbox"><div class="pdf-footlabel">Métodos de pago</div>Transferencia bancaria al número de cuenta &nbsp; <strong>${EMISOR.cuenta}</strong></div>
+    <div class="pdf-obs"><div class="pdf-footlabel">OBSERVACIONES</div>El pago realizado no será reembolsable en caso de cancelación por parte del cliente. Sin embargo, el cliente podrá solicitar un cambio de fecha, el cual estará sujeto a disponibilidad y deberá comunicarse con antelación.</div>
+    <div class="pdf-pagenum">${EMISOR.nif} &nbsp; 1 / 1</div>
+  </div>`;
+}
+
+function buildPresupuestoHTML(p,c,lineas){
+  const rows = lineas.map(l=>`<tr>
+    <td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td>
+    <td>${fmt(l.unidades)}</td>
+    <td>${fmt(l.precio_unitario)}€</td>
+    <td>${fmt(l.precio_unitario*l.unidades)} €</td>
+  </tr>`).join('');
+  return `<style>${pdfStyles()}</style>
+  <div class="pdfdoc" id="pdf-to-print">
+    <div class="pdf-top">
+      <div><div class="pdf-brand">foto<span>tela</span></div><div class="pdf-brand-sub">EVENTS</div></div>
+      <div class="pdf-emisor">
+        <div style="font-weight:700;font-size:12px;color:#222">${EMISOR.nombre}</div>
+        <div>${EMISOR.nif}</div><div>${EMISOR.dir}</div><div>${EMISOR.ciudad}</div><div>Telf. ${EMISOR.tel}</div>
+      </div>
+    </div>
+    <div class="pdf-sections">
+      <div class="pdf-box">
+        <div class="pdf-label">PARA</div>
+        <div class="pdf-name">${c?c.nombre:'—'}</div>
+        <div class="pdf-detail">${c?clienteDetailHTML(c):''}${c&&c.telefono?'<br>Tel. '+c.telefono:''}</div>
+      </div>
+      <div class="pdf-box">
+        <div class="pdf-label">PRESUPUESTO</div>
+        <div class="pdf-row"><span class="pdf-row-label">Nº</span><span class="pdf-row-val">${p.numero}</span></div>
+        <div class="pdf-row"><span class="pdf-row-label">Fecha evento</span><span class="pdf-row-val">${fmtDate(p.fecha_evento)||'—'}</span></div>
+        ${p.lugar?'<div class="pdf-row"><span class="pdf-row-label">Lugar</span><span class="pdf-row-val">'+p.lugar+'</span></div>':''}
+        <div class="pdf-validez">Válido ${p.validez_dias||15} días</div>
+      </div>
+    </div>
+    <table class="pdf-table">
+      <thead><tr><th>Concepto</th><th>Uds</th><th>Precio</th><th>Subtotal</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="pdf-totales">
+      <div class="pdf-trow"><span>Total neto</span><span>${fmt(p.base)} €</span></div>
+      <div class="pdf-trow"><span>IVA ${p.iva_pct}%</span><span>${fmt(p.iva_eur)} €</span></div>
+      <div class="pdf-trow final"><span>Total</span><span>${fmt(p.total)} €</span></div>
+    </div>
+    <div class="pdf-footbox"><div class="pdf-footlabel">Para confirmar la reserva</div>Transferencia bancaria al número de cuenta &nbsp; <strong>${EMISOR.cuenta}</strong> &nbsp; indicando como concepto el número de presupuesto ${p.numero}</div>
+    ${p.notas?'<div class="pdf-obs"><div class="pdf-footlabel">NOTAS</div>'+p.notas+'</div>':''}
+    <div class="pdf-pagenum">${EMISOR.nif} &nbsp; 1 / 1</div>
+  </div>`;
+}
+
+function downloadPDF(){
+  const content = document.getElementById('pdf-to-print');
+  if(!content||!activeDoc)return;
+  const numero = activeDoc.doc.numero;
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${activeDocType==='factura'?'Factura':'Presupuesto'} ${numero}</title>
+  <style>body{margin:0;padding:24px;background:#fff}${pdfStyles()}@media print{body{padding:0}}</style>
+  </head><body>${content.outerHTML}
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
+}
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 checkSession();
