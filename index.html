@@ -233,6 +233,16 @@ tr:hover td{background:#FAFBFF}
   <div class="page-header"><div><div class="page-title">Dashboard</div><div class="page-sub">Resumen de tu negocio</div></div></div>
   <div class="metrics-grid" id="dash-metrics"></div>
   <div id="dash-empty-hint" class="empty" style="display:none">Aún no tienes datos. Empieza creando tu primer cliente.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px">Próximos eventos</div>
+      <div class="table-wrap" id="dash-proximos"></div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px">Alertas</div>
+      <div id="dash-alertas"></div>
+    </div>
+  </div>
 </div>
 
 <div id="clientes" class="page">
@@ -254,7 +264,7 @@ tr:hover td{background:#FAFBFF}
     </select>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="cli-tbody"></tbody>
   </table></div>
 </div>
@@ -265,7 +275,7 @@ tr:hover td{background:#FAFBFF}
     <button class="btn-primary" onclick="abrirNuevoPresupuesto()">+ Nuevo presupuesto</button>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Nº</th><th>Cliente</th><th>Evento</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>Nº</th><th>Cliente</th><th>Evento</th><th>Total</th><th>Válido hasta</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="pres-tbody"></tbody>
   </table></div>
 </div>
@@ -567,19 +577,25 @@ function nav(page,el){
   if(r[page])r[page]();
 }
 
+function pendienteCliente(c){if(!c.importe_total||Number(c.importe_total)===0)return null;const cobradoFac=FACTURAS.filter(f=>f.cliente_id===c.id&&f.tipo==='formal').reduce((a,f)=>a+Number(f.total||0),0);const cobradoEfec=FACTURAS.filter(f=>f.cliente_id===c.id&&f.tipo==='efectivo'&&f.cuenta_como_pago).reduce((a,f)=>a+Number(f.total||0),0);return Math.max(0,Number(c.importe_total)-(cobradoFac+cobradoEfec));}
+function badgePago(c){const pend=pendienteCliente(c);if(pend===null)return'';if(pend===0)return'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Pagado</span>';return'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Falta '+fmt(pend)+' </span>';}
+function estadoPresupuesto(p){const hoy=new Date();hoy.setHours(0,0,0,0);const tieneFac=FACTURAS.some(f=>f.cliente_id===p.cliente_id&&f.tipo==='formal');if(tieneFac)return'aceptado';if(p.validez_hasta&&new Date(p.validez_hasta+'T00:00:00')<hoy)return'caducado';return'pendiente';}
+function badgePresupuesto(p){const e=estadoPresupuesto(p);if(e==='aceptado')return'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Aceptado</span>';if(e==='caducado')return'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Caducado</span>';return'<span class="badge" style="background:#EEEFF2;color:#5B5E68">Pendiente</span>';}
 function renderDashboard(){
-  const totalFac=FACTURAS.reduce((a,f)=>a+Number(f.total||0),0);
-  const totalCob=FACTURAS.reduce((a,f)=>a+Number(f.cobrado||0),0);
-  const totalPend=FACTURAS.reduce((a,f)=>a+Number(f.pendiente||0),0);
-  document.getElementById('dash-metrics').innerHTML=`
-    <div class="metric-card accent"><div class="metric-label">Clientes</div><div class="metric-value">${CLIENTES.length}</div></div>
-    <div class="metric-card"><div class="metric-label">Presupuestos</div><div class="metric-value">${PRESUPUESTOS.length}</div></div>
-    <div class="metric-card"><div class="metric-label">Facturas</div><div class="metric-value">${FACTURAS.length}</div></div>
-    <div class="metric-card"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(totalFac)} €</div></div>
-    <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(totalCob)} €</div></div>
-    <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(totalPend)} €</div></div>`;
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const totalH=FACTURAS.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.total||0),0);
+  const totalN=FACTURAS.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria').reduce((a,f)=>a+Number(f.total||0),0);
+  const totalPend=CLIENTES.reduce((a,c)=>{const p=pendienteCliente(c);return a+(p||0);},0);
+  const futuros=CLIENTES.filter(c=>calcEstadoCliente(c)==='Futuro').length;
+  const potenciales=CLIENTES.filter(c=>calcEstadoCliente(c)==='Potencial').length;
+  document.getElementById('dash-metrics').innerHTML='<div class="metric-card accent"><div class="metric-label">Clientes</div><div class="metric-value">'+CLIENTES.length+'</div></div><div class="metric-card"><div class="metric-label">Futuros</div><div class="metric-value">'+futuros+'</div></div><div class="metric-card"><div class="metric-label">Potenciales</div><div class="metric-value">'+potenciales+'</div></div><div class="metric-card"><div class="metric-label">Henry</div><div class="metric-value">'+fmt(totalH)+' </div></div><div class="metric-card"><div class="metric-label">Nuria</div><div class="metric-value">'+fmt(totalN)+' </div></div><div class="metric-card"><div class="metric-label">Pdte cobro</div><div class="metric-value">'+fmt(totalPend)+' </div></div>';
+  const proximos=CLIENTES.filter(c=>calcEstadoCliente(c)==='Futuro'&&c.fecha_evento).map(c=>({...c,diff:Math.ceil((new Date(c.fecha_evento+'T00:00:00')-hoy)/86400000)})).filter(c=>c.diff>=0).sort((a,b)=>a.diff-b.diff).slice(0,6);
+  const caducados=PRESUPUESTOS.filter(p=>estadoPresupuesto(p)==='caducado');
   document.getElementById('dash-empty-hint').style.display=CLIENTES.length===0?'block':'none';
+  const pp=document.getElementById('dash-proximos');if(pp){pp.innerHTML=proximos.length?'<table style="font-size:13px;width:100%"><thead><tr><th style="padding:8px;font-size:11px;color:var(--ink-soft)">Cliente</th><th style="padding:8px;font-size:11px;color:var(--ink-soft)">Fecha</th><th style="padding:8px;font-size:11px;color:var(--ink-soft)">Dias</th><th style="padding:8px;font-size:11px;color:var(--ink-soft)">Pago</th></tr></thead><tbody>'+proximos.map(c=>'<tr><td style="padding:8px;font-weight:600">'+c.nombre+'</td><td style="padding:8px">'+fmtDate(c.fecha_evento)+'</td><td style="padding:8px">'+c.diff+'d</td><td style="padding:8px">'+badgePago(c)+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Sin eventos proximos</div>';}
+  const pa=document.getElementById('dash-alertas');if(pa){const alertas=[];caducados.forEach(p=>{const c=CLIENTES.find(x=>x.id===p.cliente_id);alertas.push('Presupuesto <strong>'+p.numero+'</strong>'+(c?' ('+c.nombre+')':'')+' caducado el '+fmtDate(p.validez_hasta)+' sin factura');});pa.innerHTML=alertas.map(a=>'<div style="background:#FEF3E2;border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:8px;font-size:13px;color:#92400E">'+a+'</div>').join('');}
 }
+
 
 function calcEstadoCliente(c){
   // Si tiene estado forzado manualmente, respetarlo
@@ -641,6 +657,7 @@ function renderClientes(){
     <td>${c.tipo_evento||'—'}</td>
     <td>${fmtDate(c.fecha_evento)||'—'}</td>
     <td style="font-size:12px;color:var(--ink-soft)">${c.ubicacion_evento||'—'}</td>
+    <td>${badgePago(c)}</td>
     <td>
       ${badgeEstado(estado)}
       ${esForzado?'<span style="font-size:10px;color:var(--ink-soft);margin-left:4px">Manual</span>':''}
@@ -652,7 +669,7 @@ function renderClientes(){
       <button class="btn-icon blue" title="Ver ficha PDF" onclick="verFichaCliente('${c.id}')">📄 Ficha</button>
       <button class="btn-icon red" title="Eliminar" onclick="eliminarCliente('${c.id}')" style="margin-left:4px">🗑 Borrar</button>
     </td>
-  </tr>`;}).join(''):'<tr><td colspan="7"><div class="empty">Sin clientes todavía.</div></td></tr>';
+  </tr>`;}).join(''):'<tr><td colspan="8"><div class="empty">Sin clientes todavía.</div></td></tr>';
 }
 
 async function guardarCliente(){
@@ -810,14 +827,23 @@ async function guardarPresupuesto(){
 }
 
 function renderPresupuestos(){
-  document.getElementById('pres-tbody').innerHTML=PRESUPUESTOS.length?PRESUPUESTOS.map(p=>{
+  const tbody=document.getElementById('pres-tbody');
+  if(!PRESUPUESTOS.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty">Sin presupuestos.</div></td></tr>';return;}
+  tbody.innerHTML=PRESUPUESTOS.map(p=>{
     const c=CLIENTES.find(x=>x.id===p.cliente_id);
-    return`<tr><td style="font-weight:600;color:var(--brand)">${p.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmtDate(p.fecha_evento)||'—'}</td><td>${fmt(p.total)} €</td><td>${badge(p.estado)}</td><td style="white-space:nowrap">
-      <button class="btn-icon blue" onclick="verPresupuesto('${p.id}')" title="Ver PDF">📄 Ver</button>
-      <button class="btn-icon blue" onclick="crearFacturaDesdePresupuestoId('${p.id}')" title="Crear factura" style="margin-left:4px">📋 Factura</button>
-      <button class="btn-icon red" onclick="eliminarPres('${p.id}')" style="margin-left:4px">🗑</button>
-    </td></tr>`;
-  }).join(''):'<tr><td colspan="6"><div class="empty">Sin presupuestos todavía.</div></td></tr>';
+    const ep=estadoPresupuesto(p);
+    const bg=ep==='caducado'?'background:#FFF5F5':ep==='aceptado'?'background:#F0FFF7':'';
+    const acciones='<button class="btn-icon blue" onclick="verPresupuesto(''+p.id+'')">Ver PDF</button> '+
+      '<button class="btn-icon green" onclick="crearFacturaDesdePresupuestoId(''+p.id+'')" style="margin-left:4px">Factura</button> '+
+      '<button class="btn-icon red" onclick="eliminarPres(''+p.id+'')" style="margin-left:4px">Borrar</button>';
+    return '<tr style="'+bg+'"><td style="font-weight:600;color:var(--brand);padding:11px 14px">'+p.numero+'</td>'+
+      '<td style="padding:11px 14px">'+(c?c.nombre:'?')+'</td>'+
+      '<td style="padding:11px 14px">'+(fmtDate(p.fecha_evento)||'?')+'</td>'+
+      '<td style="padding:11px 14px">'+fmt(p.total)+' </td>'+
+      '<td style="padding:11px 14px;font-size:12px;color:var(--ink-soft)">'+(fmtDate(p.validez_hasta)||'?')+'</td>'+
+      '<td style="padding:11px 14px">'+badgePresupuesto(p)+'</td>'+
+      '<td style="padding:11px 14px;white-space:nowrap">'+acciones+'</td></tr>';
+  }).join('');
 }
 async function eliminarPres(id){if(!confirm('¿Eliminar este presupuesto?'))return;await sb.from('presupuestos').delete().eq('id',id);await loadAllData();renderPresupuestos();}
 
@@ -908,8 +934,16 @@ async function guardarFactura(){
   const {data,error}=await sb.from('facturas').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver factura';alert('Error: '+error.message);return;}
   await sb.from('factura_lineas').insert(lineasValidas.map((l,i)=>({user_id:currentUser.id,factura_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
+  // Si es factura formal y el cliente no tiene importe_total, pedirlo
+  if(tipo==='formal'){
+    const cliente=CLIENTES.find(x=>x.id===clienteId);
+    if(!cliente.importe_total||Number(cliente.importe_total)===0){
+      const importeTotal=parseFloat(prompt('Importe total contratado con este cliente (para control de pagos):',total))||total;
+      await sb.from('clientes').update({importe_total:importeTotal}).eq('id',clienteId);
+    }
+  }
   btn.disabled=false;btn.textContent='Guardar y ver factura';
-  closeModal('modal-factura');await loadAllData();renderFacturas();renderDashboard();
+  closeModal('modal-factura');await loadAllData();renderFacturasConMetricas(facTabActual);renderDashboard();
   verFactura(data.id);
 }
 
