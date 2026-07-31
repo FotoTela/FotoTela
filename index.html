@@ -283,7 +283,10 @@ tr:hover td{background:#FAFBFF}
 <div id="facturas" class="page">
   <div class="page-header">
     <div><div class="page-title">Facturas</div></div>
-    <button class="btn-primary" onclick="abrirNuevaFactura()">+ Nueva factura</button>
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="abrirNuevoEfectivo()">+ Cobro en efectivo</button>
+      <button class="btn-primary" onclick="abrirNuevaFactura()">+ Nueva factura</button>
+    </div>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--surface);padding:4px;border-radius:10px;width:fit-content">
     <div class="tab active" id="tab-fac-todos" onclick="switchTabFac('todos',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Todas</div>
@@ -387,6 +390,41 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 <!-- MODAL FACTURA -->
+<!-- MODAL COBRO EN EFECTIVO -->
+<div id="modal-efectivo" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-efectivo')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar cobro en efectivo</span>
+      <button class="btn-icon" onclick="closeModal('modal-efectivo')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#FEF3E2;border:1px solid #FCD34D;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#92400E">
+        Este registro es interno, no tiene IVA ni datos fiscales. Se usa para controlar lo cobrado en mano.
+      </div>
+      <div class="form-row full"><div><label class="flabel">Cliente *</label>
+        <input id="ef-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ef-cliente','ef-cliente-search')" style="margin-bottom:6px">
+        <select id="ef-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
+      </div></div>
+      <div class="form-row">
+        <div><label class="flabel">Importe (€) *</label><input id="ef-importe" type="number" class="finput" placeholder="150"></div>
+        <div><label class="flabel">Fecha</label><input id="ef-fecha" type="date" class="finput"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface);border-radius:9px;margin-bottom:14px">
+        <input type="checkbox" id="ef-cuenta-pago" style="width:16px;height:16px;cursor:pointer">
+        <label for="ef-cuenta-pago" style="font-size:13px;color:var(--ink);cursor:pointer">
+          <strong>Cuenta como pago del servicio</strong><br>
+          <span style="font-size:11px;color:var(--ink-soft)">Resta del pendiente del cliente. Actívalo para el resto del pago, no para propinas o extras.</span>
+        </label>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Notas</label><input id="ef-notas" class="finput" placeholder="Ej: Resto del pago en mano el día del evento"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-efectivo')">Cancelar</button>
+      <button class="btn-primary" id="save-ef-btn" onclick="guardarEfectivo()">Registrar cobro</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-factura" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-factura')">
   <div class="modal wide">
     <div class="modal-header"><span class="modal-title">Nueva factura</span><button class="btn-icon" onclick="closeModal('modal-factura')">✕</button></div>
@@ -401,17 +439,11 @@ tr:hover td{background:#FAFBFF}
         <input id="fc-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('fc-cliente','fc-cliente-search')" style="margin-bottom:6px">
         <select id="fc-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
       </div></div>
-      <div class="form-row">
+      <div class="form-row full">
         <div><label class="flabel">Emisor *</label>
           <select id="fc-emisor" class="finput" onchange="actualizarNumeroFac()">
             <option value="Henry">Henry</option>
             <option value="Nuria">Núria</option>
-          </select>
-        </div>
-        <div><label class="flabel">Tipo de documento</label>
-          <select id="fc-tipo" class="finput" onchange="actualizarNumeroFac()">
-            <option value="formal">Factura formal (con IVA)</option>
-            <option value="efectivo">Cobro en efectivo (sin IVA)</option>
           </select>
         </div>
       </div>
@@ -883,11 +915,56 @@ function nextNumFac(emisor, tipo){
 
 function actualizarNumeroFac(){
   const emisor = document.getElementById('fc-emisor').value;
-  const tipo = document.getElementById('fc-tipo').value;
-  document.getElementById('fc-numero').value = nextNumFac(emisor, tipo);
-  // Mostrar/ocultar IVA según tipo
-  const esEfectivo = tipo==='efectivo';
-  document.getElementById('fc-iva-section').style.display = esEfectivo ? 'none' : 'block';
+  document.getElementById('fc-numero').value = nextNumFac(emisor, 'formal');
+}
+
+function abrirNuevoEfectivo(){
+  // Poblar selector de cliente
+  const sel=document.getElementById('ef-cliente');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  const sb2=document.getElementById('ef-cliente-search');
+  if(sb2)sb2.value='';
+  document.getElementById('ef-importe').value='';
+  document.getElementById('ef-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ef-cuenta-pago').checked=true;
+  document.getElementById('ef-notas').value='';
+  openModal('modal-efectivo');
+}
+
+async function guardarEfectivo(){
+  const clienteId=document.getElementById('ef-cliente').value;
+  if(!clienteId){alert('Selecciona un cliente');return;}
+  const importe=parseFloat(document.getElementById('ef-importe').value)||0;
+  if(!importe){alert('Introduce el importe');return;}
+  const cuentaPago=document.getElementById('ef-cuenta-pago').checked;
+  const btn=document.getElementById('save-ef-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  // Número correlativo de efectivo
+  const efExist=FACTURAS.filter(f=>f.tipo==='efectivo');
+  const nums=efExist.map(f=>{const m=f.numero&&f.numero.match(/(\d+)$/);return m?parseInt(m[1]):0;});
+  const next=(nums.length?Math.max(...nums):0)+1;
+  const numero='EF-'+new Date().getFullYear()+'-'+String(next).padStart(3,'0');
+  const payload={
+    user_id:currentUser.id,
+    numero,
+    cliente_id:clienteId,
+    emisor:null,
+    tipo:'efectivo',
+    fecha_factura:document.getElementById('ef-fecha').value||null,
+    base:importe,iva_pct:0,iva_eur:0,total:importe,
+    cobrado:importe,pendiente:0,
+    estado:'Cobrada',
+    cuenta_como_pago:cuentaPago,
+    lugar:document.getElementById('ef-notas').value
+  };
+  const {error}=await sb.from('facturas').insert(payload);
+  btn.disabled=false;btn.textContent='Registrar cobro';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-efectivo');
+  await loadAllData();renderFacturasConMetricas(facTabActual);renderDashboard();
+  // Refrescar lista de clientes si está visible
+  if(document.getElementById('clientes').classList.contains('active'))renderClientes();
 }
 
 function abrirNuevaFactura(){
@@ -898,9 +975,8 @@ function abrirNuevaFactura(){
   document.getElementById('fc-iva').value='21';
   document.getElementById('fc-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('fc-emisor').value='Henry';
-  document.getElementById('fc-tipo').value='formal';
   document.getElementById('fc-numero').value=nextNumFac('Henry','formal');
-  document.getElementById('fc-iva-section').style.display='block';
+  if(document.getElementById('fc-iva-section'))document.getElementById('fc-iva-section').style.display='block';
   switchFacSource('cero');renderLineasFac();calcFacTotales();openModal('modal-factura');
 }
 
@@ -925,12 +1001,12 @@ async function guardarFactura(){
   const lineasValidas=facLineas.filter(l=>l.descripcion.trim());
   if(lineasValidas.length===0){alert('Añade al menos un concepto');return;}
   const neto=lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
-  const ivaPct=tipo==='efectivo'?0:parseFloat(document.getElementById('fc-iva').value)||21;
+  const ivaPct=parseFloat(document.getElementById('fc-iva').value)||21;
   const ivaEur=+(neto*ivaPct/100).toFixed(2);const total=+(neto+ivaEur).toFixed(2);
-  const cobrado=tipo==='efectivo'?total:parseFloat(document.getElementById('fc-cobrado').value)||0;
+  const cobrado=parseFloat(document.getElementById('fc-cobrado').value)||0;
   const btn=document.getElementById('save-fac-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,emisor,tipo,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente',cuenta_como_pago:tipo==='efectivo'};
+  const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,emisor,tipo,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente',cuenta_como_pago:false};
   const {data,error}=await sb.from('facturas').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver factura';alert('Error: '+error.message);return;}
   await sb.from('factura_lineas').insert(lineasValidas.map((l,i)=>({user_id:currentUser.id,factura_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
