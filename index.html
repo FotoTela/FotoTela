@@ -314,7 +314,19 @@ tr:hover td{background:#FAFBFF}
       <div class="form-row"><div><label class="flabel">Ciudad</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP</label><input id="f-cp" class="finput"></div></div>
       <div class="form-row"><div><label class="flabel">Tipo de evento</label><select id="f-tipo" class="finput"><option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option></select></div><div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="f-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
-      <div class="form-row full"><div><label class="flabel">Notas</label><input id="f-notas" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Servicios de interés</label>
+        <select id="f-servicios" class="finput">
+          <option value="">Seleccionar...</option>
+          <option>Fotomaton 2h</option>
+          <option>Fotomaton 3h</option>
+          <option>Fotomaton 4h</option>
+          <option>360° Platform</option>
+          <option>Fotomaton + Teléfono</option>
+          <option>Fotomaton + 360°</option>
+          <option>Pack completo</option>
+        </select>
+      </div></div>
+      <div class="form-row full"><div><label class="flabel">Notas internas</label><input id="f-notas" class="finput"></div></div>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn-primary" id="save-cliente-btn" onclick="guardarCliente()">Guardar cliente</button></div>
   </div>
@@ -337,7 +349,10 @@ tr:hover td{background:#FAFBFF}
   <div class="modal wide">
     <div class="modal-header"><span class="modal-title">Nuevo presupuesto</span><button class="btn-icon" onclick="closeModal('modal-presupuesto')">✕</button></div>
     <div class="modal-body">
-      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="p-cliente" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <div class="form-row full"><div><label class="flabel">Cliente *</label>
+        <input id="p-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('p-cliente','p-cliente-search')" style="margin-bottom:6px">
+        <select id="p-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
+      </div></div>
       <div class="form-row"><div><label class="flabel">Lugar del evento</label><input id="p-lugar" class="finput"></div><div><label class="flabel">Fecha evento</label><input id="p-fecha" type="date" class="finput"></div></div>
       <label class="flabel" style="margin-bottom:8px">Conceptos</label>
       <div class="lineas-wrap" id="p-lineas"></div>
@@ -365,7 +380,10 @@ tr:hover td{background:#FAFBFF}
         <div class="select-source-tab" id="tab-desde-cliente" onclick="switchFacSource('cliente')">Desde cliente</div>
       </div>
       <div class="form-row full" id="fac-pres-selector" style="display:none"><div><label class="flabel">Presupuesto</label><select id="fc-presupuesto" onchange="autoFillFacDesdePres()" class="finput"><option value="">Seleccionar...</option></select></div></div>
-      <div class="form-row full"><div><label class="flabel">Cliente *</label><select id="fc-cliente" class="finput"><option value="">Seleccionar...</option></select></div></div>
+      <div class="form-row full"><div><label class="flabel">Cliente *</label>
+        <input id="fc-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('fc-cliente','fc-cliente-search')" style="margin-bottom:6px">
+        <select id="fc-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
+      </div></div>
       <div class="form-row"><div><label class="flabel">Nº factura</label><input id="fc-numero" class="finput"></div><div><label class="flabel">Fecha factura</label><input id="fc-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Lugar del evento</label><input id="fc-lugar" class="finput"></div></div>
       <label class="flabel" style="margin-bottom:8px">Conceptos</label>
@@ -494,7 +512,24 @@ function openModal(id){document.getElementById(id).style.display='flex';}
 function closeModal(id){document.getElementById(id).style.display='none';}
 
 function populateClientSelects(){
-  ['p-cliente','fc-cliente'].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML='<option value="">Seleccionar...</option>';CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);});
+  ['p-cliente','fc-cliente'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='<option value="">Seleccionar...</option>';
+    CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}${c.tipo_evento?' — '+c.tipo_evento:''}</option>`);
+  });
+  // Limpiar buscadores
+  const ps=document.getElementById('p-cliente-search');
+  const fs=document.getElementById('fc-cliente-search');
+  if(ps)ps.value='';
+  if(fs)fs.value='';
+}
+
+function filtrarSelectCliente(selectId,searchId){
+  const q=document.getElementById(searchId).value.toLowerCase();
+  const sel=document.getElementById(selectId);
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  CLIENTES.filter(c=>!q||c.nombre.toLowerCase().includes(q)||(c.tipo_evento||'').toLowerCase().includes(q))
+    .forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}${c.tipo_evento?' — '+c.tipo_evento:''}</option>`);
 }
 function populatePresupuestoSelect(){
   const sel=document.getElementById('fc-presupuesto');sel.innerHTML='<option value="">Seleccionar...</option>';
@@ -603,12 +638,13 @@ async function guardarCliente(){
   if(!nombre){alert('El nombre es obligatorio');return;}
   const btn=document.getElementById('save-cliente-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  const payload={user_id:currentUser.id,nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,ubicacion_evento:document.getElementById('f-ubicacion').value,notas:document.getElementById('f-notas').value,estado:'Potencial',estado_forzado:null,origen:'manual'};
+  const payload={user_id:currentUser.id,nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,ubicacion_evento:document.getElementById('f-ubicacion').value,servicios_interes:document.getElementById('f-servicios').value,notas:document.getElementById('f-notas').value,estado:'Potencial',estado_forzado:null,origen:'manual'};
   const {error}=await sb.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Guardar cliente';
   if(error){alert('Error al guardar: '+error.message);return;}
   closeModal('modal-cliente');
-  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha','f-ubicacion'].forEach(id=>document.getElementById(id).value='');
+  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha','f-ubicacion','f-horario','f-homenajeado'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-servicios').value='';
   await loadAllData();renderClientes();renderDashboard();
 }
 
@@ -627,11 +663,12 @@ function verFichaCliente(id){
 }
 
 function buildFichaClienteHTML(c){
+  const em=EMISOR;
   return`<style>${pdfStyles()}</style>
   <div class="pdfdoc" id="pdf-to-print">
     <div class="pdf-top">
       <div><div class="pdf-brand">foto<span>tela</span></div><div class="pdf-brand-sub">EVENTS</div></div>
-      <div class="pdf-emisor"><div style="font-weight:700;font-size:12px;color:#222">${EMISOR.nombre}</div><div>${EMISOR.nif}</div><div>${EMISOR.dir}</div><div>${EMISOR.ciudad}</div><div>Telf. ${EMISOR.tel}</div></div>
+      <div class="pdf-emisor"><div style="font-weight:700;font-size:12px;color:#222">${em.nombre}</div><div>${em.nif}</div><div>${em.dir}</div><div>${em.ciudad}</div><div>Telf. ${em.tel}</div></div>
     </div>
     <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:#888;margin-bottom:14px;text-transform:uppercase">Ficha de cliente</div>
     <div class="pdf-sections">
@@ -654,19 +691,22 @@ function buildFichaClienteHTML(c){
     </div>
     <div class="pdf-sections" style="margin-top:8px">
       <div class="pdf-box">
-        <div class="pdf-label">Evento</div>
+        <div class="pdf-label">Datos del evento</div>
         <div class="pdf-detail">
-          ${c.tipo_evento?'Tipo: '+c.tipo_evento+'<br>':''}
-          ${c.fecha_evento?'Fecha: '+fmtDate(c.fecha_evento)+'<br>':''}
+          ${c.tipo_evento?'Tipo: <strong>'+c.tipo_evento+'</strong><br>':''}
+          ${c.fecha_evento?'Fecha: <strong>'+fmtDate(c.fecha_evento)+'</strong><br>':''}
+          ${c.horario?'Horario: '+c.horario+'<br>':''}
           ${c.ubicacion_evento?'Lugar: '+c.ubicacion_evento+'<br>':''}
+          ${c.homenajeado?'Homenajeado/a: <strong>'+c.homenajeado+'</strong><br>':''}
         </div>
       </div>
       <div class="pdf-box">
-        <div class="pdf-label">Notas</div>
-        <div class="pdf-detail">${c.notas||'—'}</div>
+        <div class="pdf-label">Servicios de interés</div>
+        <div class="pdf-detail">${c.servicios_interes||'—'}</div>
+        ${c.notas?'<div class="pdf-label" style="margin-top:12px">Notas internas</div><div class="pdf-detail">'+c.notas+'</div>':''}
       </div>
     </div>
-    <div class="pdf-pagenum">${EMISOR.nif} &nbsp; Ficha generada el ${fmtDate(new Date().toISOString().split('T')[0])}</div>
+    <div class="pdf-pagenum">${em.nif} &nbsp; Ficha generada el ${fmtDate(new Date().toISOString().split('T')[0])}</div>
   </div>`;
 }
 
