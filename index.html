@@ -275,8 +275,15 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Facturas</div></div>
     <button class="btn-primary" onclick="abrirNuevaFactura()">+ Nueva factura</button>
   </div>
+  <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--surface);padding:4px;border-radius:10px;width:fit-content">
+    <div class="tab active" id="tab-fac-todos" onclick="switchTabFac('todos',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Todas</div>
+    <div class="tab" id="tab-fac-henry" onclick="switchTabFac('Henry',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Henry</div>
+    <div class="tab" id="tab-fac-nuria" onclick="switchTabFac('Nuria',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Núria</div>
+    <div class="tab" id="tab-fac-efectivo" onclick="switchTabFac('efectivo',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Efectivo</div>
+  </div>
+  <div class="metrics-grid" id="fac-metrics" style="margin-bottom:16px"></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Nº Factura</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>Nº Factura</th><th>Emisor</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="fac-tbody"></tbody>
   </table></div>
 </div>
@@ -384,12 +391,26 @@ tr:hover td{background:#FAFBFF}
         <input id="fc-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('fc-cliente','fc-cliente-search')" style="margin-bottom:6px">
         <select id="fc-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
       </div></div>
-      <div class="form-row"><div><label class="flabel">Nº factura</label><input id="fc-numero" class="finput"></div><div><label class="flabel">Fecha factura</label><input id="fc-fecha" type="date" class="finput"></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Emisor *</label>
+          <select id="fc-emisor" class="finput" onchange="actualizarNumeroFac()">
+            <option value="Henry">Henry</option>
+            <option value="Nuria">Núria</option>
+          </select>
+        </div>
+        <div><label class="flabel">Tipo de documento</label>
+          <select id="fc-tipo" class="finput" onchange="actualizarNumeroFac()">
+            <option value="formal">Factura formal (con IVA)</option>
+            <option value="efectivo">Cobro en efectivo (sin IVA)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row"><div><label class="flabel">Nº factura</label><input id="fc-numero" class="finput" readonly style="background:var(--surface);font-weight:600"></div><div><label class="flabel">Fecha factura</label><input id="fc-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Lugar del evento</label><input id="fc-lugar" class="finput"></div></div>
       <label class="flabel" style="margin-bottom:8px">Conceptos</label>
       <div class="lineas-wrap" id="fc-lineas"></div>
       <button class="add-linea-btn" onclick="addLineaFac()">+ Añadir concepto</button>
-      <div class="form-row" style="margin-top:14px"><div><label class="flabel">IVA %</label><select id="fc-iva" onchange="calcFacTotales()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div><div><label class="flabel">Cobrado (€)</label><input id="fc-cobrado" type="number" value="0" class="finput"></div></div>
+      <div id="fc-iva-section"><div class="form-row" style="margin-top:14px"><div><label class="flabel">IVA %</label><select id="fc-iva" onchange="calcFacTotales()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div><div><label class="flabel">Cobrado (€)</label><input id="fc-cobrado" type="number" value="0" class="finput"></div></div></div>
       <div class="totales-box">
         <div class="totales-row"><span>Base imponible</span><span id="fc-total-neto">0,00 €</span></div>
         <div class="totales-row"><span id="fc-iva-label">IVA 21%</span><span id="fc-total-iva">0,00 €</span></div>
@@ -419,6 +440,7 @@ const SUPABASE_URL='https://iizchzmoujzzuxwdhybr.supabase.co';
 const SUPABASE_KEY='sb_publishable_ek702DJegaKBkZg4107YPw_bTHrsjKT';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+const CUENTA='ES44 0182 6308 7402 0161 1473';
 const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
 let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear();
@@ -541,7 +563,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,facturas:renderFacturas,cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario};
   if(r[page])r[page]();
 }
 
@@ -821,13 +843,38 @@ function switchFacSource(tipo){
   if(tipo==='cliente')document.getElementById('tab-desde-cliente').classList.add('active');
 }
 
+function nextNumFac(emisor, tipo){
+  const prefix = tipo==='efectivo' ? 'EF' : (emisor==='Henry' ? 'H' : 'N');
+  const year = new Date().getFullYear();
+  const existing = FACTURAS.filter(f=>{
+    if(tipo==='efectivo') return f.tipo==='efectivo';
+    return f.emisor===emisor && f.tipo==='formal';
+  });
+  const nums = existing.map(f=>{const m=f.numero&&f.numero.match(/(\d+)$/);return m?parseInt(m[1]):0;});
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `${prefix}-${year}-${String(next).padStart(4,'0')}`;
+}
+
+function actualizarNumeroFac(){
+  const emisor = document.getElementById('fc-emisor').value;
+  const tipo = document.getElementById('fc-tipo').value;
+  document.getElementById('fc-numero').value = nextNumFac(emisor, tipo);
+  // Mostrar/ocultar IVA según tipo
+  const esEfectivo = tipo==='efectivo';
+  document.getElementById('fc-iva-section').style.display = esEfectivo ? 'none' : 'block';
+}
+
 function abrirNuevaFactura(){
   populateClientSelects();populatePresupuestoSelect();
   facLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
   ['fc-cliente','fc-presupuesto','fc-lugar'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fc-cobrado').value='0';document.getElementById('fc-iva').value='21';
+  document.getElementById('fc-cobrado').value='0';
+  document.getElementById('fc-iva').value='21';
   document.getElementById('fc-fecha').value=new Date().toISOString().split('T')[0];
-  document.getElementById('fc-numero').value='F'+new Date().getFullYear()+String(FACTURAS.length+1).padStart(2,'0');
+  document.getElementById('fc-emisor').value='Henry';
+  document.getElementById('fc-tipo').value='formal';
+  document.getElementById('fc-numero').value=nextNumFac('Henry','formal');
+  document.getElementById('fc-iva-section').style.display='block';
   switchFacSource('cero');renderLineasFac();calcFacTotales();openModal('modal-factura');
 }
 
@@ -847,15 +894,17 @@ async function guardarFactura(){
   const clienteId=document.getElementById('fc-cliente').value;
   const c=CLIENTES.find(x=>x.id===clienteId);
   if(!c){alert('Selecciona un cliente');return;}
+  const emisor=document.getElementById('fc-emisor').value;
+  const tipo=document.getElementById('fc-tipo').value;
   const lineasValidas=facLineas.filter(l=>l.descripcion.trim());
   if(lineasValidas.length===0){alert('Añade al menos un concepto');return;}
   const neto=lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
-  const ivaPct=parseFloat(document.getElementById('fc-iva').value)||21;
+  const ivaPct=tipo==='efectivo'?0:parseFloat(document.getElementById('fc-iva').value)||21;
   const ivaEur=+(neto*ivaPct/100).toFixed(2);const total=+(neto+ivaEur).toFixed(2);
-  const cobrado=parseFloat(document.getElementById('fc-cobrado').value)||0;
+  const cobrado=tipo==='efectivo'?total:parseFloat(document.getElementById('fc-cobrado').value)||0;
   const btn=document.getElementById('save-fac-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente'};
+  const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,emisor,tipo,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente',cuenta_como_pago:tipo==='efectivo'};
   const {data,error}=await sb.from('facturas').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver factura';alert('Error: '+error.message);return;}
   await sb.from('factura_lineas').insert(lineasValidas.map((l,i)=>({user_id:currentUser.id,factura_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
@@ -864,14 +913,52 @@ async function guardarFactura(){
   verFactura(data.id);
 }
 
-function renderFacturas(){
-  document.getElementById('fac-tbody').innerHTML=FACTURAS.length?FACTURAS.map(f=>{
-    const c=CLIENTES.find(x=>x.id===f.cliente_id);
-    return`<tr><td style="font-weight:600;color:var(--brand)">${f.numero}</td><td>${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${badge(f.estado)}</td><td style="white-space:nowrap">
-      <button class="btn-icon blue" onclick="verFactura('${f.id}')">📄 Ver</button>
-      <button class="btn-icon red" onclick="eliminarFac('${f.id}')" style="margin-left:4px">🗑</button>
-    </td></tr>`;
-  }).join(''):'<tr><td colspan="5"><div class="empty">Sin facturas todavía.</div></td></tr>';
+let facTabActual='todos';
+function switchTabFac(filtro, el){
+  facTabActual=filtro;
+  document.querySelectorAll('[id^="tab-fac-"]').forEach(t=>{t.style.background='';t.style.color='var(--ink-soft)';t.style.boxShadow='';});
+  if(el){el.style.background='#fff';el.style.color='var(--brand)';el.style.boxShadow='0 1px 3px rgba(0,0,0,.08)';}
+  renderFacturasConMetricas(filtro);
+}
+
+function renderFacturasConMetricas(filtro){
+  const totalH=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
+  const totalN=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
+  const totalEf=FACTURAS.filter(x=>x.tipo==='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
+  document.getElementById('fac-metrics').innerHTML=`
+    <div class="metric-card accent"><div class="metric-label">Total formal</div><div class="metric-value">${fmt(totalH+totalN)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Henry</div><div class="metric-value">${fmt(totalH)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Núria</div><div class="metric-value">${fmt(totalN)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Efectivo</div><div class="metric-value">${fmt(totalEf)} €</div></div>`;
+  renderFacturas(filtro);
+}
+
+function renderFacturas(filtro){
+  // Filtro: 'todos', 'Henry', 'Nuria', 'efectivo'
+  const f=filtro||'todos';
+  let data=FACTURAS;
+  if(f==='Henry')data=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo');
+  else if(f==='Nuria')data=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo');
+  else if(f==='efectivo')data=FACTURAS.filter(x=>x.tipo==='efectivo');
+  const totalH=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
+  const totalN=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
+  const totalEf=FACTURAS.filter(x=>x.tipo==='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
+  document.getElementById('fac-tbody').innerHTML=data.length?data.map(fac=>{
+    const c=CLIENTES.find(x=>x.id===fac.cliente_id);
+    const esEfectivo=fac.tipo==='efectivo';
+    const emisorBadge=esEfectivo?'<span class="badge badge-purple">Efectivo</span>':(fac.emisor==='Henry'?'<span class="badge badge-blue">Henry</span>':'<span class="badge badge-green">Núria</span>');
+    return`<tr>
+      <td style="font-weight:600;color:var(--brand)">${fac.numero}</td>
+      <td>${emisorBadge}</td>
+      <td>${c?c.nombre:'—'}</td>
+      <td>${fmt(fac.total)} €</td>
+      <td>${fac.estado==='Cobrada'?'<span class="badge badge-green">Cobrada</span>':'<span class="badge badge-amber">Pendiente</span>'}</td>
+      <td style="white-space:nowrap">
+        ${!esEfectivo?`<button class="btn-icon blue" onclick="verFactura('${fac.id}')">📄 Ver</button>`:''}
+        <button class="btn-icon red" onclick="eliminarFac('${fac.id}')" style="margin-left:4px">🗑</button>
+      </td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6"><div class="empty">Sin facturas todavía.</div></td></tr>';
 }
 async function eliminarFac(id){if(!confirm('¿Eliminar esta factura?'))return;await sb.from('facturas').delete().eq('id',id);await loadAllData();renderFacturas();}
 
@@ -965,12 +1052,17 @@ function clienteDetailHTML(c){
 }
 
 function buildFacturaHTML(f,c,lineas){
+  const emisorData={
+    Henry:{nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354'},
+    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'644416100'}
+  };
+  const em=emisorData[f.emisor]||emisorData.Henry;
   const rows=lineas.map(l=>`<tr><td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td><td>${fmt(l.unidades)}</td><td>${fmt(l.precio_unitario)}€</td><td>${fmt(l.precio_unitario*l.unidades)} €</td></tr>`).join('');
   return`<style>${pdfStyles()}</style>
   <div class="pdfdoc" id="pdf-to-print">
     <div class="pdf-top">
       <div><div class="pdf-brand">foto<span>tela</span></div><div class="pdf-brand-sub">EVENTS</div></div>
-      <div class="pdf-emisor"><div style="font-weight:700;font-size:12px;color:#222">${EMISOR.nombre}</div><div>${EMISOR.nif}</div><div>${EMISOR.dir}</div><div>${EMISOR.ciudad}</div><div>Telf. ${EMISOR.tel}</div></div>
+      <div class="pdf-emisor"><div style="font-weight:700;font-size:12px;color:#222">${em.nombre}</div><div>${em.nif}</div><div>${em.dir}</div><div>${em.ciudad}</div><div>Telf. ${em.tel}</div></div>
     </div>
     <div class="pdf-sections">
       <div class="pdf-box"><div class="pdf-label">CLIENTE</div><div class="pdf-name">${c?c.nombre:'—'}</div><div class="pdf-detail">${c?clienteDetailHTML(c):''}</div></div>
@@ -986,7 +1078,7 @@ function buildFacturaHTML(f,c,lineas){
       <div class="pdf-trow"><span>IVA ${f.iva_pct}%</span><span>${fmt(f.iva_eur)} €</span></div>
       <div class="pdf-trow final"><span>Total</span><span>${fmt(f.total)} €</span></div>
     </div>
-    <div class="pdf-footbox"><div class="pdf-footlabel">Métodos de pago</div>Transferencia bancaria al número de cuenta &nbsp; <strong>${EMISOR.cuenta}</strong></div>
+    <div class="pdf-footbox"><div class="pdf-footlabel">Métodos de pago</div>Transferencia bancaria al número de cuenta &nbsp; <strong>${CUENTA}</strong></div>
     <div class="pdf-obs"><div class="pdf-footlabel">OBSERVACIONES</div>El pago realizado no será reembolsable en caso de cancelación por parte del cliente. Sin embargo, el cliente podrá solicitar un cambio de fecha, el cual estará sujeto a disponibilidad y deberá comunicarse con antelación.</div>
     <div class="pdf-pagenum">${EMISOR.nif} &nbsp; 1 / 1</div>
   </div>`;
