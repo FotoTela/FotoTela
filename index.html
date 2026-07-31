@@ -243,9 +243,18 @@ tr:hover td{background:#FAFBFF}
       <button class="btn-primary" onclick="openModal('modal-cliente')">+ Nuevo cliente</button>
     </div>
   </div>
-  <div class="search-bar"><input type="text" id="cli-search" placeholder="Buscar cliente..." oninput="renderClientes()"></div>
+  <div class="search-bar">
+    <input type="text" id="cli-search" placeholder="Buscar cliente..." oninput="renderClientes()">
+    <select id="cli-estado-filter" onchange="renderClientes()" style="font-size:13px;padding:9px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)">
+      <option value="">Todos los estados</option>
+      <option value="Potencial">Potencial</option>
+      <option value="Futuro">Futuro</option>
+      <option value="Pasado">Pasado</option>
+      <option value="Archivado">Archivado</option>
+    </select>
+  </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Origen</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="cli-tbody"></tbody>
   </table></div>
 </div>
@@ -419,7 +428,7 @@ async function submitPublicForm(){
   if(!nombre||!tel){errBox.textContent='El nombre y el teléfono son obligatorios';errBox.style.display='block';return;}
   const btn=document.getElementById('pf-submit-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Enviando...';
-  const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),notas:document.getElementById('pf-notas').value.trim(),estado:'Activo',origen:'formulario_publico'};
+  const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
   const {error}=await sbPublic.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Enviar';
   if(error){errBox.textContent='Ha ocurrido un error. Inténtalo de nuevo.';errBox.style.display='block';console.error(error);return;}
@@ -515,21 +524,78 @@ function renderDashboard(){
   document.getElementById('dash-empty-hint').style.display=CLIENTES.length===0?'block':'none';
 }
 
+function calcEstadoCliente(c){
+  // Si tiene estado forzado manualmente, respetarlo
+  if(c.estado_forzado)return c.estado_forzado;
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const fechaEvento=c.fecha_evento?new Date(c.fecha_evento+'T00:00:00'):null;
+  const tieneFac=FACTURAS.some(f=>f.cliente_id===c.id);
+  // Potencial cuya fecha pasó sin factura → Archivado automático
+  if(!tieneFac&&fechaEvento&&fechaEvento<hoy)return'Archivado';
+  // Tiene factura y fecha pasó → Pasado
+  if(tieneFac&&fechaEvento&&fechaEvento<hoy)return'Pasado';
+  // Tiene factura y fecha futura → Futuro
+  if(tieneFac)return'Futuro';
+  // Sin factura → Potencial
+  return'Potencial';
+}
+
+function badgeEstado(estado){
+  const map={
+    Potencial:'background:#EEEFF2;color:#5B5E68',
+    Futuro:'background:var(--brand-light);color:var(--brand-dark)',
+    Pasado:'background:#15171C;color:#fff',
+    Archivado:'background:#FEF3E2;color:#92400E'
+  };
+  return`<span class="badge" style="${map[estado]||''}">${estado}</span>`;
+}
+
+async function forzarEstado(id,estadoActual){
+  const opciones=['Potencial','Futuro','Pasado','Archivado'];
+  const elegido=prompt(`Estado actual: ${estadoActual}\n\nElige nuevo estado:\n1. Potencial\n2. Futuro\n3. Pasado\n4. Archivado\n\nEscribe el número o el nombre:`);
+  if(!elegido)return;
+  const mapa={'1':'Potencial','2':'Futuro','3':'Pasado','4':'Archivado'};
+  const nuevo=mapa[elegido.trim()]||opciones.find(o=>o.toLowerCase()===elegido.trim().toLowerCase());
+  if(!nuevo){alert('Estado no reconocido');return;}
+  await sb.from('clientes').update({estado_forzado:nuevo}).eq('id',id);
+  await loadAllData();renderClientes();
+}
+
+async function limpiarEstadoForzado(id){
+  await sb.from('clientes').update({estado_forzado:null}).eq('id',id);
+  await loadAllData();renderClientes();
+}
+
 function renderClientes(){
   const q=(document.getElementById('cli-search').value||'').toLowerCase();
-  const data=CLIENTES.filter(c=>!q||c.nombre.toLowerCase().includes(q)||(c.telefono||'').includes(q)||(c.email||'').toLowerCase().includes(q));
-  document.getElementById('cli-tbody').innerHTML=data.length?data.map(c=>`<tr>
+  const ef=document.getElementById('cli-estado-filter').value;
+  const data=CLIENTES.filter(c=>{
+    const matchQ=!q||(c.nombre||'').toLowerCase().includes(q)||(c.telefono||'').includes(q)||(c.email||'').toLowerCase().includes(q);
+    const estado=calcEstadoCliente(c);
+    const matchE=!ef||estado===ef;
+    return matchQ&&matchE;
+  });
+  document.getElementById('cli-tbody').innerHTML=data.length?data.map(c=>{
+    const estado=calcEstadoCliente(c);
+    const esForzado=!!c.estado_forzado;
+    return`<tr>
     <td><div style="font-weight:600">${c.nombre}</div>${c.dni?'<div style="font-size:11px;color:var(--ink-soft)">'+c.dni+'</div>':''}</td>
     <td><div>${c.telefono||'—'}</div><div style="font-size:11px;color:var(--ink-soft)">${c.email||''}</div></td>
     <td>${c.tipo_evento||'—'}</td>
     <td>${fmtDate(c.fecha_evento)||'—'}</td>
     <td style="font-size:12px;color:var(--ink-soft)">${c.ubicacion_evento||'—'}</td>
-    <td>${c.origen==='formulario_publico'?'<span class="badge badge-amber">Formulario</span>':'<span class="badge badge-gray">Manual</span>'}</td>
+    <td>
+      ${badgeEstado(estado)}
+      ${esForzado?'<span style="font-size:10px;color:var(--ink-soft);margin-left:4px">Manual</span>':''}
+      <br>
+      <button onclick="forzarEstado('${c.id}','${estado}')" style="font-size:10px;color:var(--brand);background:none;border:none;cursor:pointer;padding:2px 0;margin-top:2px">Cambiar</button>
+      ${esForzado?`<button onclick="limpiarEstadoForzado('${c.id}')" style="font-size:10px;color:#A32D2D;background:none;border:none;cursor:pointer;padding:2px 0;margin-left:6px">Auto</button>`:''}
+    </td>
     <td style="white-space:nowrap">
       <button class="btn-icon blue" title="Ver ficha PDF" onclick="verFichaCliente('${c.id}')">📄 Ficha</button>
       <button class="btn-icon red" title="Eliminar" onclick="eliminarCliente('${c.id}')" style="margin-left:4px">🗑 Borrar</button>
     </td>
-  </tr>`).join(''):'<tr><td colspan="7"><div class="empty">Sin clientes todavía.</div></td></tr>';
+  </tr>`;}).join(''):'<tr><td colspan="7"><div class="empty">Sin clientes todavía.</div></td></tr>';
 }
 
 async function guardarCliente(){
@@ -537,7 +603,7 @@ async function guardarCliente(){
   if(!nombre){alert('El nombre es obligatorio');return;}
   const btn=document.getElementById('save-cliente-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  const payload={user_id:currentUser.id,nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,ubicacion_evento:document.getElementById('f-ubicacion').value,notas:document.getElementById('f-notas').value,estado:'Activo',origen:'manual'};
+  const payload={user_id:currentUser.id,nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,ubicacion_evento:document.getElementById('f-ubicacion').value,notas:document.getElementById('f-notas').value,estado:'Potencial',estado_forzado:null,origen:'manual'};
   const {error}=await sb.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Guardar cliente';
   if(error){alert('Error al guardar: '+error.message);return;}
