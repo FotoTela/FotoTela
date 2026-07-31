@@ -833,9 +833,9 @@ function renderPresupuestos(){
     const c=CLIENTES.find(x=>x.id===p.cliente_id);
     const ep=estadoPresupuesto(p);
     const bg=ep==='caducado'?'background:#FFF5F5':ep==='aceptado'?'background:#F0FFF7':'';
-    const acciones='<button class="btn-icon blue" onclick="verPresupuesto(''+p.id+'')">Ver PDF</button> '+
-      '<button class="btn-icon green" onclick="crearFacturaDesdePresupuestoId(''+p.id+'')" style="margin-left:4px">Factura</button> '+
-      '<button class="btn-icon red" onclick="eliminarPres(''+p.id+'')" style="margin-left:4px">Borrar</button>';
+    const acciones='<button class="btn-icon blue" onclick="verPresupuesto(&apos;'+p.id+'&apos;)">Ver PDF</button> '+
+      '<button class="btn-icon green" onclick="crearFacturaDesdePresupuestoId(&apos;'+p.id+'&apos;)" style="margin-left:4px">Factura</button> '+
+      '<button class="btn-icon red" onclick="eliminarPres(&apos;'+p.id+'&apos;)" style="margin-left:4px">Borrar</button>';
     return '<tr style="'+bg+'"><td style="font-weight:600;color:var(--brand);padding:11px 14px">'+p.numero+'</td>'+
       '<td style="padding:11px 14px">'+(c?c.nombre:'?')+'</td>'+
       '<td style="padding:11px 14px">'+(fmtDate(p.fecha_evento)||'?')+'</td>'+
