@@ -219,6 +219,7 @@ tr:hover td{background:#FAFBFF}
   <div class="nav-section">
     <div class="nav-group-title">Operaciones</div>
     <div class="nav-item" onclick="nav('calendario',this)">Calendario</div>
+    <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
   </div>
   <div class="user-foot">
     <div class="user-avatar" id="user-avatar"></div>
@@ -331,6 +332,20 @@ tr:hover td{background:#FAFBFF}
     <thead><tr><th>Nº</th><th>Cliente</th><th>Fecha evento</th><th>Servicios</th><th>Importe</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="contratos-tbody"></tbody>
   </table></div>
+</div>
+
+
+<div id="tareas" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Tareas y recordatorios</div><div class="page-sub">Organiza las acciones pendientes</div></div>
+    <button class="btn-primary" onclick="abrirModalTarea()">+ Nueva tarea</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="btn-secondary" id="tfil-todas" onclick="filtrarTareas('todas',this)" style="background:var(--brand);color:#fff;border-color:var(--brand)">Todas</button>
+    <button class="btn-secondary" id="tfil-pend" onclick="filtrarTareas('Pendiente',this)">Pendientes</button>
+    <button class="btn-secondary" id="tfil-hecho" onclick="filtrarTareas('Hecho',this)">Completadas</button>
+  </div>
+  <div id="tareas-list"></div>
 </div>
 
 </main>
@@ -515,6 +530,37 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL TAREA -->
+<div id="modal-tarea" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-tarea')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nueva tarea</span>
+      <button class="btn-icon" onclick="closeModal('modal-tarea')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row full"><div><label class="flabel">Título *</label><input id="t-titulo" class="finput" placeholder="Ej: Llamar a Masia Can Ribas para confirmar acceso"></div></div>
+      <div class="form-row full"><div><label class="flabel">Descripción</label><textarea id="t-desc" class="finput" rows="2" style="resize:vertical"></textarea></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Fecha límite</label><input id="t-fecha" type="date" class="finput"></div>
+        <div><label class="flabel">Prioridad</label>
+          <select id="t-prioridad" class="finput">
+            <option value="Alta">🔴 Alta</option>
+            <option value="Normal" selected>🟡 Normal</option>
+            <option value="Baja">🟢 Baja</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Cliente relacionado (opcional)</label>
+        <select id="t-cliente" class="finput"><option value="">Sin cliente</option></select>
+      </div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-tarea')">Cancelar</button>
+      <button class="btn-primary" id="save-t-btn" onclick="guardarTarea()">Guardar tarea</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
@@ -536,7 +582,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const CUENTA='ES44 0182 6308 7402 0161 1473';
 const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
-let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[];
+let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear();
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 
@@ -607,7 +653,7 @@ async function showApp(){
   document.getElementById('app').classList.add('show');
   document.getElementById('user-email-display').textContent=currentUser.email;
   document.getElementById('user-avatar').textContent=currentUser.email.slice(0,2).toUpperCase();
-  await loadAllData();renderDashboard();
+  await loadAllData();renderDashboard();actualizarBadgeTareas();
 }
 
 async function checkSession(){
@@ -617,8 +663,8 @@ async function checkSession(){
 }
 
 async function loadAllData(){
-  const [c,p,f,ct]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false})]);
-  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];
+  const [c,p,f,ct,t]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true})]);
+  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];
   const leadsCount=CLIENTES.filter(c=>c.origen==='formulario_publico').length;
   const b=document.getElementById('leads-badge');
   if(leadsCount>0){b.textContent=leadsCount;b.classList.add('show');}else{b.classList.remove('show');}
@@ -657,7 +703,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas')};
   if(r[page])r[page]();
 }
 
@@ -1456,6 +1502,113 @@ function buildContratoHTML(ct,c){
 
     <div class="pdf-pagenum">${em.nif} &nbsp;·&nbsp; ${ct.numero} &nbsp;·&nbsp; 1 / 1</div>
   </div>`;
+}
+
+
+// ======= TAREAS =======
+let tareasFiltro='todas';
+
+function abrirModalTarea(){
+  const sel=document.getElementById('t-cliente');
+  sel.innerHTML='<option value="">Sin cliente</option>';
+  CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  ['t-titulo','t-desc','t-fecha'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('t-prioridad').value='Normal';
+  openModal('modal-tarea');
+}
+
+async function guardarTarea(){
+  const titulo=document.getElementById('t-titulo').value.trim();
+  if(!titulo){alert('El título es obligatorio');return;}
+  const btn=document.getElementById('save-t-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const clienteId=document.getElementById('t-cliente').value;
+  const {error}=await sb.from('tareas').insert({
+    user_id:currentUser.id,titulo,
+    descripcion:document.getElementById('t-desc').value,
+    fecha_limite:document.getElementById('t-fecha').value||null,
+    prioridad:document.getElementById('t-prioridad').value,
+    cliente_id:clienteId||null,
+    estado:'Pendiente'
+  });
+  btn.disabled=false;btn.textContent='Guardar tarea';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-tarea');
+  await loadAllData();renderTareas(tareasFiltro);
+  if(document.getElementById('dashboard').classList.contains('active'))renderDashboard();
+}
+
+function actualizarBadgeTareas(){
+  const pend=TAREAS.filter(t=>t.estado==='Pendiente').length;
+  const b=document.getElementById('tareas-badge');
+  if(b){if(pend>0){b.textContent=pend;b.classList.add('show');}else b.classList.remove('show');}
+}
+
+function filtrarTareas(filtro,el){
+  tareasFiltro=filtro;
+  document.querySelectorAll('[id^="tfil-"]').forEach(b=>{b.style.background='';b.style.color='var(--ink)';b.style.borderColor='var(--line)';});
+  if(el){el.style.background='var(--brand)';el.style.color='#fff';el.style.borderColor='var(--brand)';}
+  renderTareas(filtro);
+}
+
+function renderTareas(filtro){
+  tareasFiltro=filtro||'todas';
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  let data=TAREAS;
+  if(filtro==='Pendiente')data=TAREAS.filter(t=>t.estado==='Pendiente');
+  else if(filtro==='Hecho')data=TAREAS.filter(t=>t.estado==='Hecho');
+
+  if(!data.length){
+    document.getElementById('tareas-list').innerHTML='<div class="empty">Sin tareas '+( filtro==='todas'?'todavía':'en este estado')+'.</div>';
+    return;
+  }
+
+  const prioColor={Alta:'#FCEBEB',Normal:'#FEF3E2',Baja:'#F0FFF7'};
+  const prioTextColor={Alta:'#A32D2D',Normal:'#92400E',Baja:'#0F6E56'};
+
+  document.getElementById('tareas-list').innerHTML=data.map(t=>{
+    const c=CLIENTES.find(x=>x.id===t.cliente_id);
+    const hecho=t.estado==='Hecho';
+    const fechaLim=t.fecha_limite?new Date(t.fecha_limite+'T00:00:00'):null;
+    const vencida=fechaLim&&fechaLim<hoy&&!hecho;
+    const diff=fechaLim?Math.ceil((fechaLim-hoy)/86400000):null;
+    let fechaBadge='';
+    if(fechaLim){
+      if(vencida)fechaBadge='<span class="badge" style="background:#FCEBEB;color:#A32D2D">Vencida</span>';
+      else if(diff===0)fechaBadge='<span class="badge" style="background:#FEF3E2;color:#92400E">Hoy</span>';
+      else if(diff<=3)fechaBadge='<span class="badge" style="background:#FEF3E2;color:#92400E">'+diff+'d</span>';
+      else fechaBadge='<span class="badge badge-gray">'+fmtDate(t.fecha_limite)+'</span>';
+    }
+    return`<div style="background:#fff;border:1px solid ${vencida?'#FCEBEB':'var(--line)'};border-radius:12px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px;${hecho?'opacity:.55':''}">
+      <div style="flex-shrink:0;margin-top:2px">
+        <input type="checkbox" ${hecho?'checked':''} onchange="toggleTarea('${t.id}','${t.estado}')"
+          style="width:18px;height:18px;cursor:pointer;accent-color:var(--brand)">
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px;${hecho?'text-decoration:line-through;color:var(--ink-soft)':'color:var(--ink)'}">${t.titulo}</div>
+        ${t.descripcion?'<div style="font-size:12px;color:var(--ink-soft);margin-top:4px">'+t.descripcion+'</div>':''}
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${prioColor[t.prioridad]||'#EEEFF2'};color:${prioTextColor[t.prioridad]||'#5B5E68'}">${t.prioridad}</span>
+          ${fechaBadge}
+          ${c?'<span class="badge badge-gray">'+c.nombre+'</span>':''}
+        </div>
+      </div>
+      <button class="btn-icon red" onclick="eliminarTarea('${t.id}')" style="flex-shrink:0">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleTarea(id,estadoActual){
+  const nuevo=estadoActual==='Hecho'?'Pendiente':'Hecho';
+  await sb.from('tareas').update({estado:nuevo}).eq('id',id);
+  await loadAllData();renderTareas(tareasFiltro);
+  if(document.getElementById('dashboard').classList.contains('active'))renderDashboard();
+}
+
+async function eliminarTarea(id){
+  if(!confirm('¿Eliminar esta tarea?'))return;
+  await sb.from('tareas').delete().eq('id',id);
+  await loadAllData();renderTareas(tareasFiltro);
 }
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
