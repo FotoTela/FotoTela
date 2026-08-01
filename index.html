@@ -221,6 +221,7 @@ tr:hover td{background:#FAFBFF}
     <div class="nav-item" onclick="nav('calendario',this)">Calendario</div>
     <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
     <div class="nav-item" onclick="nav('personas',this)">Equipo</div>
+    <div class="nav-item" onclick="nav('equipo',this)">Material <span class="nav-badge" id="stock-badge"></span></div>
   </div>
   <div class="user-foot">
     <div class="user-avatar" id="user-avatar"></div>
@@ -359,6 +360,29 @@ tr:hover td{background:#FAFBFF}
   <div class="table-wrap"><table>
     <thead><tr><th>Nombre</th><th>Rol</th><th>Contacto</th><th>Coste/evento</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="personas-tbody"></tbody>
+  </table></div>
+</div>
+
+
+<div id="equipo" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Material y equipo</div><div class="page-sub">Fotomatones, plataforma 360° y consumibles</div></div>
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="openModal('modal-consumible')">+ Consumible</button>
+      <button class="btn-primary" onclick="openModal('modal-equipo')">+ Equipo</button>
+    </div>
+  </div>
+
+  <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px">Equipo (activos)</div>
+  <div class="table-wrap" style="margin-bottom:24px"><table>
+    <thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Notas</th><th>Acciones</th></tr></thead>
+    <tbody id="equipo-tbody"></tbody>
+  </table></div>
+
+  <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px">Consumibles <span id="stock-alertas-badge" style="display:none;background:#FCEBEB;color:#A32D2D;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:600"></span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nombre</th><th>Categoría</th><th>Stock actual</th><th>Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody id="consumibles-tbody"></tbody>
   </table></div>
 </div>
 
@@ -615,6 +639,64 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL EQUIPO -->
+<div id="modal-equipo" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-equipo')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="modal-equipo-title">Nuevo equipo</span><button class="btn-icon" onclick="closeModal('modal-equipo')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div><label class="flabel">Nombre *</label><input id="eq-nombre" class="finput" placeholder="Ej: Fotomatón 1"></div>
+      <div><label class="flabel">Tipo</label>
+        <select id="eq-tipo" class="finput">
+          <option>Fotomatón</option><option>Plataforma 360°</option><option>Teléfono guestbook</option><option>Iluminación</option><option>Otro</option>
+        </select>
+      </div></div>
+      <div class="form-row"><div><label class="flabel">Estado</label>
+        <select id="eq-estado" class="finput">
+          <option value="Disponible">✅ Disponible</option>
+          <option value="Mantenimiento">🔧 Mantenimiento</option>
+          <option value="Bloqueado">🔴 Bloqueado</option>
+        </select>
+      </div></div>
+      <div class="form-row full"><div><label class="flabel">Notas</label><input id="eq-notas" class="finput"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-equipo')">Cancelar</button><button class="btn-primary" id="save-eq-btn" onclick="guardarEquipo()">Guardar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CONSUMIBLE -->
+<div id="modal-consumible" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-consumible')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="modal-cons-title">Nuevo consumible</span><button class="btn-icon" onclick="closeModal('modal-consumible')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div><label class="flabel">Nombre *</label><input id="cons-nombre" class="finput" placeholder="Ej: Álbumes fotomatón"></div>
+      <div><label class="flabel">Categoría</label>
+        <select id="cons-cat" class="finput">
+          <option>Álbumes</option><option>Pegamentos</option><option>Colas</option><option>Papel fotográfico</option><option>Tinta</option><option>Atrezzo</option><option>Otro</option>
+        </select>
+      </div></div>
+      <div class="form-row">
+        <div><label class="flabel">Stock actual</label><input id="cons-stock" type="number" class="finput" placeholder="0"></div>
+        <div><label class="flabel">Stock mínimo (alerta)</label><input id="cons-min" type="number" class="finput" placeholder="5"></div>
+      </div>
+      <div class="form-row"><div><label class="flabel">Unidad</label><input id="cons-unidad" class="finput" placeholder="uds, rollos, botes..."></div></div>
+      <div class="form-row full"><div><label class="flabel">Notas</label><input id="cons-notas" class="finput"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-consumible')">Cancelar</button><button class="btn-primary" id="save-cons-btn" onclick="guardarConsumible()">Guardar</button></div>
+  </div>
+</div>
+
+<!-- MODAL AJUSTE STOCK -->
+<div id="modal-stock" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-stock')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="modal-stock-title">Ajustar stock</span><button class="btn-icon" onclick="closeModal('modal-stock')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div><label class="flabel">Nuevo stock</label><input id="stock-nuevo" type="number" class="finput"></div></div>
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Introduce el stock actual real después del ajuste.</div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-stock')">Cancelar</button><button class="btn-primary" id="save-stock-btn" onclick="guardarStock()">Actualizar stock</button></div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
@@ -636,7 +718,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const CUENTA='ES44 0182 6308 7402 0161 1473';
 const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
-let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[];
+let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear();
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 
@@ -707,7 +789,7 @@ async function showApp(){
   document.getElementById('app').classList.add('show');
   document.getElementById('user-email-display').textContent=currentUser.email;
   document.getElementById('user-avatar').textContent=currentUser.email.slice(0,2).toUpperCase();
-  await loadAllData();renderDashboard();actualizarBadgeTareas();if(PERSONAS.length===0)initPersonas();
+  await loadAllData();renderDashboard();actualizarBadgeTareas();actualizarBadgeStock();if(PERSONAS.length===0)initPersonas();if(EQUIPO.length===0)initEquipo();
 }
 
 async function checkSession(){
@@ -717,8 +799,8 @@ async function checkSession(){
 }
 
 async function loadAllData(){
-  const [c,p,f,ct,t,per]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false})]);
-  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];
+  const [c,p,f,ct,t,per,eq,cons]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true})]);
+  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];
   const leadsCount=CLIENTES.filter(c=>c.origen==='formulario_publico').length;
   const b=document.getElementById('leads-badge');
   if(leadsCount>0){b.textContent=leadsCount;b.classList.add('show');}else{b.classList.remove('show');}
@@ -757,7 +839,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles};
   if(r[page])r[page]();
 }
 
@@ -1753,6 +1835,170 @@ async function eliminarPersona(id){
   if(!confirm('¿Eliminar esta persona?'))return;
   await sb.from('personas').delete().eq('id',id);
   await loadAllData();renderPersonas();
+}
+
+
+// ======= EQUIPO Y MATERIALES =======
+let editandoEquipoId=null, editandoConsId=null, ajustandoConsId=null;
+
+async function initEquipo(){
+  if(EQUIPO.length===0){
+    const defaults=[
+      {nombre:'Fotomatón 1',tipo:'Fotomatón',estado:'Disponible',notas:'Fotomatón principal con impresora'},
+      {nombre:'Fotomatón 2',tipo:'Fotomatón',estado:'Disponible',notas:'Fotomatón de reserva'},
+      {nombre:'Plataforma 360°',tipo:'Plataforma 360°',estado:'Disponible',notas:'Plataforma con focos LED'}
+    ];
+    for(const d of defaults){
+      await sb.from('equipo').insert({...d,user_id:currentUser.id});
+    }
+    await loadAllData();
+  }
+}
+
+function actualizarBadgeStock(){
+  const bajosStk=CONSUMIBLES.filter(c=>Number(c.stock_actual||0)<=Number(c.stock_minimo||0)&&Number(c.stock_minimo||0)>0);
+  const b=document.getElementById('stock-badge');
+  const b2=document.getElementById('stock-alertas-badge');
+  if(b){if(bajosStk.length>0){b.textContent=bajosStk.length;b.classList.add('show');}else b.classList.remove('show');}
+  if(b2){if(bajosStk.length>0){b2.textContent=bajosStk.length+' con stock bajo';b2.style.display='inline';}else b2.style.display='none';}
+}
+
+function renderEquipoYConsumibles(){
+  actualizarBadgeStock();
+  // Equipo
+  const estadoStyle={
+    'Disponible':'background:#E1F5EE;color:#0F6E56',
+    'Mantenimiento':'background:#FEF3E2;color:#92400E',
+    'Bloqueado':'background:#FCEBEB;color:#A32D2D'
+  };
+  document.getElementById('equipo-tbody').innerHTML=EQUIPO.length?EQUIPO.map(eq=>`<tr>
+    <td style="font-weight:600">${eq.nombre}</td>
+    <td><span class="badge badge-gray">${eq.tipo||'—'}</span></td>
+    <td><span class="badge" style="${estadoStyle[eq.estado]||''}">${eq.estado}</span></td>
+    <td style="font-size:12px;color:var(--ink-soft)">${eq.notas||'—'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn-icon blue" onclick="editarEquipo('${eq.id}')">Editar</button>
+      <button class="btn-icon ${eq.estado==='Disponible'?'red':'green'}" onclick="toggleEstadoEquipo('${eq.id}','${eq.estado}')" style="margin-left:4px">${eq.estado==='Disponible'?'Bloquear':'Liberar'}</button>
+      <button class="btn-icon red" onclick="eliminarEquipo('${eq.id}')" style="margin-left:4px">Borrar</button>
+    </td>
+  </tr>`).join(''):'<tr><td colspan="5"><div class="empty">Sin equipo registrado.</div></td></tr>';
+
+  // Consumibles
+  document.getElementById('consumibles-tbody').innerHTML=CONSUMIBLES.length?CONSUMIBLES.map(c=>{
+    const bajo=Number(c.stock_actual||0)<=Number(c.stock_minimo||0)&&Number(c.stock_minimo||0)>0;
+    const agotado=Number(c.stock_actual||0)===0;
+    return`<tr style="${agotado?'background:#FFF5F5':bajo?'background:#FFFBEB':''}">
+      <td style="font-weight:600">${c.nombre}</td>
+      <td><span class="badge badge-gray">${c.categoria||'—'}</span></td>
+      <td style="font-weight:600;color:${agotado?'#A32D2D':bajo?'#92400E':'var(--ink)'}">${c.stock_actual||0} ${c.unidad||'uds'}</td>
+      <td style="color:var(--ink-soft)">${c.stock_minimo||0} ${c.unidad||'uds'}</td>
+      <td>${agotado?'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Agotado</span>':bajo?'<span class="badge" style="background:#FEF3E2;color:#92400E">Stock bajo</span>':'<span class="badge badge-green">OK</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-icon blue" onclick="abrirAjusteStock('${c.id}','${c.nombre}',${c.stock_actual||0})">Ajustar</button>
+        <button class="btn-icon blue" onclick="editarConsumible('${c.id}')" style="margin-left:4px">Editar</button>
+        <button class="btn-icon red" onclick="eliminarConsumible('${c.id}')" style="margin-left:4px">Borrar</button>
+      </td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6"><div class="empty">Sin consumibles registrados.</div></td></tr>';
+}
+
+// -- Equipo --
+function editarEquipo(id){
+  const eq=EQUIPO.find(x=>x.id===id);if(!eq)return;
+  editandoEquipoId=id;
+  document.getElementById('modal-equipo-title').textContent='Editar equipo';
+  document.getElementById('eq-nombre').value=eq.nombre||'';
+  document.getElementById('eq-tipo').value=eq.tipo||'Fotomatón';
+  document.getElementById('eq-estado').value=eq.estado||'Disponible';
+  document.getElementById('eq-notas').value=eq.notas||'';
+  openModal('modal-equipo');
+}
+
+async function toggleEstadoEquipo(id,estadoActual){
+  const nuevo=estadoActual==='Disponible'?'Bloqueado':'Disponible';
+  await sb.from('equipo').update({estado:nuevo}).eq('id',id);
+  await loadAllData();renderEquipoYConsumibles();
+}
+
+async function guardarEquipo(){
+  const nombre=document.getElementById('eq-nombre').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+  const btn=document.getElementById('save-eq-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const payload={nombre,tipo:document.getElementById('eq-tipo').value,estado:document.getElementById('eq-estado').value,notas:document.getElementById('eq-notas').value};
+  let error;
+  if(editandoEquipoId){({error}=await sb.from('equipo').update(payload).eq('id',editandoEquipoId));}
+  else{({error}=await sb.from('equipo').insert({...payload,user_id:currentUser.id}));}
+  btn.disabled=false;btn.textContent='Guardar';
+  if(error){alert('Error: '+error.message);return;}
+  editandoEquipoId=null;
+  document.getElementById('modal-equipo-title').textContent='Nuevo equipo';
+  closeModal('modal-equipo');
+  await loadAllData();renderEquipoYConsumibles();
+}
+
+async function eliminarEquipo(id){
+  if(!confirm('¿Eliminar este equipo?'))return;
+  await sb.from('equipo').delete().eq('id',id);
+  await loadAllData();renderEquipoYConsumibles();
+}
+
+// -- Consumibles --
+function editarConsumible(id){
+  const c=CONSUMIBLES.find(x=>x.id===id);if(!c)return;
+  editandoConsId=id;
+  document.getElementById('modal-cons-title').textContent='Editar consumible';
+  document.getElementById('cons-nombre').value=c.nombre||'';
+  document.getElementById('cons-cat').value=c.categoria||'Álbumes';
+  document.getElementById('cons-stock').value=c.stock_actual||0;
+  document.getElementById('cons-min').value=c.stock_minimo||0;
+  document.getElementById('cons-unidad').value=c.unidad||'uds';
+  document.getElementById('cons-notas').value=c.notas||'';
+  openModal('modal-consumible');
+}
+
+async function guardarConsumible(){
+  const nombre=document.getElementById('cons-nombre').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+  const btn=document.getElementById('save-cons-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const payload={nombre,categoria:document.getElementById('cons-cat').value,stock_actual:parseFloat(document.getElementById('cons-stock').value)||0,stock_minimo:parseFloat(document.getElementById('cons-min').value)||0,unidad:document.getElementById('cons-unidad').value||'uds',notas:document.getElementById('cons-notas').value};
+  let error;
+  if(editandoConsId){({error}=await sb.from('consumibles').update(payload).eq('id',editandoConsId));}
+  else{({error}=await sb.from('consumibles').insert({...payload,user_id:currentUser.id}));}
+  btn.disabled=false;btn.textContent='Guardar';
+  if(error){alert('Error: '+error.message);return;}
+  editandoConsId=null;
+  document.getElementById('modal-cons-title').textContent='Nuevo consumible';
+  closeModal('modal-consumible');
+  ['cons-nombre','cons-stock','cons-min','cons-unidad','cons-notas'].forEach(id=>document.getElementById(id).value='');
+  await loadAllData();renderEquipoYConsumibles();
+}
+
+async function eliminarConsumible(id){
+  if(!confirm('¿Eliminar este consumible?'))return;
+  await sb.from('consumibles').delete().eq('id',id);
+  await loadAllData();renderEquipoYConsumibles();
+}
+
+function abrirAjusteStock(id,nombre,stockActual){
+  ajustandoConsId=id;
+  document.getElementById('modal-stock-title').textContent='Ajustar stock — '+nombre;
+  document.getElementById('stock-nuevo').value=stockActual;
+  openModal('modal-stock');
+}
+
+async function guardarStock(){
+  const nuevo=parseFloat(document.getElementById('stock-nuevo').value)||0;
+  const btn=document.getElementById('save-stock-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const {error}=await sb.from('consumibles').update({stock_actual:nuevo}).eq('id',ajustandoConsId);
+  btn.disabled=false;btn.textContent='Actualizar stock';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-stock');
+  await loadAllData();renderEquipoYConsumibles();
+  // Alerta en dashboard si hay stock bajo
+  if(document.getElementById('dashboard').classList.contains('active'))renderDashboard();
 }
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
