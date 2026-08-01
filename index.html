@@ -2651,8 +2651,8 @@ function abrirNuevoEvento(clienteIdPref){
   document.getElementById('ev-horario').value='';
   document.getElementById('ev-ubicacion').value='';
   document.getElementById('ev-notas').value='';
-  document.getElementById('ev-hora-ini').value='';
-  document.getElementById('ev-hora-fin').value='';
+  const ehi=document.getElementById('ev-hora-ini');if(ehi)ehi.value='';
+  const efh=document.getElementById('ev-hora-fin');if(efh)efh.value='';
   document.getElementById('ev-estado').value='Confirmado';
   document.getElementById('ev-servicio').value='';
   document.getElementById('ev-conflicto').style.display='none';
