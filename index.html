@@ -171,6 +171,10 @@ tr:hover td{background:#FAFBFF}
         </div>
         <div><label class="flabel">Fecha del evento</label><input id="pf-fecha" type="date" class="finput"></div>
       </div>
+      <div class="form-row">
+        <div><label class="flabel">Hora inicio (aprox.)</label><input id="pf-hora-ini" type="time" class="finput"></div>
+        <div><label class="flabel">Hora fin (aprox.)</label><input id="pf-hora-fin" type="time" class="finput"></div>
+      </div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="pf-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
       <div class="form-row full"><div><label class="flabel">Cuéntanos sobre tu evento</label><textarea id="pf-notas" class="finput" rows="3" style="resize:vertical"></textarea></div></div>
       <button class="btn-primary" id="pf-submit-btn" style="width:100%;justify-content:center;margin-top:6px" onclick="submitPublicForm()">Enviar</button>
@@ -224,6 +228,7 @@ tr:hover td{background:#FAFBFF}
     <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
     <div class="nav-item" onclick="nav('personas',this)">Equipo</div>
     <div class="nav-item" onclick="nav('equipo',this)">Material <span class="nav-badge" id="stock-badge"></span></div>
+    <div class="nav-item" onclick="nav('eventos',this)">Eventos</div>
     <div class="nav-item" onclick="nav('catalogo',this)">Catálogo</div>
   </div>
   <div class="user-foot">
@@ -448,6 +453,18 @@ tr:hover td{background:#FAFBFF}
     <button class="btn-primary" onclick="abrirNuevoServicio()">+ Nuevo servicio</button>
   </div>
   <div id="catalogo-list"></div>
+</div>
+
+
+<div id="eventos" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Eventos</div><div class="page-sub">Nodo central — equipo, personas, costes y materiales</div></div>
+    <button class="btn-primary" onclick="abrirNuevoEvento()">+ Nuevo evento</button>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Servicio</th><th>Fecha</th><th>Horario</th><th>Equipo</th><th>Personas</th><th>P&L</th><th>Acciones</th></tr></thead>
+    <tbody id="eventos-tbody"></tbody>
+  </table></div>
 </div>
 
 </main>
@@ -826,6 +843,80 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL EVENTO -->
+<div id="modal-evento" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-evento')">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-evento-title">Nuevo evento</span>
+      <button class="btn-icon" onclick="closeModal('modal-evento')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Cliente y servicio -->
+      <div class="form-row full"><div><label class="flabel">Cliente *</label>
+        <input id="ev-cli-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ev-cliente','ev-cli-search')" style="margin-bottom:6px">
+        <select id="ev-cliente" class="finput" size="3" style="height:auto" onchange="autoFillEvento()"><option value="">Seleccionar...</option></select>
+      </div></div>
+      <div class="form-row">
+        <div><label class="flabel">Servicio</label>
+          <select id="ev-servicio" class="finput" onchange="autoFillEquipoEvento()">
+            <option value="">Sin servicio</option>
+          </select>
+        </div>
+        <div><label class="flabel">Estado</label>
+          <select id="ev-estado" class="finput">
+            <option value="Confirmado">Confirmado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Completado">Completado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Fecha *</label><input id="ev-fecha" type="date" class="finput"></div>
+        <div><label class="flabel">Hora inicio</label><input id="ev-hora-ini" type="time" class="finput" onchange="actualizarHorarioEvento()"></div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Hora fin</label><input id="ev-hora-fin" type="time" class="finput" onchange="actualizarHorarioEvento()"></div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Ubicación</label><input id="ev-ubicacion" class="finput"></div></div>
+
+      <!-- Equipo -->
+      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Equipo asignado</div>
+      <div id="ev-equipo-checks" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px"></div>
+      <div id="ev-conflicto" style="display:none;background:#FCEBEB;color:#A32D2D;border-radius:8px;padding:8px 12px;font-size:12px;margin-top:6px"></div>
+
+      <!-- Personas -->
+      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Personas asignadas</div>
+      <div id="ev-personas-checks" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px"></div>
+
+      <!-- Costes -->
+      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px">Costes del evento</div>
+      <div id="ev-costes-list"></div>
+      <button onclick="addCosteRow()" class="add-linea-btn" style="margin-top:6px">+ Añadir coste (gasolina, etc.)</button>
+
+      <div class="form-row full" style="margin-top:14px"><div><label class="flabel">Notas</label><input id="ev-notas" class="finput"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-evento')">Cancelar</button>
+      <button class="btn-primary" id="save-ev-btn" onclick="guardarEvento()">Guardar evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE EVENTO COMPLETO -->
+<div id="modal-evento-full" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-evento-full')">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title" id="evento-full-title">Detalle del evento</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" id="evento-full-edit-btn" onclick="editarEventoDesdeDetalle()">Editar</button>
+        <button class="btn-icon" onclick="closeModal('modal-evento-full')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="evento-full-body"></div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
@@ -847,7 +938,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const CUENTA='ES44 0182 6308 7402 0161 1473';
 const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
-let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[],GASTOS=[],SERVICIOS=[],SERVICIO_CONSUMIBLES=[];
+let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[],GASTOS=[],SERVICIOS=[],SERVICIO_CONSUMIBLES=[],EVENTOS=[],EVENTO_EQUIPO=[],EVENTO_PERSONAS=[],EVENTO_COSTES=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear(),calDay=new Date().getDate(),calView='mes';
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 
@@ -928,8 +1019,8 @@ async function checkSession(){
 }
 
 async function loadAllData(){
-  const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*')]);
-  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];
+  const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc,ev,eeq,eper,eco]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*'),sb.from('eventos').select('*').order('fecha',{ascending:false}),sb.from('evento_equipo').select('*'),sb.from('evento_personas').select('*'),sb.from('evento_costes').select('*')]);
+  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];EVENTOS=ev.data||[];EVENTO_EQUIPO=eeq.data||[];EVENTO_PERSONAS=eper.data||[];EVENTO_COSTES=eco.data||[];
   const leadsCount=CLIENTES.filter(c=>c.origen==='formulario_publico').length;
   const b=document.getElementById('leads-badge');
   if(leadsCount>0){b.textContent=leadsCount;b.classList.add('show');}else{b.classList.remove('show');}
@@ -968,7 +1059,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo,eventos:renderEventos};
   if(r[page])r[page]();
 }
 
@@ -1077,7 +1168,7 @@ async function guardarCliente(){
   btn.disabled=false;btn.textContent='Guardar cliente';
   if(error){alert('Error al guardar: '+error.message);return;}
   closeModal('modal-cliente');
-  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha','f-ubicacion','f-horario','f-homenajeado'].forEach(id=>document.getElementById(id).value='');
+  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha','f-ubicacion','f-horario','f-homenajeado','f-hora-ini','f-hora-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-servicios').value='';
   await loadAllData();renderClientes();renderDashboard();
 }
@@ -2537,6 +2628,290 @@ async function eliminarServicio(id){
   await sb.from('servicio_consumibles').delete().eq('servicio_id',id);
   await sb.from('servicios').delete().eq('id',id);
   await loadAllData();renderCatalogo();
+}
+
+
+// ======= EVENTOS =======
+let editandoEventoId=null, costeRows=[];
+
+function abrirNuevoEvento(clienteIdPref){
+  editandoEventoId=null; costeRows=[];
+  document.getElementById('modal-evento-title').textContent='Nuevo evento';
+  // Poblar cliente
+  const sel=document.getElementById('ev-cliente');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  const sb2=document.getElementById('ev-cli-search');if(sb2)sb2.value='';
+  if(clienteIdPref){sel.value=clienteIdPref;autoFillEvento();}
+  // Poblar servicio
+  const srvSel=document.getElementById('ev-servicio');
+  srvSel.innerHTML='<option value="">Sin servicio</option>';
+  SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);
+  document.getElementById('ev-fecha').value='';
+  document.getElementById('ev-horario').value='';
+  document.getElementById('ev-ubicacion').value='';
+  document.getElementById('ev-notas').value='';
+  document.getElementById('ev-hora-ini').value='';
+  document.getElementById('ev-hora-fin').value='';
+  document.getElementById('ev-estado').value='Confirmado';
+  document.getElementById('ev-servicio').value='';
+  document.getElementById('ev-conflicto').style.display='none';
+  renderEquipoChecksEvento([]);
+  renderPersonasChecksEvento([]);
+  renderCostesEvento();
+  openModal('modal-evento');
+}
+
+function autoFillEvento(){
+  const id=document.getElementById('ev-cliente').value;
+  const c=CLIENTES.find(x=>x.id===id);if(!c)return;
+  if(c.fecha_evento)document.getElementById('ev-fecha').value=c.fecha_evento;
+  if(c.horario){
+    const hp=(c.horario||'').split(' - ');
+    document.getElementById('ev-hora-ini').value=hp[0]||'';
+    document.getElementById('ev-hora-fin').value=hp[1]||'';
+  }
+  if(c.ubicacion_evento)document.getElementById('ev-ubicacion').value=c.ubicacion_evento;
+}
+
+function autoFillEquipoEvento(){
+  const srvId=document.getElementById('ev-servicio').value;
+  const srv=SERVICIOS.find(x=>x.id===srvId);
+  if(srv&&srv.equipo_ids&&srv.equipo_ids.length){
+    renderEquipoChecksEvento(srv.equipo_ids);
+    comprobarConflictos();
+  }
+}
+
+function renderEquipoChecksEvento(selectedIds){
+  document.getElementById('ev-equipo-checks').innerHTML=EQUIPO.map(eq=>`
+    <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:${eq.estado!=='Disponible'?'#FCEBEB':'var(--surface)'};border-radius:8px;cursor:pointer;font-size:13px">
+      <input type="checkbox" value="${eq.id}" ${selectedIds.includes(eq.id)?'checked':''} onchange="comprobarConflictos()" style="accent-color:var(--brand)">
+      ${eq.nombre} <span style="font-size:10px;color:${eq.estado==='Disponible'?'#0F6E56':'#A32D2D'}">${eq.estado}</span>
+    </label>`).join('');
+}
+
+function renderPersonasChecksEvento(selectedIds){
+  document.getElementById('ev-personas-checks').innerHTML=PERSONAS.filter(p=>p.activo).map(p=>`
+    <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface);border-radius:8px;cursor:pointer;font-size:13px">
+      <input type="checkbox" value="${p.id}" ${selectedIds.includes(p.id)?'checked':''} style="accent-color:var(--brand)">
+      ${p.nombre} <span style="font-size:10px;color:var(--ink-soft)">${p.rol}</span>
+    </label>`).join('');
+}
+
+function renderCostesEvento(){
+  document.getElementById('ev-costes-list').innerHTML=costeRows.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 100px 30px;gap:8px;margin-bottom:6px;align-items:center">
+      <input value="${r.concepto||''}" placeholder="Concepto (ej: Gasolina)" oninput="costeRows[${i}].concepto=this.value" class="finput" style="font-size:12px">
+      <input type="number" value="${r.importe||0}" oninput="costeRows[${i}].importe=parseFloat(this.value)||0" class="finput" style="font-size:12px" placeholder="€">
+      <button onclick="costeRows.splice(${i},1);renderCostesEvento()" style="background:#FCEBEB;color:#A32D2D;border:none;border-radius:7px;padding:6px 8px;cursor:pointer;font-weight:600">✕</button>
+    </div>`).join('');
+}
+
+function addCosteRow(){costeRows.push({concepto:'',importe:0});renderCostesEvento();}
+
+function actualizarHorarioEvento(){
+  const ini=document.getElementById('ev-hora-ini').value;
+  const fin=document.getElementById('ev-hora-fin').value;
+  // Guardar en campo oculto para compatibilidad
+  const txt=ini&&fin?ini+' - '+fin:ini||fin||'';
+  if(!document.getElementById('ev-horario-hidden')){
+    const inp=document.createElement('input');
+    inp.type='hidden';inp.id='ev-horario-hidden';
+    document.getElementById('ev-hora-ini').parentElement.appendChild(inp);
+  }
+  document.getElementById('ev-horario-hidden').value=txt;
+  comprobarConflictos();
+}
+
+function horasSeSolapan(ini1,fin1,ini2,fin2){
+  // Convertir HH:MM a minutos
+  const toMin=h=>{if(!h)return null;const[hh,mm]=h.split(':').map(Number);return hh*60+mm;};
+  const a=toMin(ini1),b=toMin(fin1),c=toMin(ini2),d=toMin(fin2);
+  // Si alguno no tiene horario, asumir conflicto por precaución
+  if(a===null||b===null||c===null||d===null)return true;
+  // Solapamiento: no se solapan si uno termina antes de que empiece el otro
+  return !(b<=c||d<=a);
+}
+
+function comprobarConflictos(){
+  const fecha=document.getElementById('ev-fecha').value;
+  if(!fecha)return;
+  const iniNuevo=document.getElementById('ev-hora-ini').value;
+  const finNuevo=document.getElementById('ev-hora-fin').value;
+  const equipoSelIds=Array.from(document.querySelectorAll('#ev-equipo-checks input:checked')).map(cb=>cb.value);
+  if(!equipoSelIds.length){document.getElementById('ev-conflicto').style.display='none';return;}
+  const conflictos=[];
+  equipoSelIds.forEach(eqId=>{
+    const eq=EQUIPO.find(x=>x.id===eqId);if(!eq)return;
+    const evsEnFecha=EVENTOS.filter(ev=>ev.fecha===fecha&&ev.id!==editandoEventoId);
+    evsEnFecha.forEach(ev=>{
+      const tieneEq=EVENTO_EQUIPO.some(ee=>ee.evento_id===ev.id&&ee.equipo_id===eqId);
+      if(!tieneEq)return;
+      // Extraer horario del evento existente
+      let iniExist=null,finExist=null;
+      if(ev.horario&&ev.horario.includes(' - ')){
+        [iniExist,finExist]=ev.horario.split(' - ');
+      }
+      if(horasSeSolapan(iniNuevo,finNuevo,iniExist,finExist)){
+        const c=CLIENTES.find(x=>x.id===ev.cliente_id);
+        const horarioExist=ev.horario?` (${ev.horario})`:'';
+        conflictos.push(`${eq.nombre} ya está en ${c?c.nombre:'otro evento'}${horarioExist}`);
+      }
+    });
+  });
+  const box=document.getElementById('ev-conflicto');
+  if(conflictos.length){box.innerHTML='⚠️ Conflicto de horario: '+conflictos.join(' · ');box.style.display='block';}
+  else{box.innerHTML='✅ Sin conflictos de horario';box.style.display='block';box.style.background='#E1F5EE';box.style.color='#0F6E56';setTimeout(()=>{box.style.display='none';box.style.background='#FCEBEB';box.style.color='#A32D2D';},2000);}
+}
+
+async function guardarEvento(){
+  const clienteId=document.getElementById('ev-cliente').value;
+  const fecha=document.getElementById('ev-fecha').value;
+  if(!clienteId||!fecha){alert('Cliente y fecha son obligatorios');return;}
+  const btn=document.getElementById('save-ev-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const equipoIds=Array.from(document.querySelectorAll('#ev-equipo-checks input:checked')).map(cb=>cb.value);
+  const personaIds=Array.from(document.querySelectorAll('#ev-personas-checks input:checked')).map(cb=>cb.value);
+  const iniH=document.getElementById('ev-hora-ini').value;
+  const finH=document.getElementById('ev-hora-fin').value;
+  const horarioFinal=iniH&&finH?iniH+' - '+finH:iniH||finH||'';
+  const payload={cliente_id:clienteId,servicio_id:document.getElementById('ev-servicio').value||null,fecha,horario:horarioFinal,ubicacion:document.getElementById('ev-ubicacion').value,estado:document.getElementById('ev-estado').value,notas:document.getElementById('ev-notas').value};
+  let eventoId=editandoEventoId;
+  if(editandoEventoId){
+    await sb.from('eventos').update(payload).eq('id',editandoEventoId);
+    await sb.from('evento_equipo').delete().eq('evento_id',editandoEventoId);
+    await sb.from('evento_personas').delete().eq('evento_id',editandoEventoId);
+    await sb.from('evento_costes').delete().eq('evento_id',editandoEventoId);
+  } else {
+    const {data}=await sb.from('eventos').insert({...payload,user_id:currentUser.id}).select().single();
+    eventoId=data.id;
+  }
+  if(equipoIds.length)await sb.from('evento_equipo').insert(equipoIds.map(id=>({user_id:currentUser.id,evento_id:eventoId,equipo_id:id})));
+  if(personaIds.length)await sb.from('evento_personas').insert(personaIds.map(id=>({user_id:currentUser.id,evento_id:eventoId,persona_id:id})));
+  const costesValidos=costeRows.filter(r=>r.concepto&&r.importe>0);
+  if(costesValidos.length){
+    await sb.from('evento_costes').insert(costesValidos.map(r=>({user_id:currentUser.id,evento_id:eventoId,concepto:r.concepto,importe:r.importe})));
+    // Crear también en gastos como libro maestro
+    await sb.from('gastos').insert(costesValidos.map(r=>({user_id:currentUser.id,fecha,concepto:r.concepto+' (Evento)',importe:r.importe,categoria:'evento',asignado_a:'empresa'})));
+  }
+  btn.disabled=false;btn.textContent='Guardar evento';
+  editandoEventoId=null;costeRows=[];
+  closeModal('modal-evento');
+  await loadAllData();renderEventos();renderDashboard();
+}
+
+function renderEventos(){
+  document.getElementById('eventos-tbody').innerHTML=EVENTOS.length?EVENTOS.map(ev=>{
+    const c=CLIENTES.find(x=>x.id===ev.cliente_id);
+    const srv=SERVICIOS.find(x=>x.id===ev.servicio_id);
+    const eqAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===ev.id).map(e=>{const eq=EQUIPO.find(x=>x.id===e.equipo_id);return eq?eq.nombre:'';}).filter(Boolean);
+    const perAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===ev.id).map(e=>{const p=PERSONAS.find(x=>x.id===e.persona_id);return p?p.nombre:'';}).filter(Boolean);
+    const costes=EVENTO_COSTES.filter(e=>e.evento_id===ev.id).reduce((a,e)=>a+Number(e.importe||0),0);
+    const ingresos=c?Number(c.importe_total||0):0;
+    const margen=ingresos-costes;
+    const estadoColor={Confirmado:'badge-blue',Completado:'badge-green',Pendiente:'badge-gray',Cancelado:'badge-red'};
+    return`<tr>
+      <td style="font-weight:600">${c?c.nombre:'—'}<br><span class="badge ${estadoColor[ev.estado]||'badge-gray'}" style="margin-top:3px">${ev.estado}</span></td>
+      <td style="font-size:12px">${srv?srv.nombre:'—'}</td>
+      <td>${fmtDate(ev.fecha)}</td>
+      <td style="font-size:12px;color:var(--ink-soft)">${ev.horario||'—'}</td>
+      <td style="font-size:12px">${eqAsig.length?eqAsig.join(', '):'—'}</td>
+      <td style="font-size:12px">${perAsig.length?perAsig.join(', '):'—'}</td>
+      <td style="font-size:12px"><div style="color:${margen>=0?'#0F6E56':'#A32D2D'};font-weight:600">${ingresos>0?fmt(margen)+' €':'—'}</div>${costes>0?'<div style="font-size:10px;color:var(--ink-soft)">Costes: '+fmt(costes)+' €</div>':''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-icon blue" onclick="verEventoFull('${ev.id}')">Ver</button>
+        <button class="btn-icon blue" onclick="editarEvento('${ev.id}')" style="margin-left:4px">Editar</button>
+        <button class="btn-icon red" onclick="eliminarEvento('${ev.id}')" style="margin-left:4px">Borrar</button>
+      </td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="8"><div class="empty">Sin eventos todavía. Créalos desde aquí o desde la ficha de un cliente.</div></td></tr>';
+}
+
+async function editarEvento(id){
+  const ev=EVENTOS.find(x=>x.id===id);if(!ev)return;
+  editandoEventoId=id;
+  costeRows=EVENTO_COSTES.filter(e=>e.evento_id===id).map(e=>({concepto:e.concepto,importe:e.importe}));
+  document.getElementById('modal-evento-title').textContent='Editar evento';
+  const sel=document.getElementById('ev-cliente');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  sel.value=ev.cliente_id||'';
+  const srvSel=document.getElementById('ev-servicio');
+  srvSel.innerHTML='<option value="">Sin servicio</option>';
+  SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);
+  srvSel.value=ev.servicio_id||'';
+  document.getElementById('ev-fecha').value=ev.fecha||'';
+  // Rellenar hora inicio/fin desde el campo horario guardado
+  const horParts=(ev.horario||'').split(' - ');
+  document.getElementById('ev-hora-ini').value=horParts[0]||'';
+  document.getElementById('ev-hora-fin').value=horParts[1]||'';
+  document.getElementById('ev-ubicacion').value=ev.ubicacion||'';
+  document.getElementById('ev-estado').value=ev.estado||'Confirmado';
+  document.getElementById('ev-notas').value=ev.notas||'';
+  document.getElementById('ev-conflicto').style.display='none';
+  const equipoAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===id).map(e=>e.equipo_id);
+  const personasAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===id).map(e=>e.persona_id);
+  renderEquipoChecksEvento(equipoAsig);
+  renderPersonasChecksEvento(personasAsig);
+  renderCostesEvento();
+  openModal('modal-evento');
+}
+
+async function verEventoFull(id){
+  const ev=EVENTOS.find(x=>x.id===id);if(!ev)return;
+  const c=CLIENTES.find(x=>x.id===ev.cliente_id);
+  const srv=SERVICIOS.find(x=>x.id===ev.servicio_id);
+  const eqAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===id).map(e=>{const eq=EQUIPO.find(x=>x.id===e.equipo_id);return eq;}).filter(Boolean);
+  const perAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===id).map(e=>{const p=PERSONAS.find(x=>x.id===e.persona_id);return p;}).filter(Boolean);
+  const costes=EVENTO_COSTES.filter(e=>e.evento_id===id);
+  const totalCostes=costes.reduce((a,e)=>a+Number(e.importe||0),0);
+  const costPersonas=perAsig.reduce((a,p)=>a+Number(p.coste_por_evento||0),0);
+  const totalCostesTotal=totalCostes+costPersonas;
+  const ingresos=c?Number(c.importe_total||0):0;
+  const margen=ingresos-totalCostesTotal;
+  const facs=FACTURAS.filter(f=>f.cliente_id===ev.cliente_id);
+  document.getElementById('evento-full-title').textContent=(c?c.nombre:'Evento')+' — '+fmtDate(ev.fecha);
+  document.getElementById('evento-full-edit-btn').onclick=()=>{closeModal('modal-evento-full');editarEvento(id);};
+  document.getElementById('evento-full-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <div class="flabel">Cliente</div><div style="font-size:14px;font-weight:600">${c?c.nombre:'—'}</div>
+        ${c&&c.telefono?'<div style="font-size:12px;color:var(--ink-soft)">'+c.telefono+'</div>':''}
+      </div>
+      <div>
+        <div class="flabel">Servicio</div><div style="font-size:13px;font-weight:600">${srv?srv.nombre:'—'}</div>
+        ${srv?'<div style="font-size:12px;color:var(--ink-soft)">'+fmt(srv.precio_base)+' € base</div>':''}
+      </div>
+      <div><div class="flabel">Fecha</div><div style="font-weight:600">${fmtDate(ev.fecha)}</div></div>
+      <div><div class="flabel">Horario</div><div>${ev.horario||'—'}</div></div>
+      <div style="grid-column:1/-1"><div class="flabel">Ubicación</div><div>${ev.ubicacion||'—'}</div></div>
+    </div>
+
+    ${eqAsig.length?`<div class="flabel" style="margin-bottom:6px">Equipo asignado</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${eqAsig.map(eq=>'<span class="badge badge-blue">'+eq.nombre+'</span>').join('')}</div>`:''}
+    ${perAsig.length?`<div class="flabel" style="margin-bottom:6px">Personas</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${perAsig.map(p=>'<span class="badge badge-gray">'+p.nombre+(p.coste_por_evento>0?' ('+fmt(p.coste_por_evento)+' €)':'')+' </span>').join('')}</div>`:''}
+
+    <div class="flabel" style="margin-bottom:8px">P&L del evento</div>
+    <div style="background:var(--surface);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>Ingresos contratados</span><span style="font-weight:600">${fmt(ingresos)} €</span></div>
+      ${costes.map(co=>'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ink-soft)"><span>'+co.concepto+'</span><span>−'+fmt(co.importe)+' €</span></div>').join('')}
+      ${perAsig.filter(p=>p.coste_por_evento>0).map(p=>'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ink-soft)"><span>'+p.nombre+'</span><span>−'+fmt(p.coste_por_evento)+' €</span></div>').join('')}
+      <div style="display:flex;justify-content:space-between;padding:8px 0 4px;font-size:14px;font-weight:700;border-top:1px solid var(--line);margin-top:4px"><span>Margen</span><span style="color:${margen>=0?'#0F6E56':'#A32D2D'}">${fmt(margen)} €</span></div>
+    </div>
+
+    ${facs.length?'<div class="flabel" style="margin-bottom:6px">Facturas</div><div style="display:flex;flex-direction:column;gap:4px">'+facs.map(f=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:var(--surface);border-radius:8px"><span style="font-weight:600">'+f.numero+'</span><span>'+fmt(f.total)+' €</span><span style="color:'+(f.estado==='Cobrada'?'#0F6E56':'#92400E')+'">'+f.estado+'</span></div>').join('')+'</div>':''}
+    ${ev.notas?'<div class="flabel" style="margin-top:12px;margin-bottom:4px">Notas</div><div style="font-size:12px;color:var(--ink-soft)">'+ev.notas+'</div>':''}
+  `;
+  openModal('modal-evento-full');
+}
+
+async function eliminarEvento(id){
+  if(!confirm('¿Eliminar este evento?'))return;
+  await sb.from('evento_equipo').delete().eq('evento_id',id);
+  await sb.from('evento_personas').delete().eq('evento_id',id);
+  await sb.from('evento_costes').delete().eq('evento_id',id);
+  await sb.from('eventos').delete().eq('id',id);
+  await loadAllData();renderEventos();
 }
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
