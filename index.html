@@ -2648,7 +2648,6 @@ function abrirNuevoEvento(clienteIdPref){
   srvSel.innerHTML='<option value="">Sin servicio</option>';
   SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);
   document.getElementById('ev-fecha').value='';
-  document.getElementById('ev-horario').value='';
   document.getElementById('ev-ubicacion').value='';
   document.getElementById('ev-notas').value='';
   const ehi=document.getElementById('ev-hora-ini');if(ehi)ehi.value='';
