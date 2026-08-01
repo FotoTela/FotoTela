@@ -745,6 +745,23 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL GASTO -->
+<div id="modal-gasto" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-gasto')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Nuevo gasto</span><button class="btn-icon" onclick="closeModal('modal-gasto')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div><label class="flabel">Fecha *</label><input id="g-fecha" type="date" class="finput"></div><div><label class="flabel">Importe (€) *</label><input id="g-importe" type="number" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Concepto *</label><input id="g-concepto" class="finput"></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Categoría</label><select id="g-categoria" class="finput"><option value="recurrente-fijo">Recurrente / fijo</option><option value="evento">Coste de evento</option><option value="stock">Compra de stock</option><option value="otros">Otros</option></select></div>
+        <div><label class="flabel">Asignado a</label><select id="g-asignado" class="finput"><option value="empresa">Empresa</option><option value="Henry">Henry</option><option value="Nuria">Núria</option></select></div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Notas</label><input id="g-notas" class="finput"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-gasto')">Cancelar</button><button class="btn-primary" id="save-gasto-btn" onclick="guardarGasto()">Guardar gasto</button></div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
