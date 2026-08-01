@@ -389,6 +389,19 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 
+
+<div id="gastos" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Gastos</div><div class="page-sub">Libro maestro de gastos</div></div>
+    <button class="btn-primary" onclick="openModal('modal-gasto')">+ Nuevo gasto</button>
+  </div>
+  <div class="metrics-grid" id="gastos-metrics"></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Asignado a</th><th>Importe</th><th></th></tr></thead>
+    <tbody id="gastos-tbody"></tbody>
+  </table></div>
+</div>
+
 <div id="ganancias" class="page">
   <div class="page-header">
     <div><div class="page-title">Ganancias y facturado</div><div class="page-sub">Vista calculada — todo se actualiza solo</div></div>
@@ -2132,6 +2145,48 @@ function renderGanancias(){
         <tr style="background:#F0EEFF"><td style="font-weight:700">Rendimiento neto estimado</td><td style="font-weight:700;text-align:right;color:${ganNuria>=0?'#0F6E56':'#A32D2D'}">${fmt(ganNuria)} €</td></tr>
       </tbody>
     </table></div>`;
+}
+
+
+// ======= GASTOS =======
+function renderGastos(){
+  const totalEmp=GASTOS.filter(g=>g.asignado_a==='empresa').reduce((a,g)=>a+Number(g.importe||0),0);
+  const totalH=GASTOS.filter(g=>g.asignado_a==='Henry').reduce((a,g)=>a+Number(g.importe||0),0);
+  const totalN=GASTOS.filter(g=>g.asignado_a==='Nuria').reduce((a,g)=>a+Number(g.importe||0),0);
+  document.getElementById('gastos-metrics').innerHTML=`
+    <div class="metric-card accent"><div class="metric-label">Total gastos</div><div class="metric-value">${fmt(totalEmp+totalH+totalN)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Empresa</div><div class="metric-value">${fmt(totalEmp)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Henry</div><div class="metric-value">${fmt(totalH)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Núria</div><div class="metric-value">${fmt(totalN)} €</div></div>`;
+  document.getElementById('gastos-tbody').innerHTML=GASTOS.length?GASTOS.map(g=>`<tr>
+    <td>${fmtDate(g.fecha)}</td>
+    <td style="font-weight:600">${g.concepto}</td>
+    <td><span class="badge badge-gray">${g.categoria||'—'}</span></td>
+    <td><span class="badge ${g.asignado_a==='Henry'?'badge-blue':g.asignado_a==='Nuria'?'badge-purple':'badge-gray'}">${g.asignado_a||'empresa'}</span></td>
+    <td style="font-weight:600">${fmt(g.importe)} €</td>
+    <td><button class="btn-icon red" onclick="eliminarGasto('${g.id}')">🗑</button></td>
+  </tr>`).join(''):'<tr><td colspan="6"><div class="empty">Sin gastos registrados todavía.</div></td></tr>';
+}
+
+async function guardarGasto(){
+  const concepto=document.getElementById('g-concepto').value.trim();
+  const fecha=document.getElementById('g-fecha').value;
+  const importe=parseFloat(document.getElementById('g-importe').value)||0;
+  if(!concepto||!fecha){alert('Concepto y fecha son obligatorios');return;}
+  const btn=document.getElementById('save-gasto-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const {error}=await sb.from('gastos').insert({user_id:currentUser.id,fecha,concepto,importe,categoria:document.getElementById('g-categoria').value,asignado_a:document.getElementById('g-asignado').value,notas:document.getElementById('g-notas').value});
+  btn.disabled=false;btn.textContent='Guardar gasto';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-gasto');
+  ['g-concepto','g-fecha','g-importe','g-notas'].forEach(id=>document.getElementById(id).value='');
+  await loadAllData();renderGastos();
+}
+
+async function eliminarGasto(id){
+  if(!confirm('¿Eliminar gasto?'))return;
+  await sb.from('gastos').delete().eq('id',id);
+  await loadAllData();renderGastos();
 }
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
