@@ -228,7 +228,6 @@ tr:hover td{background:#FAFBFF}
     <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
     <div class="nav-item" onclick="nav('personas',this)">Equipo</div>
     <div class="nav-item" onclick="nav('equipo',this)">Material <span class="nav-badge" id="stock-badge"></span></div>
-    <div class="nav-item" onclick="nav('eventos',this)">Eventos</div>
     <div class="nav-item" onclick="nav('catalogo',this)">Catálogo</div>
   </div>
   <div class="user-foot">
@@ -324,16 +323,41 @@ tr:hover td{background:#FAFBFF}
 
 <div id="calendario" class="page">
   <div class="page-header"><div><div class="page-title">Calendario</div></div></div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <button class="btn-secondary" onclick="changeMonth(-1)">←</button>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn-secondary" onclick="changeMonth(-1)" id="cal-prev">←</button>
     <span id="month-label" style="font-size:14px;font-weight:600;min-width:130px;text-align:center;color:var(--ink)"></span>
-    <button class="btn-secondary" onclick="changeMonth(1)">→</button>
-    <button class="btn-secondary" onclick="irHoy()">Hoy</button>
-    <div style="margin-left:auto;display:flex;gap:4px;background:var(--surface);padding:3px;border-radius:10px">
+    <button class="btn-secondary" onclick="changeMonth(1)" id="cal-next">→</button>
+    <button class="btn-secondary" onclick="irHoy()" id="cal-hoy">Hoy</button>
+    <input id="cal-search" type="text" placeholder="Buscar cliente, servicio..." oninput="renderCalendario()" style="font-size:13px;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-width:200px;flex:1">
+    <div style="display:flex;gap:4px;background:var(--surface);padding:3px;border-radius:10px">
       <button id="cal-view-mes" onclick="switchCalView('mes',this)" style="padding:6px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;background:var(--brand);color:#fff">Mes</button>
       <button id="cal-view-semana" onclick="switchCalView('semana',this)" style="padding:6px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;background:none;color:var(--ink-soft)">Semana</button>
       <button id="cal-view-dia" onclick="switchCalView('dia',this)" style="padding:6px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;background:none;color:var(--ink-soft)">Día</button>
+      <button id="cal-view-lista" onclick="switchCalView('lista',this)" style="padding:6px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;background:none;color:var(--ink-soft)">Lista</button>
     </div>
+  </div>
+  <!-- Filtros lista (solo visibles en vista lista) -->
+  <div id="cal-filtros-lista" style="display:none;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="cal-fil-estado" onchange="renderCalendario()" style="font-size:12px;padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff">
+      <option value="">Todos los estados</option>
+      <option value="Confirmado">Confirmado</option>
+      <option value="Pendiente">Pendiente</option>
+      <option value="Completado">Completado</option>
+      <option value="Cancelado">Cancelado</option>
+    </select>
+    <select id="cal-fil-servicio" onchange="renderCalendario()" style="font-size:12px;padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff">
+      <option value="">Todos los servicios</option>
+    </select>
+    <select id="cal-fil-orden" onchange="renderCalendario()" style="font-size:12px;padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff">
+      <option value="fecha">Ordenar por fecha</option>
+      <option value="importe">Ordenar por importe</option>
+      <option value="nombre">Ordenar por cliente</option>
+    </select>
+    <select id="cal-fil-pago" onchange="renderCalendario()" style="font-size:12px;padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff">
+      <option value="">Todos los pagos</option>
+      <option value="pagado">Pagado</option>
+      <option value="pendiente">Pendiente pago</option>
+    </select>
   </div>
   <div id="cal-headers" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
   <div id="cal-body" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px"></div>
@@ -456,16 +480,6 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 
-<div id="eventos" class="page">
-  <div class="page-header">
-    <div><div class="page-title">Eventos</div><div class="page-sub">Nodo central — equipo, personas, costes y materiales</div></div>
-    <button class="btn-primary" onclick="abrirNuevoEvento()">+ Nuevo evento</button>
-  </div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>Cliente</th><th>Servicio</th><th>Fecha</th><th>Horario</th><th>Equipo</th><th>Personas</th><th>P&L</th><th>Acciones</th></tr></thead>
-    <tbody id="eventos-tbody"></tbody>
-  </table></div>
-</div>
 
 </main>
 </div>
@@ -1059,7 +1073,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo,eventos:renderEventos};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo};
   if(r[page])r[page]();
 }
 
@@ -1550,9 +1564,119 @@ function renderCobros(){
 }
 
 function renderCalendario(){
+  // Ocultar/mostrar controles según vista
+  const isList=calView==='lista';
+  const filtros=document.getElementById('cal-filtros-lista');
+  if(filtros)filtros.style.display=isList?'flex':'none';
+  const prevBtn=document.getElementById('cal-prev');
+  const nextBtn=document.getElementById('cal-next');
+  const hoyBtn=document.getElementById('cal-hoy');
+  [prevBtn,nextBtn,hoyBtn].forEach(b=>{if(b)b.style.display=isList?'none':'inline-flex';});
+  // Poblar filtro de servicios
+  if(isList){
+    const srvSel=document.getElementById('cal-fil-servicio');
+    if(srvSel&&srvSel.options.length<=1){
+      SERVICIOS.forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre}</option>`);
+    }
+  }
   if(calView==='semana')return renderCalendarioSemana();
   if(calView==='dia')return renderCalendarioDia();
+  if(calView==='lista')return renderCalendarioLista();
   renderCalendarioMes();
+}
+
+function getCalSearch(){
+  const el=document.getElementById('cal-search');
+  return el?el.value.toLowerCase():'';
+}
+
+function renderCalendarioLista(){
+  const q=getCalSearch();
+  const filEstado=document.getElementById('cal-fil-estado')?.value||'';
+  const filServicio=document.getElementById('cal-fil-servicio')?.value||'';
+  const filOrden=document.getElementById('cal-fil-orden')?.value||'fecha';
+  const filPago=document.getElementById('cal-fil-pago')?.value||'';
+  document.getElementById('month-label').textContent='Todos los eventos';
+  document.getElementById('cal-headers').innerHTML='';
+  document.getElementById('cal-body').style.gridTemplateColumns='1fr';
+
+  // Combinar eventos reales + clientes con fecha sin evento
+  let items=[];
+  EVENTOS.forEach(ev=>{
+    const c=CLIENTES.find(x=>x.id===ev.cliente_id);
+    const srv=SERVICIOS.find(x=>x.id===ev.servicio_id);
+    const pend=pendienteCliente(c);
+    items.push({tipo:'evento',ev,c,srv,pend,fecha:ev.fecha,importe:c?Number(c.importe_total||0):0,nombre:c?c.nombre:''});
+  });
+  CLIENTES.forEach(c=>{
+    if(!c.fecha_evento)return;
+    if(EVENTOS.some(e=>e.cliente_id===c.id&&e.fecha===c.fecha_evento))return;
+    const pend=pendienteCliente(c);
+    items.push({tipo:'cliente',c,fecha:c.fecha_evento,importe:Number(c.importe_total||0),nombre:c.nombre,pend});
+  });
+
+  // Filtros
+  if(q)items=items.filter(it=>{
+    const nombre=it.nombre.toLowerCase();
+    const srv=it.srv?it.srv.nombre.toLowerCase():'';
+    const ubi=(it.ev?.ubicacion||it.c?.ubicacion_evento||'').toLowerCase();
+    return nombre.includes(q)||srv.includes(q)||ubi.includes(q);
+  });
+  if(filEstado)items=items.filter(it=>it.tipo==='evento'?it.ev.estado===filEstado:false);
+  if(filServicio)items=items.filter(it=>it.tipo==='evento'&&it.ev.servicio_id===filServicio);
+  if(filPago==='pagado')items=items.filter(it=>it.pend===0);
+  if(filPago==='pendiente')items=items.filter(it=>it.pend!==null&&it.pend>0);
+
+  // Orden
+  items.sort((a,b)=>{
+    if(filOrden==='importe')return b.importe-a.importe;
+    if(filOrden==='nombre')return a.nombre.localeCompare(b.nombre);
+    return(a.fecha||'').localeCompare(b.fecha||'');
+  });
+
+  if(!items.length){
+    document.getElementById('cal-body').innerHTML='<div class="empty" style="padding:40px">Sin eventos que coincidan con los filtros.</div>';
+    return;
+  }
+
+  const estadoColor={Confirmado:'badge-blue',Completado:'badge-green',Pendiente:'badge-gray',Cancelado:'badge-red'};
+  document.getElementById('cal-body').innerHTML=`
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Horario</th><th>Ubicación</th><th>Importe</th><th>Pago</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody>${items.map(it=>{
+          if(it.tipo==='evento'){
+            const ev=it.ev;const c=it.c;const srv=it.srv;
+            return`<tr>
+              <td style="font-weight:600;white-space:nowrap">${fmtDate(ev.fecha)}</td>
+              <td style="font-weight:600">${c?c.nombre:'—'}</td>
+              <td style="font-size:12px">${srv?srv.nombre:'—'}</td>
+              <td style="font-size:12px;color:var(--ink-soft)">${ev.horario||'—'}</td>
+              <td style="font-size:12px;color:var(--ink-soft)">${ev.ubicacion||'—'}</td>
+              <td style="font-weight:600">${it.importe>0?fmt(it.importe)+' €':'—'}</td>
+              <td>${it.pend===null?'—':it.pend===0?'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Pagado</span>':'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Falta '+fmt(it.pend)+' €</span>'}</td>
+              <td><span class="badge ${estadoColor[ev.estado]||'badge-gray'}">${ev.estado}</span></td>
+              <td><button class="btn-icon blue" onclick="verEventoFull('${ev.id}')">Ver</button></td>
+            </tr>`;
+          } else {
+            const c=it.c;
+            return`<tr style="opacity:.6">
+              <td style="font-weight:600;white-space:nowrap">${fmtDate(c.fecha_evento)}</td>
+              <td style="font-weight:600">${c.nombre}</td>
+              <td style="font-size:12px;color:var(--ink-soft)">Sin evento</td>
+              <td style="font-size:12px;color:var(--ink-soft)">${c.horario||'—'}</td>
+              <td style="font-size:12px;color:var(--ink-soft)">${c.ubicacion_evento||'—'}</td>
+              <td>${it.importe>0?fmt(it.importe)+' €':'—'}</td>
+              <td>${it.pend===null?'—':it.pend===0?'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Pagado</span>':'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Falta '+fmt(it.pend)+' €</span>'}</td>
+              <td><span class="badge badge-gray">Sin evento</span></td>
+              <td><button class="btn-icon green" onclick="crearEventoDesdeCliente('${c.id}')">+ Crear</button></td>
+            </tr>`;
+          }
+        }).join('')}</tbody>
+      </table>
+    </div>`;
 }
 
 function renderCalendarioMes(){
@@ -1566,25 +1690,50 @@ function renderCalendarioMes(){
   const daysInMonth=new Date(calYear,calMonth,0).getDate();
   const hoy=new Date();
   const byDay={};
+  // Eventos reales por día
+  const eventosByDay={};
+  EVENTOS.forEach(ev=>{
+    const d=new Date(ev.fecha+'T00:00:00');
+    if(d.getFullYear()===calYear&&d.getMonth()===calMonth-1){
+      if(!eventosByDay[d.getDate()])eventosByDay[d.getDate()]=[];
+      eventosByDay[d.getDate()].push({tipo:'evento',data:ev});
+    }
+  });
+  // Clientes con fecha_evento pero sin evento creado
   CLIENTES.forEach(c=>{
     if(!c.fecha_evento)return;
     const d=new Date(c.fecha_evento+'T00:00:00');
     if(d.getFullYear()===calYear&&d.getMonth()===calMonth-1){
-      if(!byDay[d.getDate()])byDay[d.getDate()]=[];
-      byDay[d.getDate()].push(c);
+      const fecha=c.fecha_evento;
+      const tieneEvento=EVENTOS.some(e=>e.cliente_id===c.id&&e.fecha===fecha);
+      if(!tieneEvento){
+        if(!eventosByDay[d.getDate()])eventosByDay[d.getDate()]=[];
+        eventosByDay[d.getDate()].push({tipo:'cliente',data:c});
+      }
     }
   });
   let html='';
   for(let i=0;i<firstDow;i++)html+='<div></div>';
   for(let d=1;d<=daysInMonth;d++){
     const isT=hoy.getDate()===d&&hoy.getMonth()===calMonth-1&&hoy.getFullYear()===calYear;
-    const evs=byDay[d]||[];
-    const colorMap={Futuro:'var(--brand-light)',Pasado:'#EEEFF2',Potencial:'#FEF3E2',Archivado:'#EEEFF2'};
-    const textMap={Futuro:'var(--brand-dark)',Pasado:'#5B5E68',Potencial:'#92400E',Archivado:'#9CA0AA'};
-    html+=`<div onclick="verEventosDia(${d})" style="min-height:72px;background:#fff;border:1px solid ${isT?'var(--brand)':evs.length?'var(--line)':'var(--line)'};border-radius:10px;padding:6px;font-size:12px;cursor:${evs.length?'pointer':'default'};transition:box-shadow .15s" onmouseover="if(${evs.length})this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+    const items=eventosByDay[d]||[];
+    html+=`<div onclick="verEventosDia(${d})" style="min-height:72px;background:#fff;border:1px solid ${isT?'var(--brand)':'var(--line)'};border-radius:10px;padding:6px;font-size:12px;cursor:${items.length?'pointer':'default'};transition:box-shadow .15s" onmouseover="if(${items.length})this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
       <div style="font-size:11px;${isT?'background:var(--brand);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-weight:700':'color:var(--ink-soft)'}">${d}</div>
-      ${evs.slice(0,2).map(c=>{const e=calcEstadoCliente(c);return`<div onclick="event.stopPropagation();verDetalleEvento('${c.id}')" style="background:${colorMap[e]||'#EEEFF2'};color:${textMap[e]||'#5B5E68'};border-radius:5px;padding:2px 5px;font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;cursor:pointer">${c.nombre}</div>`;}).join('')}
-      ${evs.length>2?`<div style="font-size:10px;color:var(--ink-soft);margin-top:2px">+${evs.length-2} más</div>`:''}
+      ${items.slice(0,2).map(item=>{
+        if(item.tipo==='evento'){
+          const ev=item.data;
+          const c=CLIENTES.find(x=>x.id===ev.cliente_id);
+          const srv=SERVICIOS.find(x=>x.id===ev.servicio_id);
+          return`<div onclick="event.stopPropagation();verEventoFull('${ev.id}')" style="background:var(--brand-light);color:var(--brand-dark);border-radius:5px;padding:2px 5px;font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;cursor:pointer" title="${srv?srv.nombre:''}">${c?c.nombre:'?'} ${ev.horario?'('+ev.horario+')':''}</div>`;
+        } else {
+          const c=item.data;
+          const e=calcEstadoCliente(c);
+          const colorMap={Futuro:'#FEF3E2',Pasado:'#EEEFF2',Potencial:'#EEEFF2'};
+          const textMap={Futuro:'#92400E',Pasado:'#5B5E68',Potencial:'#9CA0AA'};
+          return`<div onclick="event.stopPropagation();crearEventoDesdeCliente('${c.id}')" style="background:${colorMap[e]||'#EEEFF2'};color:${textMap[e]||'#5B5E68'};border-radius:5px;padding:2px 5px;font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;cursor:pointer;border:1px dashed currentColor" title="Clic para crear evento">+ ${c.nombre}</div>`;
+        }
+      }).join('')}
+      ${items.length>2?`<div style="font-size:10px;color:var(--ink-soft);margin-top:2px">+${items.length-2} más</div>`:''}
     </div>`;
   }
   document.getElementById('cal-body').innerHTML=html;
@@ -1620,34 +1769,62 @@ function renderCalendarioSemana(){
 function renderCalendarioDia(){
   const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const d=new Date(calYear,calMonth-1,calDay||new Date().getDate());
+  const fecha=`${calYear}-${String(calMonth).padStart(2,'0')}-${String(calDay||d.getDate()).padStart(2,'0')}`;
   document.getElementById('month-label').textContent=d.getDate()+' de '+months[d.getMonth()]+' de '+d.getFullYear();
   document.getElementById('cal-headers').innerHTML='';
   document.getElementById('cal-body').style.gridTemplateColumns='1fr';
-  const evs=CLIENTES.filter(c=>{if(!c.fecha_evento)return false;const cd=new Date(c.fecha_evento+'T00:00:00');return cd.toDateString()===d.toDateString();});
-  document.getElementById('cal-body').innerHTML=evs.length?evs.map(c=>{
-    const e=calcEstadoCliente(c);
-    const pend=pendienteCliente(c);
-    const colorMap={Futuro:'var(--brand)',Pasado:'#5B5E68',Potencial:'#92400E'};
-    return`<div onclick="verDetalleEvento('${c.id}')" style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px;cursor:pointer;margin-bottom:8px" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div><div style="font-size:15px;font-weight:700;color:var(--ink)">${c.nombre}</div>
-        ${c.homenajeado?'<div style="font-size:12px;color:var(--ink-soft)">'+c.homenajeado+'</div>':''}
-        </div><span class="badge" style="background:${colorMap[e]||'#EEEFF2'};color:#fff">${e}</span>
-      </div>
-      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-        ${c.horario?'<div><span style="color:var(--ink-soft)">Horario:</span> <strong>'+c.horario+'</strong></div>':''}
-        ${c.ubicacion_evento?'<div><span style="color:var(--ink-soft)">Lugar:</span> <strong>'+c.ubicacion_evento+'</strong></div>':''}
-        ${c.tipo_evento?'<div><span style="color:var(--ink-soft)">Tipo:</span> <strong>'+c.tipo_evento+'</strong></div>':''}
-        ${pend!==null?'<div><span style="color:var(--ink-soft)">Pago:</span> <strong style="color:'+(pend===0?'#0F6E56':'#A32D2D')+'">'+(pend===0?'Pagado':'Falta '+fmt(pend)+' €')+'</strong></div>':''}
-      </div>
-    </div>`;
-  }).join(''):`<div class="empty" style="padding:60px 20px">Sin eventos este día</div>`;
+  // Eventos reales del día
+  const eventosReales=EVENTOS.filter(e=>e.fecha===fecha);
+  // Clientes con fecha_evento sin evento creado
+  const clientesSinEvento=CLIENTES.filter(c=>c.fecha_evento===fecha&&!EVENTOS.some(e=>e.cliente_id===c.id&&e.fecha===fecha));
+  const items=[
+    ...eventosReales.map(ev=>{
+      const c=CLIENTES.find(x=>x.id===ev.cliente_id);
+      const srv=SERVICIOS.find(x=>x.id===ev.servicio_id);
+      const pend=pendienteCliente(c);
+      const eqAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===ev.id).map(e=>{const eq=EQUIPO.find(x=>x.id===e.equipo_id);return eq?eq.nombre:'';}).filter(Boolean);
+      const perAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===ev.id).map(e=>{const p=PERSONAS.find(x=>x.id===e.persona_id);return p?p.nombre:'';}).filter(Boolean);
+      return`<div onclick="verEventoFull('${ev.id}')" style="background:#fff;border:2px solid var(--brand);border-radius:12px;padding:16px 20px;cursor:pointer;margin-bottom:8px" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.15)'" onmouseout="this.style.boxShadow=''">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink)">${c?c.nombre:'?'}</div>
+            ${srv?'<div style="font-size:12px;color:var(--brand);font-weight:600">'+srv.nombre+'</div>':''}
+            ${c&&c.homenajeado?'<div style="font-size:12px;color:var(--ink-soft)">'+c.homenajeado+'</div>':''}
+          </div>
+          <span class="badge badge-blue">${ev.estado}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+          ${ev.horario?'<div><span style="color:var(--ink-soft)">Horario:</span> <strong>'+ev.horario+'</strong></div>':''}
+          ${ev.ubicacion?'<div><span style="color:var(--ink-soft)">Lugar:</span> <strong>'+ev.ubicacion+'</strong></div>':''}
+          ${eqAsig.length?'<div><span style="color:var(--ink-soft)">Equipo:</span> '+eqAsig.join(', ')+'</div>':''}
+          ${perAsig.length?'<div><span style="color:var(--ink-soft)">Personas:</span> '+perAsig.join(', ')+'</div>':''}
+          ${pend!==null?'<div><span style="color:var(--ink-soft)">Pago:</span> <strong style="color:'+(pend===0?'#0F6E56':'#A32D2D')+'">'+(pend===0?'Pagado':'Falta '+fmt(pend)+' €')+'</strong></div>':''}
+        </div>
+      </div>`;
+    }),
+    ...clientesSinEvento.map(c=>{
+      const pend=pendienteCliente(c);
+      return`<div style="background:#fff;border:1px dashed var(--line);border-radius:12px;padding:16px 20px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink-soft)">${c.nombre}</div>
+          <div style="font-size:11px;color:#9CA0AA">Sin evento creado todavía</div></div>
+          <button class="btn-primary" onclick="crearEventoDesdeCliente('${c.id}')">+ Crear evento</button>
+        </div>
+      </div>`;
+    })
+  ];
+  document.getElementById('cal-body').innerHTML=items.length?items.join(''):`<div class="empty" style="padding:60px 20px">Sin eventos este día<br><button class="btn-primary" style="margin-top:16px" onclick="abrirNuevoEvento()">+ Crear evento</button></div>`;
 }
 
 function switchCalView(view,el){
   calView=view;
   document.querySelectorAll('[id^="cal-view-"]').forEach(b=>{b.style.background='none';b.style.color='var(--ink-soft)';});
   if(el){el.style.background='var(--brand)';el.style.color='#fff';}
+  // En vista mes/semana ocultar tabla, en lista mostrar tabla
+  const headers=document.getElementById('cal-headers');
+  const body=document.getElementById('cal-body');
+  if(headers)headers.style.display=view==='lista'?'none':'grid';
+  if(body)body.style.display='grid';
   renderCalendario();
 }
 
@@ -2913,6 +3090,27 @@ async function eliminarEvento(id){
   await loadAllData();renderEventos();
 }
 
+
+function crearEventoDesdeCliente(clienteId){
+  // Ir al calendario y abrir modal de nuevo evento con cliente preseleccionado
+  const navItems=document.querySelectorAll('.nav-item');
+  let calItem=null;
+  navItems.forEach(el=>{if(el.textContent.trim()==='Calendario')calItem=el;});
+  nav('calendario', calItem);
+  setTimeout(()=>abrirNuevoEvento(clienteId), 150);
+}
+
+function getEventosDelDia(year, month, day){
+  // Combinar eventos reales + clientes con fecha_evento
+  const fecha=`${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  const eventosReales=EVENTOS.filter(e=>e.fecha===fecha);
+  const clientesSinEvento=CLIENTES.filter(c=>{
+    if(!c.fecha_evento||c.fecha_evento!==fecha)return false;
+    // Excluir si ya tiene evento creado
+    return!EVENTOS.some(e=>e.cliente_id===c.id&&e.fecha===fecha);
+  });
+  return{eventosReales, clientesSinEvento};
+}
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 checkSession();
 </script>
