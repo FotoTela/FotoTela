@@ -224,6 +224,7 @@ tr:hover td{background:#FAFBFF}
     <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
     <div class="nav-item" onclick="nav('personas',this)">Equipo</div>
     <div class="nav-item" onclick="nav('equipo',this)">Material <span class="nav-badge" id="stock-badge"></span></div>
+    <div class="nav-item" onclick="nav('catalogo',this)">Catálogo</div>
   </div>
   <div class="user-foot">
     <div class="user-avatar" id="user-avatar"></div>
@@ -438,6 +439,15 @@ tr:hover td{background:#FAFBFF}
   <!-- Resumen fiscal -->
   <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">Resumen fiscal (Modelo 303 / 130)</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="gan-fiscal"></div>
+</div>
+
+
+<div id="catalogo" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Catálogo de servicios</div><div class="page-sub">Pack fotomatón, 360°, teléfono guestbook...</div></div>
+    <button class="btn-primary" onclick="abrirNuevoServicio()">+ Nuevo servicio</button>
+  </div>
+  <div id="catalogo-list"></div>
 </div>
 
 </main>
@@ -782,6 +792,40 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL SERVICIO -->
+<div id="modal-servicio" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-servicio')">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-servicio-title">Nuevo servicio</span>
+      <button class="btn-icon" onclick="closeModal('modal-servicio')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div><label class="flabel">Nombre *</label><input id="srv-nombre" class="finput" placeholder="Ej: Pack Fotomatón 3h"></div>
+        <div><label class="flabel">Precio base (€)</label><input id="srv-precio" type="number" class="finput" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Duración (horas)</label><input id="srv-duracion" type="number" class="finput" placeholder="3"></div>
+        <div><label class="flabel">Estado</label>
+          <select id="srv-activo" class="finput"><option value="true">Activo</option><option value="false">Inactivo</option></select>
+        </div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Descripción</label><textarea id="srv-desc" class="finput" rows="2" style="resize:vertical"></textarea></div></div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;margin-top:6px">Equipo necesario</div>
+      <div id="srv-equipo-checks" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Receta de consumibles</div>
+      <div id="srv-receta-list"></div>
+      <button onclick="addRecetaRow()" class="add-linea-btn" style="margin-top:6px">+ Añadir consumible</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-servicio')">Cancelar</button>
+      <button class="btn-primary" id="save-srv-btn" onclick="guardarServicio()">Guardar servicio</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
@@ -803,7 +847,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const CUENTA='ES44 0182 6308 7402 0161 1473';
 const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
-let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[],GASTOS=[];
+let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[],GASTOS=[],SERVICIOS=[],SERVICIO_CONSUMIBLES=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear(),calDay=new Date().getDate(),calView='mes';
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 
@@ -874,7 +918,7 @@ async function showApp(){
   document.getElementById('app').classList.add('show');
   document.getElementById('user-email-display').textContent=currentUser.email;
   document.getElementById('user-avatar').textContent=currentUser.email.slice(0,2).toUpperCase();
-  await loadAllData();renderDashboard();actualizarBadgeTareas();actualizarBadgeStock();if(PERSONAS.length===0)initPersonas();if(EQUIPO.length===0)initEquipo();
+  await loadAllData();renderDashboard();actualizarBadgeTareas();actualizarBadgeStock();if(PERSONAS.length===0)initPersonas();if(EQUIPO.length===0)initEquipo();if(SERVICIOS.length===0)initServicios();
 }
 
 async function checkSession(){
@@ -884,8 +928,8 @@ async function checkSession(){
 }
 
 async function loadAllData(){
-  const [c,p,f,ct,t,per,eq,cons,gas]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false})]);
-  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];
+  const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*')]);
+  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];
   const leadsCount=CLIENTES.filter(c=>c.origen==='formulario_publico').length;
   const b=document.getElementById('leads-badge');
   if(leadsCount>0){b.textContent=leadsCount;b.classList.add('show');}else{b.classList.remove('show');}
@@ -924,7 +968,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo};
   if(r[page])r[page]();
 }
 
@@ -2340,6 +2384,159 @@ async function eliminarGasto(id){
   if(!confirm('¿Eliminar gasto?'))return;
   await sb.from('gastos').delete().eq('id',id);
   await loadAllData();renderGastos();
+}
+
+
+// ======= CATÁLOGO DE SERVICIOS =======
+let editandoServicioId=null;
+let recetaRows=[];
+
+async function initServicios(){
+  if(SERVICIOS.length===0){
+    const defaults=[
+      {nombre:'Pack Fotomatón 2h',descripcion:'Fotomatón con impresión ilimitada durante 2 horas',precio_base:450,duracion_horas:2,activo:true},
+      {nombre:'Pack Fotomatón 3h',descripcion:'Fotomatón con impresión ilimitada durante 3 horas',precio_base:550,duracion_horas:3,activo:true},
+      {nombre:'Pack Fotomatón 4h',descripcion:'Fotomatón con impresión ilimitada durante 4 horas',precio_base:650,duracion_horas:4,activo:true},
+      {nombre:'Plataforma 360°',descripcion:'Plataforma 360° con vídeo en alta resolución',precio_base:350,duracion_horas:2,activo:true},
+      {nombre:'Pack Fotomatón + 360°',descripcion:'Combinación de fotomatón y plataforma 360°',precio_base:800,duracion_horas:3,activo:true},
+      {nombre:'Teléfono Guestbook',descripcion:'Teléfono vintage para mensajes de voz de los invitados',precio_base:150,duracion_horas:0,activo:true}
+    ];
+    for(const d of defaults){
+      await sb.from('servicios').insert({...d,user_id:currentUser.id});
+    }
+    await loadAllData();
+  }
+}
+
+function renderCatalogo(){
+  const activos=SERVICIOS.filter(s=>s.activo);
+  const inactivos=SERVICIOS.filter(s=>!s.activo);
+  const all=[...activos,...inactivos];
+  if(!all.length){
+    document.getElementById('catalogo-list').innerHTML='<div class="empty">Sin servicios todavía.</div>';
+    return;
+  }
+  document.getElementById('catalogo-list').innerHTML=all.map(s=>{
+    const recetas=SERVICIO_CONSUMIBLES.filter(r=>r.servicio_id===s.id);
+    const equipoNames=(s.equipo_ids||[]).map(id=>{const eq=EQUIPO.find(e=>e.id===id);return eq?eq.nombre:null;}).filter(Boolean);
+    return`<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px;${!s.activo?'opacity:.55':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--ink)">${s.nombre}</div>
+          ${s.descripcion?'<div style="font-size:12px;color:var(--ink-soft);margin-top:3px">'+s.descripcion+'</div>':''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:var(--brand)">${fmt(s.precio_base)} €</div>
+          ${s.duracion_horas?'<div style="font-size:11px;color:var(--ink-soft)">'+s.duracion_horas+'h</div>':''}
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">
+        ${equipoNames.length?'<div><span style="color:var(--ink-soft);font-weight:600">Equipo:</span> '+equipoNames.join(', ')+'</div>':''}
+        ${recetas.length?'<div><span style="color:var(--ink-soft);font-weight:600">Consumibles:</span> '+recetas.map(r=>{const c=CONSUMIBLES.find(x=>x.id===r.consumible_id);return c?r.cantidad+' '+c.unidad+' '+c.nombre:'';}).filter(Boolean).join(', ')+'</div>':''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="btn-icon blue" onclick="editarServicio('${s.id}')">Editar</button>
+        <button class="btn-icon ${s.activo?'red':'green'}" onclick="toggleServicio('${s.id}',${s.activo})" style="margin-left:4px">${s.activo?'Desactivar':'Activar'}</button>
+        <button class="btn-icon red" onclick="eliminarServicio('${s.id}')" style="margin-left:4px">Borrar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirNuevoServicio(){
+  editandoServicioId=null;
+  recetaRows=[];
+  document.getElementById('modal-servicio-title').textContent='Nuevo servicio';
+  ['srv-nombre','srv-desc','srv-precio','srv-duracion'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('srv-activo').value='true';
+  renderEquipoChecks([]);
+  renderRecetaList();
+  openModal('modal-servicio');
+}
+
+function editarServicio(id){
+  const s=SERVICIOS.find(x=>x.id===id);if(!s)return;
+  editandoServicioId=id;
+  document.getElementById('modal-servicio-title').textContent='Editar servicio';
+  document.getElementById('srv-nombre').value=s.nombre||'';
+  document.getElementById('srv-desc').value=s.descripcion||'';
+  document.getElementById('srv-precio').value=s.precio_base||0;
+  document.getElementById('srv-duracion').value=s.duracion_horas||0;
+  document.getElementById('srv-activo').value=s.activo?'true':'false';
+  renderEquipoChecks(s.equipo_ids||[]);
+  const recetas=SERVICIO_CONSUMIBLES.filter(r=>r.servicio_id===id);
+  recetaRows=recetas.map(r=>({consumible_id:r.consumible_id,cantidad:r.cantidad}));
+  renderRecetaList();
+  openModal('modal-servicio');
+}
+
+function renderEquipoChecks(selectedIds){
+  document.getElementById('srv-equipo-checks').innerHTML=EQUIPO.map(eq=>`
+    <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface);border-radius:8px;cursor:pointer;font-size:13px">
+      <input type="checkbox" value="${eq.id}" ${selectedIds.includes(eq.id)?'checked':''} style="accent-color:var(--brand)">
+      ${eq.nombre}
+    </label>`).join('');
+}
+
+function renderRecetaList(){
+  document.getElementById('srv-receta-list').innerHTML=recetaRows.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 80px 30px;gap:8px;margin-bottom:6px;align-items:center">
+      <select onchange="recetaRows[${i}].consumible_id=this.value" class="finput" style="font-size:12px">
+        <option value="">Seleccionar consumible...</option>
+        ${CONSUMIBLES.map(c=>`<option value="${c.id}" ${r.consumible_id===c.id?'selected':''}>${c.nombre}</option>`).join('')}
+      </select>
+      <input type="number" value="${r.cantidad||1}" min="1" onchange="recetaRows[${i}].cantidad=parseFloat(this.value)||1" class="finput" style="font-size:12px" placeholder="Cant.">
+      <button onclick="recetaRows.splice(${i},1);renderRecetaList()" style="background:#FCEBEB;color:#A32D2D;border:none;border-radius:7px;padding:6px 8px;cursor:pointer;font-weight:600">✕</button>
+    </div>`).join('');
+}
+
+function addRecetaRow(){
+  recetaRows.push({consumible_id:'',cantidad:1});
+  renderRecetaList();
+}
+
+async function guardarServicio(){
+  const nombre=document.getElementById('srv-nombre').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+  const btn=document.getElementById('save-srv-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const equipoIds=Array.from(document.querySelectorAll('#srv-equipo-checks input:checked')).map(cb=>cb.value);
+  const payload={
+    nombre,
+    descripcion:document.getElementById('srv-desc').value,
+    precio_base:parseFloat(document.getElementById('srv-precio').value)||0,
+    duracion_horas:parseFloat(document.getElementById('srv-duracion').value)||0,
+    activo:document.getElementById('srv-activo').value==='true',
+    equipo_ids:equipoIds
+  };
+  let servicioId=editandoServicioId;
+  if(editandoServicioId){
+    await sb.from('servicios').update(payload).eq('id',editandoServicioId);
+    await sb.from('servicio_consumibles').delete().eq('servicio_id',editandoServicioId);
+  } else {
+    const {data}=await sb.from('servicios').insert({...payload,user_id:currentUser.id}).select().single();
+    servicioId=data.id;
+  }
+  const recetasValidas=recetaRows.filter(r=>r.consumible_id);
+  if(recetasValidas.length){
+    await sb.from('servicio_consumibles').insert(recetasValidas.map(r=>({user_id:currentUser.id,servicio_id:servicioId,consumible_id:r.consumible_id,cantidad:r.cantidad})));
+  }
+  btn.disabled=false;btn.textContent='Guardar servicio';
+  editandoServicioId=null;recetaRows=[];
+  closeModal('modal-servicio');
+  await loadAllData();renderCatalogo();
+}
+
+async function toggleServicio(id,activo){
+  await sb.from('servicios').update({activo:!activo}).eq('id',id);
+  await loadAllData();renderCatalogo();
+}
+
+async function eliminarServicio(id){
+  if(!confirm('¿Eliminar este servicio?'))return;
+  await sb.from('servicio_consumibles').delete().eq('servicio_id',id);
+  await sb.from('servicios').delete().eq('id',id);
+  await loadAllData();renderCatalogo();
 }
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
