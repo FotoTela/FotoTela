@@ -766,7 +766,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const CUENTA='ES44 0182 6308 7402 0161 1473';
 const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'};
-let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[];
+let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[],GASTOS=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear();
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 
@@ -847,8 +847,8 @@ async function checkSession(){
 }
 
 async function loadAllData(){
-  const [c,p,f,ct,t,per,eq,cons]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true})]);
-  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];
+  const [c,p,f,ct,t,per,eq,cons,gas]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false})]);
+  CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];
   const leadsCount=CLIENTES.filter(c=>c.origen==='formulario_publico').length;
   const b=document.getElementById('leads-badge');
   if(leadsCount>0){b.textContent=leadsCount;b.classList.add('show');}else{b.classList.remove('show');}
