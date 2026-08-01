@@ -386,6 +386,39 @@ tr:hover td{background:#FAFBFF}
   </table></div>
 </div>
 
+
+<div id="ganancias" class="page">
+  <div class="page-header">
+    <div><div class="page-title">Ganancias y facturado</div><div class="page-sub">Vista calculada — todo se actualiza solo</div></div>
+    <div style="display:flex;gap:8px">
+      <select id="gan-year" class="finput" onchange="renderGanancias()" style="font-size:13px;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff">
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+        <option value="2027">2027</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Bloque A: Facturado bruto -->
+  <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">A · Facturado bruto (sin restar gastos)</div>
+  <div class="metrics-grid" id="gan-facturado" style="margin-bottom:24px"></div>
+
+  <!-- Bloque B: Ganancias neto -->
+  <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">B · Ganancias neto (facturado − gastos)</div>
+  <div class="metrics-grid" id="gan-neto" style="margin-bottom:24px"></div>
+
+  <!-- Detalle por mes -->
+  <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">Detalle mensual</div>
+  <div class="table-wrap" style="margin-bottom:24px"><table>
+    <thead><tr><th>Mes</th><th>Henry</th><th>Núria</th><th>Efectivo</th><th>Total facturado</th><th>Gastos</th><th>Margen</th></tr></thead>
+    <tbody id="gan-mensual"></tbody>
+  </table></div>
+
+  <!-- Resumen fiscal -->
+  <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">Resumen fiscal (Modelo 303 / 130)</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="gan-fiscal"></div>
+</div>
+
 </main>
 </div>
 
@@ -839,7 +872,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles};
+  const r={clientes:renderClientes,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles};
   if(r[page])r[page]();
 }
 
@@ -1999,6 +2032,104 @@ async function guardarStock(){
   await loadAllData();renderEquipoYConsumibles();
   // Alerta en dashboard si hay stock bajo
   if(document.getElementById('dashboard').classList.contains('active'))renderDashboard();
+}
+
+
+// ======= GANANCIAS / FACTURADO =======
+function renderGanancias(){
+  const year=parseInt(document.getElementById('gan-year').value)||new Date().getFullYear();
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Filtrar por año
+  const facsAno=FACTURAS.filter(f=>{
+    const d=f.fecha_factura?new Date(f.fecha_factura+'T00:00:00'):null;
+    return d&&d.getFullYear()===year;
+  });
+  const gastosAno=GASTOS.filter(g=>{
+    const d=g.fecha?new Date(g.fecha+'T00:00:00'):null;
+    return d&&d.getFullYear()===year;
+  });
+
+  // === BLOQUE A: Facturado bruto ===
+  const facHenry=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.total||0),0);
+  const facNuria=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria').reduce((a,f)=>a+Number(f.total||0),0);
+  const facEfectivo=facsAno.filter(f=>f.tipo==='efectivo').reduce((a,f)=>a+Number(f.total||0),0);
+  const facTotal=facHenry+facNuria+facEfectivo;
+
+  document.getElementById('gan-facturado').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Henry</div><div class="metric-value" style="color:var(--brand)">${fmt(facHenry)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">${facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').length} facturas</div></div>
+    <div class="metric-card"><div class="metric-label">Núria</div><div class="metric-value" style="color:#5B21B6">${fmt(facNuria)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">${facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria').length} facturas</div></div>
+    <div class="metric-card"><div class="metric-label">Efectivo común</div><div class="metric-value" style="color:#0F6E56">${fmt(facEfectivo)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">${facsAno.filter(f=>f.tipo==='efectivo').length} cobros</div></div>
+    <div class="metric-card accent"><div class="metric-label">Total ${year}</div><div class="metric-value">${fmt(facTotal)} €</div></div>`;
+
+  // === BLOQUE B: Ganancias neto ===
+  const gastHenry=gastosAno.filter(g=>g.asignado_a==='Henry').reduce((a,g)=>a+Number(g.importe||0),0);
+  const gastNuria=gastosAno.filter(g=>g.asignado_a==='Nuria').reduce((a,g)=>a+Number(g.importe||0),0);
+  const gastEmpresa=gastosAno.filter(g=>g.asignado_a==='empresa').reduce((a,g)=>a+Number(g.importe||0),0);
+  const gastTotal=gastHenry+gastNuria+gastEmpresa;
+
+  const ganHenry=facHenry-gastHenry;
+  const ganNuria=facNuria-gastNuria;
+  const ganComun=facEfectivo-gastEmpresa;
+  const ganTotal=ganHenry+ganNuria+ganComun;
+
+  const colorGan=(n)=>n>=0?'color:#0F6E56':'color:#A32D2D';
+  document.getElementById('gan-neto').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Ganancias Henry</div><div class="metric-value" style="${colorGan(ganHenry)}">${fmt(ganHenry)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos Henry: ${fmt(gastHenry)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Ganancias Núria</div><div class="metric-value" style="${colorGan(ganNuria)}">${fmt(ganNuria)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos Núria: ${fmt(gastNuria)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Caja común</div><div class="metric-value" style="${colorGan(ganComun)}">${fmt(ganComun)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos empresa: ${fmt(gastEmpresa)} €</div></div>
+    <div class="metric-card accent"><div class="metric-label">Total neto ${year}</div><div class="metric-value">${fmt(ganTotal)} €</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px">Gastos totales: ${fmt(gastTotal)} €</div></div>`;
+
+  // === DETALLE MENSUAL ===
+  const filasMes=meses.map((mes,i)=>{
+    const m=i+1;
+    const fH=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry'&&new Date(f.fecha_factura+'T00:00:00').getMonth()===i).reduce((a,f)=>a+Number(f.total||0),0);
+    const fN=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria'&&new Date(f.fecha_factura+'T00:00:00').getMonth()===i).reduce((a,f)=>a+Number(f.total||0),0);
+    const fE=facsAno.filter(f=>f.tipo==='efectivo'&&new Date(f.fecha_factura+'T00:00:00').getMonth()===i).reduce((a,f)=>a+Number(f.total||0),0);
+    const gT=gastosAno.filter(g=>new Date(g.fecha+'T00:00:00').getMonth()===i).reduce((a,g)=>a+Number(g.importe||0),0);
+    const total=fH+fN+fE;
+    const margen=total-gT;
+    if(total===0&&gT===0)return'';
+    return`<tr>
+      <td style="font-weight:600">${mes}</td>
+      <td>${fH>0?fmt(fH)+' €':'—'}</td>
+      <td>${fN>0?fmt(fN)+' €':'—'}</td>
+      <td>${fE>0?fmt(fE)+' €':'—'}</td>
+      <td style="font-weight:600">${fmt(total)} €</td>
+      <td style="color:#A32D2D">${gT>0?fmt(gT)+' €':'—'}</td>
+      <td style="font-weight:600;color:${margen>=0?'#0F6E56':'#A32D2D'}">${fmt(margen)} €</td>
+    </tr>`;
+  }).filter(Boolean);
+
+  document.getElementById('gan-mensual').innerHTML=filasMes.length?filasMes.join('')+'<tr style="background:#FAFAFB;font-weight:600"><td>TOTAL</td><td>'+fmt(facHenry)+' €</td><td>'+fmt(facNuria)+' €</td><td>'+fmt(facEfectivo)+' €</td><td>'+fmt(facTotal)+' €</td><td style="color:#A32D2D">'+fmt(gastTotal)+' €</td><td style="color:'+(ganTotal>=0?'#0F6E56':'#A32D2D')+'">'+fmt(ganTotal)+' €</td></tr>':'<tr><td colspan="7"><div class="empty">Sin datos para '+year+'.</div></td></tr>';
+
+  // === RESUMEN FISCAL ===
+  const ivaDevH=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.iva_eur||0),0);
+  const ivaDevN=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria').reduce((a,f)=>a+Number(f.iva_eur||0),0);
+  const baseH=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.base||0),0);
+  const baseN=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria').reduce((a,f)=>a+Number(f.base||0),0);
+
+  document.getElementById('gan-fiscal').innerHTML=`
+    <div class="table-wrap"><table>
+      <thead><tr><th colspan="2" style="background:var(--brand);color:#fff">Henry — Modelo 303 / 130</th></tr></thead>
+      <tbody>
+        <tr><td>Base imponible acumulada</td><td style="font-weight:600;text-align:right">${fmt(baseH)} €</td></tr>
+        <tr><td>IVA repercutido (21%)</td><td style="font-weight:600;text-align:right;color:#A32D2D">${fmt(ivaDevH)} €</td></tr>
+        <tr><td>Total facturado (con IVA)</td><td style="font-weight:700;text-align:right">${fmt(facHenry)} €</td></tr>
+        <tr><td>Gastos deducibles</td><td style="font-weight:600;text-align:right;color:#A32D2D">${fmt(gastHenry)} €</td></tr>
+        <tr style="background:#E8EDFC"><td style="font-weight:700">Rendimiento neto estimado</td><td style="font-weight:700;text-align:right;color:${ganHenry>=0?'#0F6E56':'#A32D2D'}">${fmt(ganHenry)} €</td></tr>
+      </tbody>
+    </table></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th colspan="2" style="background:#5B21B6;color:#fff">Núria — Modelo 303 / 130</th></tr></thead>
+      <tbody>
+        <tr><td>Base imponible acumulada</td><td style="font-weight:600;text-align:right">${fmt(baseN)} €</td></tr>
+        <tr><td>IVA repercutido (21%)</td><td style="font-weight:600;text-align:right;color:#A32D2D">${fmt(ivaDevN)} €</td></tr>
+        <tr><td>Total facturado (con IVA)</td><td style="font-weight:700;text-align:right">${fmt(facNuria)} €</td></tr>
+        <tr><td>Gastos deducibles</td><td style="font-weight:600;text-align:right;color:#A32D2D">${fmt(gastNuria)} €</td></tr>
+        <tr style="background:#F0EEFF"><td style="font-weight:700">Rendimiento neto estimado</td><td style="font-weight:700;text-align:right;color:${ganNuria>=0?'#0F6E56':'#A32D2D'}">${fmt(ganNuria)} €</td></tr>
+      </tbody>
+    </table></div>`;
 }
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
