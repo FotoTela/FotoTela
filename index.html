@@ -528,6 +528,7 @@ tr:hover td{background:#FAFBFF}
       </div></div>
       <div class="form-row full"><div><label class="flabel">Notas internas</label><input id="f-notas" class="finput"></div></div>
     </div>
+    <input type="hidden" id="f-cliente-id" value="">
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn-primary" id="save-cliente-btn" onclick="guardarCliente()">Guardar cliente</button></div>
   </div>
 </div>
@@ -672,6 +673,10 @@ tr:hover td{background:#FAFBFF}
         <div><label class="flabel">Ubicación</label><input id="ct-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div>
       </div>
       <div class="form-row full"><div><label class="flabel">Servicios contratados</label>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <select id="ct-srv-quick" class="finput" style="font-size:12px;flex:1"><option value="">Añadir desde catálogo...</option></select>
+          <button onclick="addServicioContrato()" class="btn-secondary" style="white-space:nowrap;font-size:12px">+ Añadir</button>
+        </div>
         <textarea id="ct-servicios" class="finput" rows="3" style="resize:vertical" placeholder="Ej: Fotomatón 3h + Plataforma 360° 2h&#10;Incluye: operador, impresiones ilimitadas, álbum..."></textarea>
       </div></div>
       <div class="form-row">
@@ -3425,6 +3430,134 @@ function renderDashboard(){
 // =============================================
 // VISTA SEMANA CON BUSCADOR
 // =============================================
+
+// =============================================
+// EDITAR CLIENTE
+// =============================================
+function editarCliente(id){
+  const c=CLIENTES.find(x=>x.id===id);if(!c)return;
+  document.getElementById('modal-cliente-title').textContent='Editar cliente';
+  document.getElementById('f-cliente-id').value=id;
+  document.getElementById('f-nombre').value=c.nombre||'';
+  document.getElementById('f-dni').value=c.dni||'';
+  document.getElementById('f-tel').value=c.telefono||'';
+  document.getElementById('f-email').value=c.email||'';
+  document.getElementById('f-dir').value=c.direccion||'';
+  document.getElementById('f-ciudad').value=c.ciudad||'';
+  document.getElementById('f-cp').value=c.cp||'';
+  document.getElementById('f-tipo').value=c.tipo_evento||'Boda';
+  document.getElementById('f-fecha').value=c.fecha_evento||'';
+  document.getElementById('f-ubicacion').value=c.ubicacion_evento||'';
+  document.getElementById('f-homenajeado').value=c.homenajeado||'';
+  document.getElementById('f-notas').value=c.notas||'';
+  document.getElementById('f-servicios').value=c.servicios_interes||'';
+  // Horario
+  const hp=(c.horario||'').split(' - ');
+  const hi=document.getElementById('f-hora-ini');const hf=document.getElementById('f-hora-fin');
+  if(hi)hi.value=hp[0]||'';if(hf)hf.value=hp[1]||'';
+  // Contacto potencial
+  poblarSelectorContacto();
+  setTimeout(()=>{const sel=document.getElementById('f-contacto');if(sel)sel.value=c.contacto_potencial_id||'';},50);
+  openModal('modal-cliente');
+}
+
+// Override guardarCliente para soportar edición
+async function guardarCliente(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+  const btn=document.getElementById('save-cliente-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const iniH=document.getElementById('f-hora-ini')?document.getElementById('f-hora-ini').value:'';
+  const finH=document.getElementById('f-hora-fin')?document.getElementById('f-hora-fin').value:'';
+  const horarioFinal=iniH&&finH?iniH+' - '+finH:'';
+  const payload={nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,horario:horarioFinal,ubicacion_evento:document.getElementById('f-ubicacion').value,homenajeado:document.getElementById('f-homenajeado').value,servicios_interes:document.getElementById('f-servicios').value,notas:document.getElementById('f-notas').value,contacto_potencial_id:document.getElementById('f-contacto').value||null};
+  const editId=document.getElementById('f-cliente-id').value;
+  let error;
+  if(editId){
+    ({error}=await sb.from('clientes').update(payload).eq('id',editId));
+  } else {
+    ({error}=await sb.from('clientes').insert({...payload,user_id:currentUser.id,estado:'Potencial',estado_forzado:null,origen:'manual'}));
+  }
+  btn.disabled=false;btn.textContent='Guardar cliente';
+  if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-cliente');
+  document.getElementById('f-cliente-id').value='';
+  document.getElementById('modal-cliente-title').textContent='Nuevo cliente';
+  ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha','f-ubicacion','f-horario','f-homenajeado','f-hora-ini','f-hora-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const fs=document.getElementById('f-servicios');if(fs)fs.value='';
+  await loadAllData();renderClientes();renderDashboard();
+}
+
+// =============================================
+// EDITAR PRESUPUESTO
+// =============================================
+async function editarPresupuesto(id){
+  const p=PRESUPUESTOS.find(x=>x.id===id);if(!p)return;
+  populateClientSelects();
+  document.getElementById('p-cliente').value=p.cliente_id||'';
+  document.getElementById('p-lugar').value=p.lugar||'';
+  document.getElementById('p-fecha').value=p.fecha_evento||'';
+  document.getElementById('p-validez-hasta').value=p.validez_hasta||'';
+  document.getElementById('p-iva').value=p.iva_pct||21;
+  document.getElementById('p-notas').value=p.notas||'';
+  // Cargar líneas
+  const {data:lineas}=await sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',id).order('orden');
+  presLineas=(lineas||[]).map(l=>({id:'tmp'+(lineaIdCounter++),descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario,unidades:l.unidades}));
+  if(!presLineas.length)presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  // Marcar como edición
+  document.getElementById('save-pres-btn').onclick=()=>actualizarPresupuesto(id);
+  document.getElementById('save-pres-btn').textContent='Actualizar presupuesto';
+  // Poblar catálogo
+  const pSrv=document.getElementById('p-srv-quick');
+  if(pSrv){pSrv.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>pSrv.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
+  renderLineasPres();calcPresTotales();openModal('modal-presupuesto');
+}
+
+async function actualizarPresupuesto(id){
+  const clienteId=document.getElementById('p-cliente').value;
+  if(!clienteId){alert('Selecciona un cliente');return;}
+  const lineasV=presLineas.filter(l=>l.descripcion.trim());
+  if(!lineasV.length){alert('Añade al menos un concepto');return;}
+  const neto=lineasV.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const ivaPct=parseFloat(document.getElementById('p-iva').value)||21;
+  const ivaEur=+(neto*ivaPct/100).toFixed(2);const total=+(neto+ivaEur).toFixed(2);
+  const btn=document.getElementById('save-pres-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  await sb.from('presupuestos').update({cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_hasta:document.getElementById('p-validez-hasta').value||null,notas:document.getElementById('p-notas').value}).eq('id',id);
+  await sb.from('presupuesto_lineas').delete().eq('presupuesto_id',id);
+  await sb.from('presupuesto_lineas').insert(lineasV.map((l,i)=>({user_id:currentUser.id,presupuesto_id:id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
+  btn.disabled=false;btn.textContent='Guardar presupuesto';
+  btn.onclick=()=>guardarPresupuesto();
+  closeModal('modal-presupuesto');
+  await loadAllData();renderPresupuestos();
+}
+
+// =============================================
+// CATÁLOGO EN CONTRATOS
+// =============================================
+function addServicioContrato(){
+  const sel=document.getElementById('ct-srv-quick');
+  if(!sel||!sel.value)return;
+  const srv=SERVICIOS.find(x=>x.id===sel.value);if(!srv)return;
+  const ta=document.getElementById('ct-servicios');
+  const linea=srv.nombre+(srv.descripcion?' — '+srv.descripcion:'')+(srv.precio_base?' ('+fmt(srv.precio_base)+' €)':'');
+  ta.value=(ta.value?ta.value+'\n':'')+linea;
+  // Actualizar importe si está vacío
+  const imp=document.getElementById('ct-importe');
+  if(imp&&(!imp.value||imp.value==='0'))imp.value=srv.precio_base||0;
+  sel.value='';
+}
+
+// Poblar catálogo al abrir contrato
+const _origAbrirNuevoContrato=abrirNuevoContrato;
+abrirNuevoContrato=function(clienteIdPref){
+  _origAbrirNuevoContrato(clienteIdPref);
+  setTimeout(()=>{
+    const sel=document.getElementById('ct-srv-quick');
+    if(sel){sel.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
+  },50);
+};
+
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 checkSession();
 </script>
