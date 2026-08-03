@@ -127,6 +127,19 @@ tr:hover td{background:#FAFBFF}
 .public-form-desc{font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:28px}
 .public-success{text-align:center;padding:40px 20px;display:none}
 .public-success.show{display:block}
+/* --- Firma electrónica --- */
+.firma-wrap{max-width:820px;margin:0 auto}
+.firma-doc-scroll{max-height:52vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.firma-form-box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+.firma-canvas-box{position:relative;border:1.5px dashed #c7cdda;border-radius:10px;background:#fbfcfe;height:150px;margin-top:4px}
+.firma-canvas-box canvas{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+.firma-clear{position:absolute;top:8px;right:8px;font-size:11px;padding:4px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;color:var(--ink-soft);cursor:pointer}
+.firma-check{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);margin-top:14px;line-height:1.5;cursor:pointer}
+.firma-check input{margin-top:2px;width:16px;height:16px;flex-shrink:0}
+.firma-legal{font-size:10.5px;color:var(--ink-soft);margin-top:12px;line-height:1.5;text-align:center}
+.firma-ya{display:none;text-align:center;padding:24px 12px;background:#E1F5EE;border-radius:12px;margin-bottom:12px}
+.firma-ya.show{display:block}
+
 .public-success-icon{width:56px;height:56px;background:#E1F5EE;color:#0F6E56;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
 @media(max-width:768px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%);transition:transform .2s}
@@ -264,6 +277,49 @@ tr:hover td{background:#FAFBFF}
       <div class="public-success-icon">✓</div>
       <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px">¡Gracias!</div>
       <div style="font-size:13px;color:var(--ink-soft)">Hemos recibido tus datos. Nos pondremos en contacto contigo muy pronto.</div>
+    </div>
+  </div>
+</div>
+
+<div id="firma-screen" class="public-form-screen">
+  <div class="firma-wrap">
+    <div id="firma-inner">
+      <div style="text-align:center;margin-bottom:18px">
+        <div class="public-form-logo-mark">F</div>
+        <div class="public-form-title">Firma tu contrato</div>
+        <div class="public-form-desc">Revisa el contrato y fírmalo. Es rápido y tiene plena validez.</div>
+      </div>
+      <div id="firma-invalido" class="public-success" style="margin-bottom:12px">
+        <div class="public-success-icon" style="background:#FCEBEB;color:#A32D2D">!</div>
+        <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px">Enlace no válido</div>
+        <div style="font-size:13px;color:var(--ink-soft)">Este enlace de firma no existe o ha caducado. Contacta con Fototela Events.</div>
+      </div>
+      <div class="firma-doc-scroll" id="firma-preview"></div>
+      <div id="firma-ya" class="firma-ya">
+        <div class="public-success-icon">✓</div>
+        <div style="font-size:15px;font-weight:600;color:var(--ink)">Este contrato ya fue firmado</div>
+        <div style="font-size:13px;color:var(--ink-soft)">Firmado el <span id="firma-ya-fecha"></span>.</div>
+      </div>
+      <div id="firma-form-box" class="firma-form-box">
+        <div id="firma-error" class="login-error"></div>
+        <div class="form-row">
+          <div><label class="flabel">Nombre completo *</label><input id="firma-nombre" class="finput"></div>
+          <div><label class="flabel">DNI</label><input id="firma-dni" class="finput"></div>
+        </div>
+        <label class="flabel" style="margin-top:6px">Firma aquí *</label>
+        <div class="firma-canvas-box">
+          <canvas id="firma-canvas"></canvas>
+          <button type="button" class="firma-clear" onclick="limpiarFirma()">Borrar</button>
+        </div>
+        <label class="firma-check"><input type="checkbox" id="firma-acepta"> He leído y acepto las condiciones del contrato.</label>
+        <button class="btn-primary" id="firma-submit-btn" style="width:100%;justify-content:center;margin-top:12px" onclick="enviarFirma()">Firmar contrato</button>
+        <div class="firma-legal">Al firmar aceptas este contrato mediante firma electrónica simple (Reglamento eIDAS UE 910/2014). Se registran fecha, hora e IP como prueba.</div>
+      </div>
+    </div>
+    <div id="firma-exito" class="public-success">
+      <div class="public-success-icon">✓</div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px">¡Contrato firmado!</div>
+      <div style="font-size:13px;color:var(--ink-soft)">Gracias. Fototela Events ha recibido tu firma correctamente.</div>
     </div>
   </div>
 </div>
@@ -668,6 +724,18 @@ tr:hover td{background:#FAFBFF}
       <div class="share-box"><input id="share-link" readonly><button class="copy-btn" onclick="copyShareLink()">Copiar</button></div>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-share')">Cerrar</button></div>
+  </div>
+</div>
+
+<div id="modal-firma-share" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-firma-share')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Enviar contrato a firmar</span><button class="btn-icon" onclick="closeModal('modal-firma-share')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">Envía este enlace a tu cliente. Podrá leer el contrato y firmarlo desde el móvil. Cuando firme, verás la firma en el contrato automáticamente.</p>
+      <div class="share-box"><input id="firma-share-link" readonly><button class="copy-btn" onclick="copiarFirmaLink()">Copiar</button></div>
+      <a id="firma-share-wa" href="#" target="_blank" class="btn-primary" style="width:100%;justify-content:center;margin-top:12px;text-decoration:none">Enviar por WhatsApp</a>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-firma-share')">Cerrar</button></div>
   </div>
 </div>
 
@@ -1317,6 +1385,111 @@ function copyShareLink(){
   const btn=event.target;const orig=btn.textContent;btn.textContent='¡Copiado!';setTimeout(()=>btn.textContent=orig,1500);
 }
 
+// ======= FIRMA ELECTRÓNICA DE CONTRATOS =======
+let firmaCtx=null, firmaDibujando=false, firmaVacia=true, firmaTokenActual=null, firmaContratoActual=null;
+
+function checkFirmaURL(){
+  const params=new URLSearchParams(window.location.search);
+  const token=params.get('firmar');
+  if(token){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('firma-screen').classList.add('show');
+    cargarContratoFirma(token);
+    return true;
+  }
+  return false;
+}
+
+async function cargarContratoFirma(token){
+  firmaTokenActual=token;
+  const {data,error}=await sbPublic.rpc('get_contrato_firma',{p_token:token});
+  if(error||!data){
+    document.getElementById('firma-preview').style.display='none';
+    document.getElementById('firma-form-box').style.display='none';
+    document.getElementById('firma-invalido').classList.add('show');
+    return;
+  }
+  firmaContratoActual=data;
+  const c={nombre:data.cliente_nombre, dni:data.cliente_dni};
+  document.getElementById('firma-preview').innerHTML=buildContratoHTML(data,c);
+  document.getElementById('firma-nombre').value=data.cliente_nombre||'';
+  document.getElementById('firma-dni').value=data.cliente_dni||'';
+  if(data.firmado_at){
+    document.getElementById('firma-form-box').style.display='none';
+    document.getElementById('firma-ya').classList.add('show');
+    document.getElementById('firma-ya-fecha').textContent=new Date(data.firmado_at).toLocaleString('es-ES');
+    return;
+  }
+  setTimeout(initFirmaCanvas,60);
+}
+
+function initFirmaCanvas(){
+  const cv=document.getElementById('firma-canvas'); if(!cv)return;
+  const rect=cv.getBoundingClientRect(); const ratio=window.devicePixelRatio||1;
+  cv.width=rect.width*ratio; cv.height=rect.height*ratio;
+  firmaCtx=cv.getContext('2d'); firmaCtx.scale(ratio,ratio);
+  firmaCtx.lineWidth=2.2; firmaCtx.lineCap='round'; firmaCtx.lineJoin='round'; firmaCtx.strokeStyle='#1a1a1a';
+  firmaVacia=true;
+  const pos=(e)=>{const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+  const start=(e)=>{e.preventDefault();firmaDibujando=true;const q=pos(e);firmaCtx.beginPath();firmaCtx.moveTo(q.x,q.y);};
+  const move=(e)=>{if(!firmaDibujando)return;e.preventDefault();const q=pos(e);firmaCtx.lineTo(q.x,q.y);firmaCtx.stroke();firmaVacia=false;};
+  const end=()=>{firmaDibujando=false;};
+  cv.onmousedown=start; cv.onmousemove=move; window.onmouseup=end;
+  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
+}
+
+function limpiarFirma(){
+  if(!firmaCtx)return;
+  const cv=document.getElementById('firma-canvas');
+  firmaCtx.clearRect(0,0,cv.width,cv.height); firmaVacia=true;
+}
+
+async function enviarFirma(){
+  const err=document.getElementById('firma-error'); err.style.display='none';
+  const nombre=document.getElementById('firma-nombre').value.trim();
+  const dni=document.getElementById('firma-dni').value.trim();
+  const acepta=document.getElementById('firma-acepta').checked;
+  if(!nombre){err.textContent='Escribe tu nombre completo';err.style.display='block';return;}
+  if(!acepta){err.textContent='Debes marcar la casilla de aceptación';err.style.display='block';return;}
+  if(firmaVacia){err.textContent='Dibuja tu firma en el recuadro';err.style.display='block';return;}
+  const btn=document.getElementById('firma-submit-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Firmando...';
+  const firmaData=document.getElementById('firma-canvas').toDataURL('image/png');
+  let ip=null;
+  try{const r=await fetch('https://api.ipify.org?format=json');const j=await r.json();ip=j.ip;}catch(e){}
+  const {data,error}=await sbPublic.rpc('firmar_contrato',{p_token:firmaTokenActual,p_firma:firmaData,p_nombre:nombre,p_dni:dni,p_ip:ip});
+  btn.disabled=false; btn.textContent='Firmar contrato';
+  if(error||data===false){err.textContent='No se ha podido firmar (puede que el contrato ya esté firmado). Contacta con Fototela.';err.style.display='block';return;}
+  document.getElementById('firma-inner').style.display='none';
+  document.getElementById('firma-exito').classList.add('show');
+}
+
+async function enviarAFirmar(id){
+  const ct=CONTRATOS.find(x=>x.id===id); if(!ct)return;
+  let token=ct.firma_token;
+  if(!token){
+    token=((crypto.randomUUID?crypto.randomUUID():('t'+Date.now()))+Math.random().toString(36).slice(2));
+    const {error}=await sb.from('contratos').update({firma_token:token}).eq('id',id);
+    if(error){alert('Error generando enlace: '+error.message);return;}
+    ct.firma_token=token;
+  }
+  const url=window.location.origin+window.location.pathname+'?firmar='+token;
+  document.getElementById('firma-share-link').value=url;
+  const c=CLIENTES.find(x=>x.id===ct.cliente_id);
+  const tel=(c&&c.telefono)?c.telefono.replace(/\D/g,''):'';
+  const num=tel?(tel.length>9?tel:'34'+tel):'';
+  const nom=c&&c.nombre?(' '+c.nombre.split(' ')[0]):'';
+  const msg=encodeURIComponent('Hola'+nom+', aquí tienes el contrato de Fototela Events para revisarlo y firmarlo: '+url);
+  document.getElementById('firma-share-wa').href='https://wa.me/'+num+'?text='+msg;
+  openModal('modal-firma-share');
+}
+
+function copiarFirmaLink(){
+  const input=document.getElementById('firma-share-link');
+  input.select(); navigator.clipboard.writeText(input.value);
+  const btn=event.target; const o=btn.textContent; btn.textContent='¡Copiado!'; setTimeout(()=>btn.textContent=o,1500);
+}
+
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
@@ -1347,6 +1520,7 @@ async function showApp(){
 }
 
 async function checkSession(){
+  if(checkFirmaURL())return;
   if(checkPublicFormURL())return;
   const {data}=await sb.auth.getSession();
   if(data.session){currentUser=data.session.user;showApp();}
@@ -2434,7 +2608,11 @@ async function guardarContrato(){
 function renderContratos(){
   document.getElementById('contratos-tbody').innerHTML=CONTRATOS.length?CONTRATOS.map(ct=>{
     const c=CLIENTES.find(x=>x.id===ct.cliente_id);
-    const badgeCt=ct.estado==='Firmado'?'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Firmado</span>':'<span class="badge" style="background:#FEF3E2;color:#92400E">Pendiente firma</span>';
+    let badgeCt;
+    if(ct.firmado_at){badgeCt='<span class="badge" style="background:#E1F5EE;color:#0F6E56">✓ Firmado '+fmtDate(String(ct.firmado_at).split('T')[0])+'</span>';}
+    else if(ct.estado==='Firmado'){badgeCt='<span class="badge" style="background:#E1F5EE;color:#0F6E56">Firmado (manual)</span>';}
+    else if(ct.firma_token){badgeCt='<span class="badge" style="background:#EAF1FF;color:#1543E5">Enviado a firmar</span>';}
+    else{badgeCt='<span class="badge" style="background:#FEF3E2;color:#92400E">Pendiente firma</span>';}
     return `<tr>
       <td style="font-weight:600;color:var(--brand)">${ct.numero}</td>
       <td>${c?c.nombre:'—'}</td>
@@ -2444,6 +2622,7 @@ function renderContratos(){
       <td>${badgeCt}</td>
       <td style="white-space:nowrap">
         <button class="btn-icon blue" onclick="verContrato('${ct.id}')">Ver PDF</button>
+        ${ct.firmado_at?'':`<button class="btn-icon green" onclick="enviarAFirmar('${ct.id}')" style="margin-left:4px">✍️ Enviar a firmar</button>`}
         <button class="btn-icon ${ct.estado==='Firmado'?'gray':'green'}" onclick="toggleFirmado('${ct.id}','${ct.estado}')" style="margin-left:4px">${ct.estado==='Firmado'?'Desmarcar':'Marcar firmado'}</button>
         <button class="btn-icon red" onclick="eliminarContrato('${ct.id}')" style="margin-left:4px">Borrar</button>
       </td>
@@ -2523,7 +2702,13 @@ function buildContratoHTML(ct,c){
   +'<div class="ct-parrafo">Ambas partes aceptan el presente contrato en todos sus terminos y condiciones.</div>'
   +'<div class="ct-parrafo">En Barcelona, a <strong>'+fechaFirma+'</strong>.</div></div>'
   +'<div class="ct-firmas"><div class="ct-firma-box"><div class="ct-firma-linea">Firma '+em.pronombre+'</div><div class="ct-firma-nombre">'+em.nombre+'</div><div class="ct-firma-nif">NIF '+em.nif+'</div></div>'
-  +'<div class="ct-firma-box"><div class="ct-firma-linea">Firma EL CLIENTE</div><div class="ct-firma-nombre">'+(c?c.nombre:'___________________')+'</div>'+dniClienteHtml+'</div></div>'
+  +'<div class="ct-firma-box">'
+  +(ct.firma_data?'<img src="'+ct.firma_data+'" style="height:58px;max-width:210px;object-fit:contain;display:block;margin:0 auto -4px" alt="firma">':'')
+  +'<div class="ct-firma-linea">Firma EL CLIENTE</div>'
+  +'<div class="ct-firma-nombre">'+(ct.firma_nombre||(c?c.nombre:'___________________'))+'</div>'
+  +(ct.firma_dni?'<div class="ct-firma-nif">DNI '+ct.firma_dni+'</div>':dniClienteHtml)
+  +(ct.firmado_at?'<div class="ct-firma-nif" style="margin-top:5px;color:#0F6E56">✓ Firmado digitalmente el '+new Date(ct.firmado_at).toLocaleString('es-ES')+(ct.firma_ip?' · IP '+ct.firma_ip:'')+'</div>':'')
+  +'</div></div>'
   +'<div class="ct-pie">Fototela Events &middot; '+em.nombre+' &middot; NIF '+em.nif+' &middot; Avinguda Pi i Margall 5, 08140 Caldes de Montbui &middot; fototelaeventos@gmail.com</div>'
   +'</div>';
 }
