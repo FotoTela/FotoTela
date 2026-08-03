@@ -148,38 +148,75 @@ tr:hover td{background:#FAFBFF}
 .nav-sub.open{max-height:400px}
 .nav-sub .nav-item{padding-left:22px;font-size:12.5px}
 
-/* FICHA CLIENTE */
-.ficha-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:stretch}
+/* FICHA CLIENTE — REDISEÑO */
+.ficha-overlay{position:fixed;inset:0;background:rgba(15,18,28,.6);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .ficha-overlay.open{display:flex}
-.ficha-panel{width:min(960px,95vw);margin:0 auto;background:var(--bg);display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.ficha-header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:#fff;border-bottom:1px solid var(--line);flex-shrink:0}
-.ficha-avatar{width:42px;height:42px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.ficha-panel{width:min(900px,94vw);background:#F8F9FB;display:flex;flex-direction:column;height:90vh;border-radius:18px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+
+/* Header con gradiente */
+.ficha-header{display:flex;align-items:center;gap:16px;padding:22px 28px 18px;background:linear-gradient(135deg,#1a1d2e 0%,#2d3250 100%);flex-shrink:0}
+.ficha-avatar{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;border:2px solid rgba(255,255,255,.25)}
 .ficha-title{flex:1}
-.ficha-name{font-size:17px;font-weight:700;color:var(--ink)}
-.ficha-sub{font-size:12px;color:var(--ink-soft)}
-.ficha-tabs{display:flex;gap:0;border-bottom:2px solid var(--line);padding:0 20px;background:#fff;flex-shrink:0;overflow-x:auto}
-.ficha-tab{padding:12px 16px;font-size:13px;font-weight:500;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap}
-.ficha-tab:hover{color:var(--ink)}
+.ficha-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.ficha-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+.ficha-header-badges{display:flex;gap:8px;align-items:center}
+.ficha-header .btn-secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:12px;padding:6px 14px;border-radius:8px}
+.ficha-header .btn-secondary:hover{background:rgba(255,255,255,.22)}
+.ficha-header .btn-icon{color:rgba(255,255,255,.6);background:none;border:none;font-size:18px;cursor:pointer;padding:4px 8px}
+.ficha-header .btn-icon:hover{color:#fff}
+
+/* Tabs */
+.ficha-tabs{display:flex;gap:2px;padding:0 22px;background:#fff;border-bottom:1px solid #E8EAF0;flex-shrink:0;overflow-x:auto}
+.ficha-tab{padding:13px 18px;font-size:13px;font-weight:500;color:#8B8FA8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s}
+.ficha-tab:hover{color:#1a1d2e}
 .ficha-tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
-.ficha-body{flex:1;overflow-y:auto;padding:20px}
+
+/* Body */
+.ficha-body{flex:1;overflow-y:auto;padding:22px 24px;background:#F8F9FB}
 .ficha-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.ficha-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
-.ficha-card-title{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
-.ficha-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;font-size:13px;border-bottom:1px solid var(--line)}
+
+/* Cards */
+.ficha-card{background:#fff;border:1px solid #E8EAF0;border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.ficha-card-title{font-size:10.5px;font-weight:700;color:#9CA0AA;text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.ficha-card-title::before{content:'';display:inline-block;width:3px;height:12px;background:var(--brand);border-radius:2px}
+
+/* Rows */
+.ficha-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #F0F2F7}
 .ficha-row:last-child{border-bottom:none}
-.ficha-row .label{color:var(--ink-soft);flex-shrink:0;margin-right:8px}
-.ficha-row .value{color:var(--ink);font-weight:500;text-align:right;word-break:break-word}
-.ficha-badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.ficha-doc-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border-radius:8px;margin-bottom:6px;font-size:12.5px;cursor:pointer}
-.ficha-doc-item:hover{background:#e8eaf0}
-.ficha-timeline-item{display:flex;gap:12px;margin-bottom:12px}
-.ficha-timeline-dot{width:10px;height:10px;border-radius:50%;background:var(--brand);flex-shrink:0;margin-top:4px}
-.ficha-timeline-content{flex:1;font-size:12.5px;color:var(--ink-soft)}
-.ficha-timeline-date{font-size:11px;color:#9CA0AA}
-.file-upload-zone{border:2px dashed var(--line);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:.2s}
+.ficha-row .label{color:#9CA0AA;font-size:12px}
+.ficha-row .value{color:#1a1d2e;font-weight:500;text-align:right;word-break:break-word;max-width:60%}
+
+/* Stats */
+.ficha-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.ficha-stat{background:#F8F9FB;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:.15s;border:1px solid transparent}
+.ficha-stat:hover{border-color:var(--brand);background:var(--brand-light)}
+.ficha-stat-num{font-size:22px;font-weight:800;color:var(--brand);line-height:1}
+.ficha-stat-label{font-size:10px;color:#9CA0AA;margin-top:4px;font-weight:500}
+
+/* Quick actions */
+.ficha-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ficha-quick-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;background:#F8F9FB;border:1px solid #E8EAF0;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:#1a1d2e;transition:.15s;width:100%;text-align:left}
+.ficha-quick-btn:hover{background:var(--brand-light);border-color:var(--brand);color:var(--brand)}
+.ficha-quick-btn .qicon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* Doc items */
+.ficha-doc-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#F8F9FB;border-radius:10px;margin-bottom:6px;font-size:13px;cursor:pointer;border:1px solid transparent;transition:.15s}
+.ficha-doc-item:hover{background:#fff;border-color:var(--brand)}
+
+/* Timeline */
+.ficha-timeline-item{display:flex;gap:14px;margin-bottom:14px;position:relative}
+.ficha-timeline-item::before{content:'';position:absolute;left:5px;top:14px;bottom:-14px;width:1px;background:#E8EAF0}
+.ficha-timeline-item:last-child::before{display:none}
+.ficha-timeline-dot{width:11px;height:11px;border-radius:50%;background:var(--brand);flex-shrink:0;margin-top:3px;border:2px solid #fff;box-shadow:0 0 0 2px var(--brand)}
+.ficha-timeline-content{flex:1;padding-bottom:4px}
+.ficha-timeline-txt{font-size:13px;color:#1a1d2e;font-weight:500}
+.ficha-timeline-date{font-size:11px;color:#9CA0AA;margin-top:2px}
+
+/* Files */
+.file-upload-zone{border:2px dashed #D0D3E0;border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:.2s;background:#fff}
 .file-upload-zone:hover{border-color:var(--brand);background:var(--brand-light)}
-.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-radius:8px;margin-bottom:6px;font-size:13px}
-.file-icon{font-size:20px}
+.file-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:#F8F9FB;border-radius:10px;margin-bottom:6px;border:1px solid #E8EAF0}
+.file-icon{font-size:22px;width:36px;height:36px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid #E8EAF0}
 
 </style>
 </head>
@@ -3737,70 +3774,86 @@ function renderFichaResumen(c){
   const cts = CONTRATOS.filter(ct=>ct.cliente_id===c.id);
   const totalFacturado = facs.filter(f=>f.tipo==='formal').reduce((a,f)=>a+Number(f.total||0),0);
   const contacto = CONTACTOS.find(ct=>ct.id===c.contacto_potencial_id);
-  const evs = EVENTOS.filter(e=>e.cliente_id===c.id);
+  const estadoColor = {Futuro:'#E8F4FF',Pasado:'#F0F0F5',Potencial:'#FFF8E8',Archivado:'#F5F5F5'};
+  const estadoText = {Futuro:'#1565C0',Pasado:'#5B5E68',Potencial:'#92400E',Archivado:'#9CA0AA'};
 
   return `
   <div class="ficha-two-col">
     <div>
-      <!-- DATOS PERSONALES -->
       <div class="ficha-card">
-        <div class="ficha-card-title">Datos personales</div>
-        ${c.dni?'<div class="ficha-row"><span class="label">DNI/NIE</span><span class="value">'+c.dni+'</span></div>':''}
-        ${c.telefono?'<div class="ficha-row"><span class="label">Teléfono</span><span class="value"><a href="tel:'+c.telefono+'" style="color:var(--brand)">'+c.telefono+'</a></span></div>':''}
-        ${c.email?'<div class="ficha-row"><span class="label">Email</span><span class="value"><a href="mailto:'+c.email+'" style="color:var(--brand)">'+c.email+'</a></span></div>':''}
-        ${c.direccion?'<div class="ficha-row"><span class="label">Dirección</span><span class="value">'+c.direccion+(c.ciudad?', '+c.ciudad:'')+'</span></div>':''}
-        ${contacto?'<div class="ficha-row"><span class="label">Referenciado por</span><span class="value" style="color:var(--brand)">'+contacto.nombre+'</span></div>':''}
+        <div class="ficha-card-title">Datos de contacto</div>
+        ${c.telefono?`<div class="ficha-row"><span class="label">📱 Teléfono</span><span class="value"><a href="tel:${c.telefono}" style="color:var(--brand);text-decoration:none">${c.telefono}</a></span></div>`:''}
+        ${c.email?`<div class="ficha-row"><span class="label">✉️ Email</span><span class="value"><a href="mailto:${c.email}" style="color:var(--brand);text-decoration:none;font-size:12px">${c.email}</a></span></div>`:''}
+        ${c.dni?`<div class="ficha-row"><span class="label">🪪 DNI/NIE</span><span class="value">${c.dni}</span></div>`:''}
+        ${c.direccion?`<div class="ficha-row"><span class="label">📍 Dirección</span><span class="value">${c.direccion}${c.ciudad?', '+c.ciudad:''}</span></div>`:''}
+        ${contacto?`<div class="ficha-row"><span class="label">🤝 Referido por</span><span class="value" style="color:var(--brand)">${contacto.nombre}</span></div>`:''}
+        ${!c.telefono&&!c.email&&!c.dni?'<div style="color:#9CA0AA;font-size:13px;padding:8px 0">Sin datos de contacto</div>':''}
       </div>
 
-      <!-- EVENTO -->
       <div class="ficha-card">
-        <div class="ficha-card-title">Evento</div>
-        ${c.tipo_evento?'<div class="ficha-row"><span class="label">Tipo</span><span class="value">'+c.tipo_evento+'</span></div>':''}
-        ${c.fecha_evento?'<div class="ficha-row"><span class="label">Fecha</span><span class="value">'+fmtDate(c.fecha_evento)+'</span></div>':''}
-        ${c.horario?'<div class="ficha-row"><span class="label">Horario</span><span class="value">'+c.horario+'</span></div>':''}
-        ${c.ubicacion_evento?'<div class="ficha-row"><span class="label">Lugar</span><span class="value">'+c.ubicacion_evento+'</span></div>':''}
-        ${c.homenajeado?'<div class="ficha-row"><span class="label">Homenajeado/a</span><span class="value">'+c.homenajeado+'</span></div>':''}
-        ${c.servicios_interes?'<div class="ficha-row"><span class="label">Servicios</span><span class="value">'+c.servicios_interes+'</span></div>':''}
-        ${!c.fecha_evento&&!c.tipo_evento?'<div style="color:var(--ink-soft);font-size:13px">Sin datos de evento</div>':''}
+        <div class="ficha-card-title">Detalles del evento</div>
+        ${c.tipo_evento?`<div class="ficha-row"><span class="label">🎉 Tipo</span><span class="value">${c.tipo_evento}</span></div>`:''}
+        ${c.fecha_evento?`<div class="ficha-row"><span class="label">📅 Fecha</span><span class="value">${fmtDate(c.fecha_evento)}</span></div>`:''}
+        ${c.horario?`<div class="ficha-row"><span class="label">🕐 Horario</span><span class="value">${c.horario}</span></div>`:''}
+        ${c.ubicacion_evento?`<div class="ficha-row"><span class="label">📍 Lugar</span><span class="value">${c.ubicacion_evento}</span></div>`:''}
+        ${c.homenajeado?`<div class="ficha-row"><span class="label">👑 Homenajeado/a</span><span class="value">${c.homenajeado}</span></div>`:''}
+        ${c.servicios_interes?`<div class="ficha-row"><span class="label">🎯 Servicios</span><span class="value">${c.servicios_interes}</span></div>`:''}
+        ${!c.tipo_evento&&!c.fecha_evento?'<div style="color:#9CA0AA;font-size:13px;padding:8px 0">Sin datos de evento todavía</div>':''}
       </div>
+
+      ${c.notas?`<div class="ficha-card">
+        <div class="ficha-card-title">Notas</div>
+        <div style="font-size:13px;color:#4A4D60;line-height:1.7">${c.notas}</div>
+      </div>`:''}
     </div>
 
     <div>
-      <!-- RESUMEN FINANCIERO -->
       <div class="ficha-card">
         <div class="ficha-card-title">Resumen financiero</div>
-        <div class="ficha-row"><span class="label">Estado</span><span class="value"><span class="badge badge-${estado==='Futuro'?'blue':estado==='Pasado'?'dark':'gray'}">${estado}</span></span></div>
-        <div class="ficha-row"><span class="label">Importe total</span><span class="value" style="font-weight:700">${c.importe_total?fmt(c.importe_total)+' €':'—'}</span></div>
-        <div class="ficha-row"><span class="label">Total facturado</span><span class="value">${fmt(totalFacturado)} €</span></div>
-        <div class="ficha-row"><span class="label">Pendiente</span><span class="value" style="color:${pend===0?'#0F6E56':'#A32D2D'};font-weight:600">${pend===null?'—':pend===0?'✓ Pagado':'Falta '+fmt(pend)+' €'}</span></div>
-        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
-          <div style="padding:10px;background:var(--surface);border-radius:8px;cursor:pointer" onclick="closeFicha();nav('presupuestos',null)">
-            <div style="font-size:20px;font-weight:700;color:var(--brand)">${pres.length}</div>
-            <div style="font-size:11px;color:var(--ink-soft)">Presupuestos</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span style="background:${estadoColor[estado]||'#F5F5F5'};color:${estadoText[estado]||'#9CA0AA'};padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600">${estado}</span>
+          ${pend!==null?`<span style="font-size:13px;font-weight:600;color:${pend===0?'#0F6E56':'#C0392B'}">${pend===0?'✓ Pagado':'Falta '+fmt(pend)+' €'}</span>`:''}
+        </div>
+        ${c.importe_total?`
+        <div style="background:linear-gradient(135deg,var(--brand) 0%,#4A6CF7 100%);border-radius:12px;padding:16px;margin-bottom:14px;color:#fff">
+          <div style="font-size:11px;opacity:.75;margin-bottom:4px">IMPORTE TOTAL CONTRATADO</div>
+          <div style="font-size:26px;font-weight:800">${fmt(c.importe_total)} €</div>
+          ${pend!==null&&pend>0?`<div style="font-size:11px;opacity:.75;margin-top:4px">Pendiente: ${fmt(pend)} €</div>`:''}
+        </div>`:''}
+        <div style="font-size:12px;color:#9CA0AA;margin-bottom:8px">Total facturado: <strong style="color:#1a1d2e">${fmt(totalFacturado)} €</strong></div>
+        <div class="ficha-stat-grid">
+          <div class="ficha-stat" onclick="switchFichaTab('documentos',document.querySelectorAll('.ficha-tab')[1])">
+            <div class="ficha-stat-num">${pres.length}</div>
+            <div class="ficha-stat-label">Presupuestos</div>
           </div>
-          <div style="padding:10px;background:var(--surface);border-radius:8px;cursor:pointer" onclick="closeFicha();nav('facturas',null)">
-            <div style="font-size:20px;font-weight:700;color:var(--brand)">${facs.length}</div>
-            <div style="font-size:11px;color:var(--ink-soft)">Facturas</div>
+          <div class="ficha-stat" onclick="switchFichaTab('documentos',document.querySelectorAll('.ficha-tab')[1])">
+            <div class="ficha-stat-num">${facs.length}</div>
+            <div class="ficha-stat-label">Facturas</div>
           </div>
-          <div style="padding:10px;background:var(--surface);border-radius:8px;cursor:pointer" onclick="closeFicha();nav('contratos',null)">
-            <div style="font-size:20px;font-weight:700;color:var(--brand)">${cts.length}</div>
-            <div style="font-size:11px;color:var(--ink-soft)">Contratos</div>
+          <div class="ficha-stat" onclick="switchFichaTab('documentos',document.querySelectorAll('.ficha-tab')[1])">
+            <div class="ficha-stat-num">${cts.length}</div>
+            <div class="ficha-stat-label">Contratos</div>
           </div>
         </div>
       </div>
 
-      <!-- ACCIONES RÁPIDAS -->
       <div class="ficha-card">
         <div class="ficha-card-title">Acciones rápidas</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="btn-secondary" onclick="closeFicha();abrirNuevoPresupuesto('${c.id}')" style="font-size:12px">📋 Presupuesto</button>
-          <button class="btn-secondary" onclick="closeFicha();abrirNuevaFacturaCliente('${c.id}')" style="font-size:12px">🧾 Factura</button>
-          <button class="btn-secondary" onclick="closeFicha();abrirNuevoContrato('${c.id}')" style="font-size:12px">📝 Contrato</button>
-          <button class="btn-secondary" onclick="closeFicha();crearEventoDesdeCliente('${c.id}')" style="font-size:12px">📅 Evento</button>
+        <div class="ficha-quick-grid">
+          <button class="ficha-quick-btn" onclick="closeFicha();abrirNuevoPresupuesto('${c.id}')">
+            <span class="qicon" style="background:#EEF2FF">📋</span>Presupuesto
+          </button>
+          <button class="ficha-quick-btn" onclick="closeFicha();abrirNuevaFacturaCliente('${c.id}')">
+            <span class="qicon" style="background:#FFF5E8">🧾</span>Factura
+          </button>
+          <button class="ficha-quick-btn" onclick="closeFicha();abrirNuevoContrato('${c.id}')">
+            <span class="qicon" style="background:#F0FFF4">📝</span>Contrato
+          </button>
+          <button class="ficha-quick-btn" onclick="closeFicha();crearEventoDesdeCliente('${c.id}')">
+            <span class="qicon" style="background:#FFF0F0">📅</span>Evento
+          </button>
         </div>
       </div>
-
-      ${c.notas?'<div class="ficha-card"><div class="ficha-card-title">Notas</div><div style="font-size:13px;color:var(--ink-soft);line-height:1.6">'+c.notas+'</div></div>':''}
     </div>
   </div>`;
 }
@@ -3810,29 +3863,48 @@ function renderFichaDocumentos(c){
   const facs = FACTURAS.filter(f=>f.cliente_id===c.id).sort((a,b)=>b.created_at.localeCompare(a.created_at));
   const cts = CONTRATOS.filter(ct=>ct.cliente_id===c.id).sort((a,b)=>b.created_at.localeCompare(a.created_at));
 
-  const seccion = (titulo, items, renderFn) => `
-    <div class="ficha-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="ficha-card-title" style="margin:0">${titulo}</div>
+  const seccion = (titulo, emoji, items, renderFn, crearFn, crearLabel) => `
+    <div class="ficha-card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="ficha-card-title" style="margin:0">${emoji} ${titulo}</div>
+        <button class="ficha-quick-btn" onclick="${crearFn}" style="padding:6px 12px;font-size:12px;width:auto">+ ${crearLabel}</button>
       </div>
-      ${items.length ? items.map(renderFn).join('') : '<div style="color:var(--ink-soft);font-size:13px;padding:8px 0">Sin '+titulo.toLowerCase()+'</div>'}
+      ${items.length ? items.map(renderFn).join('') : '<div style="color:#9CA0AA;font-size:13px;padding:12px 0;text-align:center">Sin '+titulo.toLowerCase()+' todavía</div>'}
     </div>`;
 
-  return seccion('Presupuestos', pres, p=>`
+  return seccion('Presupuestos','📋', pres, p=>`
     <div class="ficha-doc-item" onclick="verPresupuesto('${p.id}')">
-      <div><span style="font-weight:600">${p.numero||'—'}</span> <span style="color:var(--ink-soft);font-size:11px">${fmtDate(p.created_at?.slice(0,10))}</span></div>
-      <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600">${fmt(p.total||0)} €</span>${badgePresupuesto(p)}</div>
-    </div>`)
-  + seccion('Facturas', facs, f=>`
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;background:#EEF2FF;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px">📋</div>
+        <div><div style="font-weight:600;font-size:13px">${p.numero||'Sin número'}</div><div style="font-size:11px;color:#9CA0AA">${fmtDate(p.created_at?.slice(0,10))}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-weight:700;font-size:14px">${fmt(p.total||0)} €</span>
+        ${badgePresupuesto(p)}
+      </div>
+    </div>`,
+    `closeFicha();abrirNuevoPresupuesto('${c.id}')`, 'Nuevo')
+  + seccion('Facturas','🧾', facs, f=>`
     <div class="ficha-doc-item" onclick="verFactura('${f.id}')">
-      <div><span style="font-weight:600">${f.numero||'—'}</span> <span style="color:var(--ink-soft);font-size:11px">${fmtDate(f.fecha_factura)}</span></div>
-      <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600">${fmt(f.total||0)} €</span><span class="badge ${f.estado==='Cobrada'?'badge-green':'badge-gray'}">${f.estado||'—'}</span></div>
-    </div>`)
-  + seccion('Contratos', cts, ct=>`
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;background:#FFF5E8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px">🧾</div>
+        <div><div style="font-weight:600;font-size:13px">${f.numero||'Borrador'}</div><div style="font-size:11px;color:#9CA0AA">${fmtDate(f.fecha_factura)}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-weight:700;font-size:14px">${fmt(f.total||0)} €</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${f.estado==='Cobrada'?'#E8F8F0':'#F5F5F5'};color:${f.estado==='Cobrada'?'#0F6E56':'#9CA0AA'}">${f.estado||'—'}</span>
+      </div>
+    </div>`,
+    `closeFicha();abrirNuevaFacturaCliente('${c.id}')`, 'Nueva')
+  + seccion('Contratos','📝', cts, ct=>`
     <div class="ficha-doc-item" onclick="verContrato('${ct.id}')">
-      <div><span style="font-weight:600">${ct.numero||'—'}</span> <span style="color:var(--ink-soft);font-size:11px">${fmtDate(ct.fecha_contrato)}</span></div>
-      <div><span class="badge ${ct.estado==='Firmado'?'badge-green':'badge-gray'}">${ct.estado||'Borrador'}</span></div>
-    </div>`);
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;background:#F0FFF4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px">📝</div>
+        <div><div style="font-weight:600;font-size:13px">${ct.numero||'Sin número'}</div><div style="font-size:11px;color:#9CA0AA">${fmtDate(ct.fecha_contrato)}</div></div>
+      </div>
+      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${ct.estado==='Firmado'?'#E8F8F0':'#F5F5F5'};color:${ct.estado==='Firmado'?'#0F6E56':'#9CA0AA'}">${ct.estado||'Borrador'}</span>
+    </div>`,
+    `closeFicha();abrirNuevoContrato('${c.id}')`, 'Nuevo');
 }
 
 function renderFichaEventos(c){
@@ -3867,15 +3939,15 @@ function renderFichaEventos(c){
 function renderFichaArchivos(c){
   return `
   <div class="ficha-card">
-    <div class="ficha-card-title">Archivos del cliente</div>
+    <div class="ficha-card-title">📁 Archivos adjuntos</div>
     <div class="file-upload-zone" onclick="document.getElementById('file-input-ficha').click()">
-      <div style="font-size:32px;margin-bottom:8px">📁</div>
-      <div style="font-weight:600;margin-bottom:4px">Subir archivo</div>
-      <div style="font-size:12px;color:var(--ink-soft)">Contratos firmados, fotos del venue, pagos...</div>
+      <div style="font-size:36px;margin-bottom:10px">☁️</div>
+      <div style="font-weight:600;color:#1a1d2e;margin-bottom:4px">Arrastra o haz clic para subir</div>
+      <div style="font-size:12px;color:#9CA0AA">Contratos firmados, fotos del venue, comprobantes de pago...</div>
       <input type="file" id="file-input-ficha" style="display:none" multiple onchange="subirArchivoFicha(this.files,'${c.id}')">
     </div>
-    <div id="archivos-list-${c.id}" style="margin-top:12px">
-      <div style="color:var(--ink-soft);font-size:13px;text-align:center;padding:16px">Cargando archivos...</div>
+    <div id="archivos-list-${c.id}" style="margin-top:14px">
+      <div style="color:#9CA0AA;font-size:13px;text-align:center;padding:16px">Cargando...</div>
     </div>
   </div>`;
 }
@@ -3948,10 +4020,10 @@ function cargarArchivosLista(clienteId){
   if(!archivos.length){lista.innerHTML='<div style="color:var(--ink-soft);font-size:13px;text-align:center;padding:16px">Sin archivos todavía</div>';return;}
   lista.innerHTML = archivos.map((a,i)=>`
     <div class="file-item">
-      <span class="file-icon">${a.tipo.includes('pdf')?'📄':a.tipo.includes('image')?'🖼️':'📎'}</span>
-      <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.nombre}</div><div style="font-size:11px;color:var(--ink-soft)">${fmtDate(a.fecha?.slice(0,10))} · ${(a.size/1024).toFixed(0)} KB</div></div>
-      <a href="${a.data}" download="${a.nombre}" class="btn-secondary" style="font-size:12px;padding:5px 10px">⬇️</a>
-      <button onclick="eliminarArchivoFicha('${clienteId}',${i})" style="background:#FCEBEB;color:#A32D2D;border:none;border-radius:7px;padding:5px 8px;cursor:pointer;margin-left:4px">🗑</button>
+      <div class="file-icon">${a.tipo.includes('pdf')?'📄':a.tipo.includes('image')?'🖼️':'📎'}</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.nombre}</div><div style="font-size:11px;color:#9CA0AA">${fmtDate(a.fecha?.slice(0,10))} · ${(a.size/1024).toFixed(0)} KB</div></div>
+      <a href="${a.data}" download="${a.nombre}" style="background:#EEF2FF;color:var(--brand);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer">⬇ Descargar</a>
+      <button onclick="eliminarArchivoFicha('${clienteId}',${i})" style="background:#FFF0F0;color:#C0392B;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;margin-left:6px;font-size:12px">🗑</button>
     </div>`).join('');
 }
 
