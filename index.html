@@ -632,6 +632,10 @@ tr:hover td{background:#FAFBFF}
       <div class="form-row"><div><label class="flabel">Ciudad</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP</label><input id="f-cp" class="finput"></div></div>
       <div class="form-row"><div><label class="flabel">Tipo de evento</label><select id="f-tipo" class="finput"><option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option></select></div><div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="f-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
+      <div class="form-row">
+        <div><label class="flabel">Hora inicio del servicio</label><input id="f-hora-ini" type="time" class="finput"></div>
+        <div><label class="flabel">Hora fin del servicio</label><input id="f-hora-fin" type="time" class="finput"></div>
+      </div>
       <div class="form-row full"><div><label class="flabel">Nombre del homenajeado/a (novios, cumpleañero...)</label><input id="f-homenajeado" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Servicios de interés</label>
         <select id="f-servicios" class="finput">
@@ -1529,14 +1533,28 @@ function calcFacTotales(){
   document.getElementById('fc-total-final').textContent=fmt(neto+iva)+' €';
 }
 
-function abrirNuevoPresupuesto(){
+function abrirNuevoPresupuesto(clienteIdPref){
   populateClientSelects();
   presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
-  ['p-cliente','p-lugar','p-fecha','p-notas'].forEach(id=>document.getElementById(id).value='');
+  ['p-lugar','p-notas'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('p-iva').value='21';document.getElementById('p-validez').value='15';
   // Poblar catálogo en presupuesto
   const pSrv=document.getElementById('p-srv-quick');
   if(pSrv){pSrv.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>pSrv.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
+  // Autorellenar si viene de un cliente
+  if(clienteIdPref){
+    document.getElementById('p-cliente').value=clienteIdPref;
+    const c=CLIENTES.find(x=>x.id===clienteIdPref);
+    if(c){
+      if(c.fecha_evento)document.getElementById('p-fecha').value=c.fecha_evento;
+      if(c.ubicacion_evento)document.getElementById('p-lugar').value=c.ubicacion_evento;
+      // Prellenar línea con servicio de interés
+      if(c.servicios_interes){
+        const srv=SERVICIOS.find(s=>s.nombre.toLowerCase().includes(c.servicios_interes.toLowerCase().split(' ')[0]));
+        if(srv)presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:srv.nombre,detalle:srv.descripcion||'',precio_unitario:srv.precio_base||0,unidades:1}];
+      }
+    }
+  } else {document.getElementById('p-cliente').value='';}
   renderLineasPres();calcPresTotales();openModal('modal-presupuesto');
 }
 
@@ -1670,19 +1688,30 @@ async function guardarEfectivo(){
   if(document.getElementById('clientes').classList.contains('active'))renderClientes();
 }
 
-function abrirNuevaFactura(){
+function abrirNuevaFactura(){abrirNuevaFacturaCliente(null);}
+function abrirNuevaFacturaCliente(clienteIdPref){
   populateClientSelects();populatePresupuestoSelect();
   facLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
-  ['fc-cliente','fc-presupuesto','fc-lugar'].forEach(id=>document.getElementById(id).value='');
+  ['fc-presupuesto','fc-lugar'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fc-cobrado').value='0';
   document.getElementById('fc-iva').value='21';
   document.getElementById('fc-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('fc-emisor').value='Henry';
   document.getElementById('fc-numero').value=nextNumFac('Henry','formal');
   if(document.getElementById('fc-iva-section'))document.getElementById('fc-iva-section').style.display='block';
-  // Poblar catálogo en factura
   const fcSrv=document.getElementById('fc-srv-quick');
   if(fcSrv){fcSrv.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>fcSrv.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
+  // Autorellenar si viene de un cliente
+  if(clienteIdPref){
+    document.getElementById('fc-cliente').value=clienteIdPref;
+    const c=CLIENTES.find(x=>x.id===clienteIdPref);
+    if(c){
+      if(c.ubicacion_evento)document.getElementById('fc-lugar').value=c.ubicacion_evento;
+      if(c.importe_total&&c.importe_total>0){
+        facLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:c.servicios_interes||'Servicio fotográfico',detalle:'Evento: '+(c.ubicacion_evento||'')+(c.fecha_evento?' · '+fmtDate(c.fecha_evento):''),precio_unitario:c.importe_total,unidades:1}];
+      }
+    }
+  } else {document.getElementById('fc-cliente').value='';}
   switchFacSource('cero');renderLineasFac();calcFacTotales();openModal('modal-factura');
 }
 
@@ -2236,7 +2265,17 @@ function autoFillContrato(){
   if(c.fecha_evento)document.getElementById('ct-fecha-ev').value=c.fecha_evento;
   if(c.horario)document.getElementById('ct-horario').value=c.horario;
   if(c.ubicacion_evento)document.getElementById('ct-ubicacion').value=c.ubicacion_evento;
-  if(c.servicios_interes)document.getElementById('ct-servicios').value=c.servicios_interes;
+  if(c.importe_total&&c.importe_total>0)document.getElementById('ct-importe').value=c.importe_total;
+  // Servicios: buscar del catálogo o usar servicios_interes
+  if(c.servicios_interes){
+    const srv=SERVICIOS.find(s=>s.nombre.toLowerCase().includes(c.servicios_interes.toLowerCase().split(' ')[0]));
+    if(srv){
+      const linea=srv.nombre+(srv.descripcion?' — '+srv.descripcion:'')+(srv.precio_base?' ('+fmt(srv.precio_base)+' €)':'');
+      document.getElementById('ct-servicios').value=linea;
+    } else {
+      document.getElementById('ct-servicios').value=c.servicios_interes;
+    }
+  }
 }
 
 async function guardarContrato(){
@@ -3335,6 +3374,19 @@ function poblarSelectorContacto(){
   if(!sel)return;
   sel.innerHTML='<option value="">Sin contacto</option>';
   CONTACTOS.forEach(ct=>sel.innerHTML+=`<option value="${ct.id}">${ct.nombre} (${ct.tipo||'—'})</option>`);
+  sel.innerHTML+='<option value="__nuevo__">+ Crear nuevo contacto...</option>';
+  sel.onchange=function(){if(this.value==='__nuevo__'){this.value='';crearContactoRapido();}};
+}
+
+async function crearContactoRapido(){
+  const nombre=prompt('Nombre del contacto (wedding planner, fotógrafo...):');
+  if(!nombre||!nombre.trim())return;
+  const tipo=prompt('Tipo (Wedding Planner, Fotógrafo, Familiar, Otro):','Wedding Planner');
+  const {data,error}=await sb.from('contactos_potenciales').insert({user_id:currentUser.id,nombre:nombre.trim(),tipo:tipo||'Otro'}).select().single();
+  if(error){alert('Error: '+error.message);return;}
+  await loadAllData();
+  poblarSelectorContacto();
+  setTimeout(()=>{const sel=document.getElementById('f-contacto');if(sel)sel.value=data.id;},50);
 }
 
 // Override renderClientes para poblar contacto al abrir modal
