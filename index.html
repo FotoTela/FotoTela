@@ -143,6 +143,13 @@ tr:hover td{background:#FAFBFF}
 .cli-locked{display:flex;align-items:center;gap:10px;background:var(--brand-light);border:1px solid #D6DBFF;border-radius:10px;padding:10px 14px;font-size:14px;color:var(--ink)}
 .cli-locked .cl-ava{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
 .cli-locked .cl-sub{font-size:12px;color:var(--ink-soft)}
+/* --- Toasts --- */
+.toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:500;box-shadow:0 10px 30px rgba(10,12,20,.28);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(12px);transition:opacity .25s,transform .25s;pointer-events:auto;max-width:90vw}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast .t-ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.toast.ok .t-ic{background:#0F6E56;color:#fff}
+.toast.err .t-ic{background:#A32D2D;color:#fff}
 
 .public-success-icon{width:56px;height:56px;background:#E1F5EE;color:#0F6E56;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
 @media(max-width:768px){
@@ -324,6 +331,7 @@ tr:hover td{background:#FAFBFF}
       <div class="public-success-icon">✓</div>
       <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px">¡Contrato firmado!</div>
       <div style="font-size:13px;color:var(--ink-soft)">Gracias. Fototela Events ha recibido tu firma correctamente.</div>
+      <button class="btn-primary" onclick="descargarContratoFirmado()" style="margin-top:16px">⬇ Descargar tu contrato</button>
     </div>
   </div>
 </div>
@@ -737,6 +745,9 @@ tr:hover td{background:#FAFBFF}
     <div class="modal-body">
       <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">Envía este enlace a tu cliente. Podrá leer el contrato y firmarlo desde el móvil. Cuando firme, verás la firma en el contrato automáticamente.</p>
       <div class="share-box"><input id="firma-share-link" readonly><button class="copy-btn" onclick="copiarFirmaLink()">Copiar</button></div>
+      <label class="flabel" style="margin-top:14px;display:block">Mensaje para el cliente</label>
+      <textarea id="firma-share-msg" class="finput" rows="4" readonly style="resize:none;font-size:13px;line-height:1.5"></textarea>
+      <button class="btn-secondary" onclick="copiarFirmaMsg()" style="width:100%;justify-content:center;margin-top:8px">Copiar mensaje</button>
       <a id="firma-share-wa" href="#" target="_blank" class="btn-primary" style="width:100%;justify-content:center;margin-top:12px;text-decoration:none">Enviar por WhatsApp</a>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-firma-share')">Cerrar</button></div>
@@ -769,7 +780,7 @@ tr:hover td{background:#FAFBFF}
         <div class="totales-row final"><span>Total</span><span id="p-total-final">0,00 €</span></div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-presupuesto')">Cancelar</button><button class="btn-primary" id="save-pres-btn" onclick="guardarPresupuesto()">Guardar presupuesto</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-presupuesto')">Cancelar</button><button class="btn-primary" id="save-pres-btn" onclick="guardarPresupuesto()">Guardar y ver presupuesto</button></div>
   </div>
 </div>
 
@@ -881,7 +892,7 @@ tr:hover td{background:#FAFBFF}
       </div>
       <div class="form-row full"><div><label class="flabel">Servicios contratados</label>
         <div style="display:flex;gap:8px;margin-bottom:6px">
-          <select id="ct-srv-quick" class="finput" style="font-size:12px;flex:1"><option value="">Añadir desde catálogo...</option></select>
+          <select id="ct-srv-quick" class="finput" style="font-size:12px;flex:1" onchange="addServicioContrato()"><option value="">Añadir desde catálogo...</option></select>
           <button onclick="addServicioContrato()" class="btn-secondary" style="white-space:nowrap;font-size:12px">+ Añadir</button>
         </div>
         <textarea id="ct-servicios" class="finput" rows="3" style="resize:vertical" placeholder="Ej: Fotomatón 3h + Plataforma 360° 2h&#10;Incluye: operador, impresiones ilimitadas, álbum..."></textarea>
@@ -1327,7 +1338,7 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 <!-- MODAL PDF -->
-<div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
+<div id="modal-pdf" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
     <div class="modal-header">
       <span class="modal-title" id="pdf-modal-title">Documento</span>
@@ -1468,6 +1479,7 @@ async function enviarFirma(){
   const {data,error}=await sbPublic.rpc('firmar_contrato',{p_token:firmaTokenActual,p_firma:firmaData,p_nombre:nombre,p_dni:dni,p_ip:ip});
   btn.disabled=false; btn.textContent='Firmar contrato';
   if(error||data===false){err.textContent='No se ha podido firmar (puede que el contrato ya esté firmado). Contacta con Fototela.';err.style.display='block';return;}
+  if(firmaContratoActual){firmaContratoActual.firma_data=firmaData;firmaContratoActual.firma_nombre=nombre;firmaContratoActual.firma_dni=dni;firmaContratoActual.firma_ip=ip;firmaContratoActual.firmado_at=new Date().toISOString();}
   document.getElementById('firma-inner').style.display='none';
   document.getElementById('firma-exito').classList.add('show');
 }
@@ -1476,9 +1488,9 @@ async function enviarAFirmar(id){
   const ct=CONTRATOS.find(x=>x.id===id); if(!ct)return;
   let token=ct.firma_token;
   if(!token){
-    token=((crypto.randomUUID?crypto.randomUUID():('t'+Date.now()))+Math.random().toString(36).slice(2));
+    token=Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
     const {error}=await sb.from('contratos').update({firma_token:token}).eq('id',id);
-    if(error){alert('Error generando enlace: '+error.message);return;}
+    if(error){toast('Error generando enlace','err');return;}
     ct.firma_token=token;
   }
   const url=window.location.origin+window.location.pathname+'?firmar='+token;
@@ -1487,8 +1499,9 @@ async function enviarAFirmar(id){
   const tel=(c&&c.telefono)?c.telefono.replace(/\D/g,''):'';
   const num=tel?(tel.length>9?tel:'34'+tel):'';
   const nom=c&&c.nombre?(' '+c.nombre.split(' ')[0]):'';
-  const msg=encodeURIComponent('Hola'+nom+', aquí tienes el contrato de Fototela Events para revisarlo y firmarlo: '+url);
-  document.getElementById('firma-share-wa').href='https://wa.me/'+num+'?text='+msg;
+  const mensaje='Hola'+nom+' \uD83D\uDC4B\n\nYa tienes tu contrato de Fototela Events listo. Puedes revisarlo y firmarlo desde aquí (tarda un minuto):\n'+url+'\n\n\u00a1Gracias!';
+  const msgEl=document.getElementById('firma-share-msg'); if(msgEl)msgEl.value=mensaje;
+  document.getElementById('firma-share-wa').href='https://wa.me/'+num+'?text='+encodeURIComponent(mensaje);
   openModal('modal-firma-share');
 }
 
@@ -1521,6 +1534,30 @@ function matchServicioCatalogo(txt){
   srv=act.find(s=>s.nombre.toLowerCase().includes(t)); if(srv)return srv;
   const w=t.split(/[\s,]+/)[0];
   return act.find(s=>s.nombre.toLowerCase().includes(w))||null;
+}
+
+function toast(msg, type){
+  const wrap=document.getElementById('toast-wrap'); if(!wrap)return;
+  const el=document.createElement('div');
+  el.className='toast '+(type==='err'?'err':'ok');
+  el.innerHTML='<span class="t-ic">'+(type==='err'?'!':'\u2713')+'</span><span class="t-msg"></span>';
+  el.querySelector('.t-msg').textContent=msg;
+  wrap.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),260);},2600);
+}
+function copiarFirmaMsg(){
+  const t=document.getElementById('firma-share-msg'); if(!t)return;
+  t.select(); navigator.clipboard.writeText(t.value);
+  const b=event.target; const o=b.textContent; b.textContent='\u00a1Copiado!'; setTimeout(()=>b.textContent=o,1500);
+}
+function descargarContratoFirmado(){
+  if(!firmaContratoActual)return;
+  const c={nombre:firmaContratoActual.cliente_nombre,dni:firmaContratoActual.cliente_dni};
+  const html=buildContratoHTML(firmaContratoActual,c);
+  const w=window.open('','_blank'); if(!w)return;
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Contrato '+(firmaContratoActual.numero||'')+'</title><style>body{margin:0;padding:24px;background:#fff}@media print{body{padding:0}}</style></head><body>'+html+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.close();
 }
 
 async function doLogin(){
@@ -1859,6 +1896,7 @@ function calcFacTotales(){
 
 function abrirNuevoPresupuesto(clienteIdPref){
   populateClientSelects();
+  {const spb=document.getElementById('save-pres-btn');if(spb){spb.onclick=()=>guardarPresupuesto();spb.textContent='Guardar y ver presupuesto';}}
   presLineas=[];  // reset
   ['p-lugar','p-notas'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('p-iva').value='21';document.getElementById('p-validez').value='15';
@@ -1905,10 +1943,11 @@ async function guardarPresupuesto(){
   const numero='P'+new Date().getFullYear()+String(PRESUPUESTOS.length+1).padStart(2,'0');
   const payload={user_id:currentUser.id,numero,cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_dias:parseInt(document.getElementById('p-validez').value)||15,notas:document.getElementById('p-notas').value,estado:'Pendiente'};
   const {data,error}=await sb.from('presupuestos').insert(payload).select().single();
-  if(error){btn.disabled=false;btn.textContent='Guardar presupuesto';alert('Error: '+error.message);return;}
+  if(error){btn.disabled=false;btn.textContent='Guardar y ver presupuesto';toast('Error: '+error.message,'err');return;}
   await sb.from('presupuesto_lineas').insert(lineasValidas.map((l,i)=>({user_id:currentUser.id,presupuesto_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
-  btn.disabled=false;btn.textContent='Guardar presupuesto';
+  btn.disabled=false;btn.textContent='Guardar y ver presupuesto';
   closeModal('modal-presupuesto');await loadAllData();renderPresupuestos();renderDashboard();
+  verPresupuesto(data.id);
 }
 
 function renderPresupuestos(){
@@ -2065,7 +2104,7 @@ async function guardarFactura(){
   const c=CLIENTES.find(x=>x.id===clienteId);
   if(!c){alert('Selecciona un cliente');return;}
   const emisor=document.getElementById('fc-emisor').value;
-  const tipo=document.getElementById('fc-tipo').value;
+  const tipo='formal';
   const lineasValidas=facLineas.filter(l=>l.descripcion.trim());
   if(lineasValidas.length===0){alert('Añade al menos un concepto');return;}
   const neto=lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
@@ -3589,7 +3628,7 @@ function renderEventos(){
     const eqAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===ev.id).map(e=>{const eq=EQUIPO.find(x=>x.id===e.equipo_id);return eq?eq.nombre:'';}).filter(Boolean);
     const perAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===ev.id).map(e=>{const p=PERSONAS.find(x=>x.id===e.persona_id);return p?p.nombre:'';}).filter(Boolean);
     const costes=EVENTO_COSTES.filter(e=>e.evento_id===ev.id).reduce((a,e)=>a+Number(e.importe||0),0);
-    const ingresos=c?Number(c.importe_total||0):0;
+    const ingresos=(c&&Number(c.importe_total)>0)?Number(c.importe_total):(srv?Number(srv.precio_base||0):0);
     const margen=ingresos-costes;
     const estadoColor={Confirmado:'badge-blue',Completado:'badge-green',Pendiente:'badge-gray',Cancelado:'badge-red'};
     return`<tr>
@@ -3650,7 +3689,7 @@ async function verEventoFull(id){
   const totalCostes=costes.reduce((a,e)=>a+Number(e.importe||0),0);
   const costPersonas=perAsig.reduce((a,p)=>a+Number(p.coste_por_evento||0),0);
   const totalCostesTotal=totalCostes+costPersonas;
-  const ingresos=c?Number(c.importe_total||0):0;
+  const ingresos=(c&&Number(c.importe_total)>0)?Number(c.importe_total):(srv?Number(srv.precio_base||0):0);
   const margen=ingresos-totalCostesTotal;
   const facs=FACTURAS.filter(f=>f.cliente_id===ev.cliente_id);
   document.getElementById('evento-full-title').textContent=(c?c.nombre:'Evento')+' — '+fmtDate(ev.fecha);
@@ -3897,6 +3936,7 @@ function addLineaDesdeServicio(){
   if(!sel||!sel.value)return;
   const srv=SERVICIOS.find(x=>x.id===sel.value);
   if(!srv)return;
+  presLineas=presLineas.filter(l=>(l.descripcion&&l.descripcion.trim())||Number(l.precio_unitario)>0);
   presLineas.push({id:'tmp'+(lineaIdCounter++),descripcion:srv.nombre,detalle:srv.descripcion||'',precio_unitario:srv.precio_base||0,unidades:1});
   renderLineasPres();calcPresTotales();
   sel.value='';
@@ -3907,6 +3947,7 @@ function addLineaFacDesdeServicio(){
   if(!sel||!sel.value)return;
   const srv=SERVICIOS.find(x=>x.id===sel.value);
   if(!srv)return;
+  facLineas=facLineas.filter(l=>(l.descripcion&&l.descripcion.trim())||Number(l.precio_unitario)>0);
   facLineas.push({id:'tmp'+(lineaIdCounter++),descripcion:srv.nombre,detalle:srv.descripcion||'',precio_unitario:srv.precio_base||0,unidades:1});
   renderLineasFac();calcFacTotales();
   sel.value='';
@@ -4125,11 +4166,11 @@ function addServicioContrato(){
   if(!sel||!sel.value)return;
   const srv=SERVICIOS.find(x=>x.id===sel.value);if(!srv)return;
   const ta=document.getElementById('ct-servicios');
-  const linea=srv.nombre+(srv.descripcion?' — '+srv.descripcion:'')+(srv.precio_base?' ('+fmt(srv.precio_base)+' €)':'');
+  const yaHabia=!!ta.value.trim();
+  const linea=srv.nombre+(srv.descripcion?' — '+srv.descripcion:'');
   ta.value=(ta.value?ta.value+'\n':'')+linea;
-  // Actualizar importe si está vacío
   const imp=document.getElementById('ct-importe');
-  if(imp&&(!imp.value||imp.value==='0'))imp.value=srv.precio_base||0;
+  if(imp){const actual=parseFloat(imp.value)||0;imp.value=yaHabia?(actual+(srv.precio_base||0)):(srv.precio_base||0);}
   sel.value='';
 }
 
@@ -4437,7 +4478,7 @@ async function guardarNotaFicha(clienteId){
   await loadAllData();
   const c = CLIENTES.find(x=>x.id===clienteId);
   if(c) c.notas = notas;
-  alert('Notas guardadas ✓');
+  toast('Notas guardadas');
 }
 
 async function subirArchivoFicha(files, clienteId){
@@ -4499,5 +4540,6 @@ function confirmarImporte(){
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 checkSession();
 </script>
+<div id="toast-wrap" class="toast-wrap"></div>
 </body>
 </html>
