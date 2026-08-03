@@ -595,6 +595,7 @@ tr:hover td{background:#FAFBFF}
       <div class="form-row"><div><label class="flabel">Ciudad</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP</label><input id="f-cp" class="finput"></div></div>
       <div class="form-row"><div><label class="flabel">Tipo de evento</label><select id="f-tipo" class="finput"><option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option></select></div><div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="f-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
+      <div class="form-row full"><div><label class="flabel">Nombre del homenajeado/a (novios, cumpleañero...)</label><input id="f-homenajeado" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Servicios de interés</label>
         <select id="f-servicios" class="finput">
           <option value="">Seleccionar...</option>
@@ -3539,26 +3540,26 @@ function renderDashboard(){
 // =============================================
 function editarCliente(id){
   const c=CLIENTES.find(x=>x.id===id);if(!c)return;
-  document.getElementById('modal-cliente-title').textContent='Editar cliente';
-  document.getElementById('f-cliente-id').value=id;
-  document.getElementById('f-nombre').value=c.nombre||'';
-  document.getElementById('f-dni').value=c.dni||'';
-  document.getElementById('f-tel').value=c.telefono||'';
-  document.getElementById('f-email').value=c.email||'';
-  document.getElementById('f-dir').value=c.direccion||'';
-  document.getElementById('f-ciudad').value=c.ciudad||'';
-  document.getElementById('f-cp').value=c.cp||'';
-  document.getElementById('f-tipo').value=c.tipo_evento||'Boda';
-  document.getElementById('f-fecha').value=c.fecha_evento||'';
-  document.getElementById('f-ubicacion').value=c.ubicacion_evento||'';
-  document.getElementById('f-homenajeado').value=c.homenajeado||'';
-  document.getElementById('f-notas').value=c.notas||'';
-  document.getElementById('f-servicios').value=c.servicios_interes||'';
-  // Horario
+  const setVal=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
+  const setTitle=document.getElementById('modal-cliente-title');
+  if(setTitle)setTitle.textContent='Editar cliente';
+  setVal('f-cliente-id',id);
+  setVal('f-nombre',c.nombre);
+  setVal('f-dni',c.dni);
+  setVal('f-tel',c.telefono);
+  setVal('f-email',c.email);
+  setVal('f-dir',c.direccion);
+  setVal('f-ciudad',c.ciudad);
+  setVal('f-cp',c.cp);
+  setVal('f-tipo',c.tipo_evento||'Boda');
+  setVal('f-fecha',c.fecha_evento);
+  setVal('f-ubicacion',c.ubicacion_evento);
+  setVal('f-homenajeado',c.homenajeado);
+  setVal('f-notas',c.notas);
+  setVal('f-servicios',c.servicios_interes);
   const hp=(c.horario||'').split(' - ');
   const hi=document.getElementById('f-hora-ini');const hf=document.getElementById('f-hora-fin');
   if(hi)hi.value=hp[0]||'';if(hf)hf.value=hp[1]||'';
-  // Contacto potencial
   poblarSelectorContacto();
   setTimeout(()=>{const sel=document.getElementById('f-contacto');if(sel)sel.value=c.contacto_potencial_id||'';},50);
   openModal('modal-cliente');
