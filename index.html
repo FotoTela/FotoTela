@@ -786,6 +786,12 @@ tr:hover td{background:#FAFBFF}
       <button class="btn-icon" onclick="closeModal('modal-contrato')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="form-row full"><div><label class="flabel">Firmado por (prestador) *</label>
+        <select id="ct-emisor" class="finput">
+          <option value="Henry">Henry Giovanni Medina Rodríguez — NIF 49459823W</option>
+          <option value="Nuria">Núria Díaz López — NIF 49271218C</option>
+        </select>
+      </div></div>
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
         <input id="ct-cli-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ct-cliente','ct-cli-search')" style="margin-bottom:6px">
         <select id="ct-cliente" class="finput" size="4" style="height:auto" onchange="autoFillContrato()"><option value="">Seleccionar...</option></select>
