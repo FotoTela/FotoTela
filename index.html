@@ -613,7 +613,7 @@ tr:hover td{background:#FAFBFF}
     <button class="btn-primary" onclick="openModal('modal-contacto')">+ Nuevo contacto</button>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>Nombre</th><th>Tipo</th><th>Contacto</th><th>Clientes aportados</th><th>Notas</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th>Nombre</th><th>Tipo</th><th>Teléfono / Email</th><th>Clientes</th><th>Notas</th><th>Acciones</th></tr></thead>
     <tbody id="contactos-tbody"></tbody>
   </table></div>
 </div>
@@ -676,12 +676,6 @@ tr:hover td{background:#FAFBFF}
   <div class="modal wide">
     <div class="modal-header"><span class="modal-title">Nuevo presupuesto</span><button class="btn-icon" onclick="closeModal('modal-presupuesto')">✕</button></div>
     <div class="modal-body">
-      <div class="form-row full"><div><label class="flabel">Firmado por (prestador) *</label>
-        <select id="ct-emisor" class="finput">
-          <option value="Henry">Henry Giovanni Medina Rodríguez — NIF 49459823W</option>
-          <option value="Nuria">Núria Díaz López — NIF 49271218C</option>
-        </select>
-      </div></div>
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
         <input id="p-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('p-cliente','p-cliente-search')" style="margin-bottom:6px">
         <select id="p-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
@@ -1216,6 +1210,40 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL CONTACTO POTENCIAL -->
+<div id="modal-contacto" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-contacto')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-contacto-title">Nuevo contacto potencial</span>
+      <button class="btn-icon" onclick="closeModal('modal-contacto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div><label class="flabel">Nombre *</label><input id="ct-nombre" class="finput" placeholder="Ej: Sara García"></div>
+        <div><label class="flabel">Tipo</label>
+          <select id="ct-tipo" class="finput">
+            <option value="Wedding Planner">Wedding Planner</option>
+            <option value="Fotógrafo">Fotógrafo</option>
+            <option value="Venue">Venue / Sala</option>
+            <option value="Familiar">Familiar o amigo</option>
+            <option value="Cliente anterior">Cliente anterior</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div><label class="flabel">Teléfono</label><input id="ct-tel" class="finput" placeholder="666 123 456"></div>
+        <div><label class="flabel">Email</label><input id="ct-email" class="finput" placeholder="sara@ejemplo.com"></div>
+      </div>
+      <div class="form-row full"><div><label class="flabel">Notas (cómo os conocisteis, eventos juntos...)</label><textarea id="ct-notas-cont" class="finput" rows="3" style="resize:vertical"></textarea></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-contacto')">Cancelar</button>
+      <button class="btn-primary" id="save-contacto-btn" onclick="guardarContacto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
@@ -1618,7 +1646,7 @@ function calcFacTotales(){
 
 function abrirNuevoPresupuesto(clienteIdPref){
   populateClientSelects();
-  presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  presLineas=[];  // reset
   ['p-lugar','p-notas'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('p-iva').value='21';document.getElementById('p-validez').value='15';
   // Poblar catálogo en presupuesto
@@ -1637,7 +1665,14 @@ function abrirNuevoPresupuesto(clienteIdPref){
         if(srv)presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:srv.nombre,detalle:srv.descripcion||'',precio_unitario:srv.precio_base||0,unidades:1}];
       }
     }
-  } else {document.getElementById('p-cliente').value='';}
+  } else {
+    document.getElementById('p-cliente').value='';
+    presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  }
+  if(!presLineas.length)presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1}];
+  // Poblar catálogo (si no se hizo arriba)
+  const pSrv2=document.getElementById('p-srv-quick');
+  if(pSrv2){pSrv2.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>pSrv2.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
   renderLineasPres();calcPresTotales();openModal('modal-presupuesto');
 }
 
@@ -3487,7 +3522,6 @@ const _origOpenModalCliente=window.openModal;
 // (ya se añade en el payload — se actualiza la función)
 
 function renderContactos(){
-  // Ranking: cuántos clientes ha aportado cada contacto
   const ranking=CONTACTOS.map(ct=>{
     const aportados=CLIENTES.filter(c=>c.contacto_potencial_id===ct.id);
     return{...ct,aportados};
@@ -3499,27 +3533,54 @@ function renderContactos(){
       <span style="font-weight:600">${ct.nombre}</span>
     </div></td>
     <td><span class="badge badge-gray">${ct.tipo||'—'}</span></td>
-    <td><div>${ct.telefono||'—'}</div><div style="font-size:11px;color:var(--ink-soft)">${ct.email||''}</div></td>
-    <td style="text-align:center">
-      <span style="font-size:18px;font-weight:700;color:var(--brand)">${ct.aportados.length}</span>
-      ${ct.aportados.length?'<div style="font-size:10px;color:var(--ink-soft)">'+ct.aportados.slice(0,2).map(c=>c.nombre).join(', ')+(ct.aportados.length>2?'...':'')+'</div>':''}
+    <td>
+      ${ct.telefono?`<a href="tel:${ct.telefono}" style="color:var(--brand);font-weight:600;text-decoration:none">📱 ${ct.telefono}</a><br>`:''}
+      <span style="font-size:12px;color:var(--ink-soft)">${ct.email||''}</span>
     </td>
-    <td style="font-size:12px;color:var(--ink-soft)">${ct.notas||'—'}</td>
-    <td><button class="btn-icon red" onclick="eliminarContacto('${ct.id}')">🗑</button></td>
-  </tr>`).join(''):'<tr><td colspan="6"><div class="empty">Sin contactos todavía.</div></td></tr>';
+    <td style="text-align:center">
+      <div style="font-size:22px;font-weight:800;color:var(--brand)">${ct.aportados.length}</div>
+      <div style="font-size:10px;color:var(--ink-soft)">${ct.aportados.slice(0,2).map(c=>c.nombre).join(', ')}${ct.aportados.length>2?'...':''}</div>
+    </td>
+    <td style="font-size:12px;color:var(--ink-soft);max-width:160px">${ct.notas||'—'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn-icon blue" onclick="editarContacto('${ct.id}')">✏️</button>
+      <button class="btn-icon red" onclick="eliminarContacto('${ct.id}')" style="margin-left:4px">🗑</button>
+    </td>
+  </tr>`).join(''):'<tr><td colspan="6"><div class="empty">Sin contactos todavía. Añade quién os referencia clientes.</div></td></tr>';
 }
 
+let editandoContactoId=null;
 async function guardarContacto(){
   const nombre=document.getElementById('ct-nombre').value.trim();
   if(!nombre){alert('El nombre es obligatorio');return;}
   const btn=document.getElementById('save-contacto-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  const {error}=await sb.from('contactos_potenciales').insert({user_id:currentUser.id,nombre,tipo:document.getElementById('ct-tipo').value,telefono:document.getElementById('ct-tel').value,email:document.getElementById('ct-email').value,notas:document.getElementById('ct-notas').value});
+  const payload={nombre,tipo:document.getElementById('ct-tipo').value,telefono:document.getElementById('ct-tel').value,email:document.getElementById('ct-email').value,notas:document.getElementById('ct-notas-cont').value};
+  let error;
+  if(editandoContactoId){
+    ({error}=await sb.from('contactos_potenciales').update(payload).eq('id',editandoContactoId));
+  } else {
+    ({error}=await sb.from('contactos_potenciales').insert({...payload,user_id:currentUser.id}));
+  }
   btn.disabled=false;btn.textContent='Guardar';
   if(error){alert('Error: '+error.message);return;}
   closeModal('modal-contacto');
-  ['ct-nombre','ct-tel','ct-email','ct-notas'].forEach(id=>document.getElementById(id).value='');
+  editandoContactoId=null;
+  document.getElementById('modal-contacto-title').textContent='Nuevo contacto potencial';
+  ['ct-nombre','ct-tel','ct-email','ct-notas-cont'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   await loadAllData();renderContactos();
+}
+
+function editarContacto(id){
+  const ct=CONTACTOS.find(x=>x.id===id);if(!ct)return;
+  editandoContactoId=id;
+  document.getElementById('modal-contacto-title').textContent='Editar contacto';
+  document.getElementById('ct-nombre').value=ct.nombre||'';
+  document.getElementById('ct-tipo').value=ct.tipo||'Otro';
+  document.getElementById('ct-tel').value=ct.telefono||'';
+  document.getElementById('ct-email').value=ct.email||'';
+  document.getElementById('ct-notas-cont').value=ct.notas||'';
+  openModal('modal-contacto');
 }
 
 async function eliminarContacto(id){
