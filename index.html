@@ -1155,6 +1155,67 @@ tr:hover td{background:#FAFBFF}
   </div>
 </div>
 
+<!-- MODAL CONTACTO RÁPIDO -->
+<div id="modal-contacto-rapido" class="modal-overlay" style="display:none;z-index:700" onclick="if(event.target===this)closeModal('modal-contacto-rapido')">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Nuevo contacto potencial</span>
+      <button class="btn-icon" onclick="closeModal('modal-contacto-rapido')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:16px">Añade quién os refirió este cliente para llevar el control de vuestros prescriptores.</div>
+      <div style="margin-bottom:12px"><label class="flabel">Nombre *</label><input id="cr-nombre" class="finput" placeholder="Ej: Sara García (Wedding Planner)"></div>
+      <div><label class="flabel">Tipo</label>
+        <select id="cr-tipo" class="finput">
+          <option value="Wedding Planner">Wedding Planner</option>
+          <option value="Fotógrafo">Fotógrafo</option>
+          <option value="Venue">Venue / Sala</option>
+          <option value="Familiar">Familiar o amigo</option>
+          <option value="Cliente anterior">Cliente anterior</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-contacto-rapido')">Cancelar</button>
+      <button class="btn-primary" onclick="guardarContactoRapido()">Crear y seleccionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMBIAR ESTADO -->
+<div id="modal-estado" class="modal-overlay" style="display:none;z-index:700" onclick="if(event.target===this)closeModal('modal-estado')">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <span class="modal-title">Cambiar estado del cliente</span>
+      <button class="btn-icon" onclick="closeModal('modal-estado')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:14px">Estado actual: <strong id="estado-actual-label"></strong></div>
+      <div style="display:flex;flex-direction:column;gap:8px" id="estado-opciones"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTE TOTAL -->
+<div id="modal-importe" class="modal-overlay" style="display:none;z-index:700" onclick="if(event.target===this)closeModal('modal-importe')">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <span class="modal-title">Importe total del servicio</span>
+      <button class="btn-icon" onclick="closeModal('modal-importe')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">¿Cuánto es el total acordado con este cliente? Se usará para calcular el pendiente de cobro.</div>
+      <label class="flabel">Importe total (€)</label>
+      <input id="importe-input" type="number" class="finput" placeholder="0.00" style="font-size:18px;font-weight:600">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-importe');resolveImporte&&resolveImporte(null)">Omitir</button>
+      <button class="btn-primary" onclick="confirmarImporte()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PDF -->
 <div id="modal-pdf" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-pdf')">
   <div class="modal wide">
@@ -1357,14 +1418,21 @@ function badgeEstado(estado){
   return`<span class="badge" style="${map[estado]||''}">${estado}</span>`;
 }
 
+let estadoClienteId=null;
 async function forzarEstado(id,estadoActual){
-  const opciones=['Potencial','Futuro','Pasado','Archivado'];
-  const elegido=prompt(`Estado actual: ${estadoActual}\n\nElige nuevo estado:\n1. Potencial\n2. Futuro\n3. Pasado\n4. Archivado\n\nEscribe el número o el nombre:`);
-  if(!elegido)return;
-  const mapa={'1':'Potencial','2':'Futuro','3':'Pasado','4':'Archivado'};
-  const nuevo=mapa[elegido.trim()]||opciones.find(o=>o.toLowerCase()===elegido.trim().toLowerCase());
-  if(!nuevo){alert('Estado no reconocido');return;}
-  await sb.from('clientes').update({estado_forzado:nuevo}).eq('id',id);
+  estadoClienteId=id;
+  document.getElementById('estado-actual-label').textContent=estadoActual;
+  const colores={Potencial:'#FEF3E2',Futuro:'#E8F4FF',Pasado:'#EEEFF2',Archivado:'#F5F5F5'};
+  const textos={Potencial:'#92400E',Futuro:'#1565C0',Pasado:'#5B5E68',Archivado:'#9CA0AA'};
+  document.getElementById('estado-opciones').innerHTML=['Potencial','Futuro','Pasado','Archivado'].map(e=>`
+    <button onclick="aplicarEstado('${e}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:${e===estadoActual?colores[e]:'#F8F9FB'};border:2px solid ${e===estadoActual?textos[e]:'#E8EAF0'};border-radius:10px;cursor:pointer;text-align:left;font-size:13px;font-weight:${e===estadoActual?'700':'500'};color:${e===estadoActual?textos[e]:'#1a1d2e'}">
+      <span style="width:10px;height:10px;border-radius:50%;background:${textos[e]};flex-shrink:0"></span>${e}${e===estadoActual?' ✓':''}
+    </button>`).join('');
+  openModal('modal-estado');
+}
+async function aplicarEstado(nuevo){
+  closeModal('modal-estado');
+  await sb.from('clientes').update({estado_forzado:nuevo}).eq('id',estadoClienteId);
   await loadAllData();renderClientes();
 }
 
@@ -1749,8 +1817,8 @@ async function guardarFactura(){
   if(tipo==='formal'){
     const cliente=CLIENTES.find(x=>x.id===clienteId);
     if(!cliente.importe_total||Number(cliente.importe_total)===0){
-      const importeTotal=parseFloat(prompt('Importe total contratado con este cliente (para control de pagos):',total))||total;
-      await sb.from('clientes').update({importe_total:importeTotal}).eq('id',clienteId);
+      const importeTotal=await pedirImporte(total);
+      if(importeTotal)await sb.from('clientes').update({importe_total:importeTotal}).eq('id',clienteId);
     }
   }
   btn.disabled=false;btn.textContent='Guardar y ver factura';
@@ -3378,15 +3446,23 @@ function poblarSelectorContacto(){
   sel.onchange=function(){if(this.value==='__nuevo__'){this.value='';crearContactoRapido();}};
 }
 
-async function crearContactoRapido(){
-  const nombre=prompt('Nombre del contacto (wedding planner, fotógrafo...):');
-  if(!nombre||!nombre.trim())return;
-  const tipo=prompt('Tipo (Wedding Planner, Fotógrafo, Familiar, Otro):','Wedding Planner');
-  const {data,error}=await sb.from('contactos_potenciales').insert({user_id:currentUser.id,nombre:nombre.trim(),tipo:tipo||'Otro'}).select().single();
+function crearContactoRapido(){
+  document.getElementById('cr-nombre').value='';
+  document.getElementById('cr-tipo').value='Wedding Planner';
+  openModal('modal-contacto-rapido');
+  setTimeout(()=>document.getElementById('cr-nombre').focus(),100);
+}
+
+async function guardarContactoRapido(){
+  const nombre=document.getElementById('cr-nombre').value.trim();
+  if(!nombre){document.getElementById('cr-nombre').style.borderColor='#C0392B';return;}
+  const tipo=document.getElementById('cr-tipo').value;
+  const {data,error}=await sb.from('contactos_potenciales').insert({user_id:currentUser.id,nombre,tipo}).select().single();
   if(error){alert('Error: '+error.message);return;}
+  closeModal('modal-contacto-rapido');
   await loadAllData();
   poblarSelectorContacto();
-  setTimeout(()=>{const sel=document.getElementById('f-contacto');if(sel)sel.value=data.id;},50);
+  setTimeout(()=>{const sel=document.getElementById('f-contacto');if(sel)sel.value=data.id;},80);
 }
 
 // Override renderClientes para poblar contacto al abrir modal
@@ -4089,6 +4165,22 @@ function eliminarArchivoFicha(clienteId, idx){
 
 // Cargar archivos cuando se abre la pestaña
 const _origSwitchFichaTab = switchFichaTab;
+
+let resolveImporte=null;
+function pedirImporte(sugerido){
+  return new Promise(resolve=>{
+    resolveImporte=resolve;
+    document.getElementById('importe-input').value=sugerido||'';
+    openModal('modal-importe');
+    setTimeout(()=>document.getElementById('importe-input').focus(),100);
+  });
+}
+function confirmarImporte(){
+  const val=parseFloat(document.getElementById('importe-input').value)||0;
+  closeModal('modal-importe');
+  if(resolveImporte)resolveImporte(val);
+  resolveImporte=null;
+}
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 checkSession();
 </script>
