@@ -789,7 +789,7 @@ tr:hover td{background:#FAFBFF}
 <div id="modal-efectivo" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal('modal-efectivo')">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Registrar cobro en efectivo</span>
+      <span class="modal-title" id="modal-efectivo-title">Registrar cobro en efectivo</span>
       <button class="btn-icon" onclick="closeModal('modal-efectivo')">✕</button>
     </div>
     <div class="modal-body">
@@ -2023,15 +2023,51 @@ function abrirNuevoEfectivo(clienteIdPref){
   document.getElementById('ef-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ef-cuenta-pago').checked=true;
   document.getElementById('ef-notas').value='';
+  document.getElementById('modal-efectivo-title').textContent='Registrar cobro en efectivo';
+  {const efb=document.getElementById('save-ef-btn');efb.textContent='Registrar cobro';efb.onclick=()=>guardarEfectivo();}
   lockCliente('ef', clienteIdPref||null);
   openModal('modal-efectivo');
 }
 
+function editarEfectivo(id){
+  const f=FACTURAS.find(x=>x.id===id); if(!f)return;
+  const sel=document.getElementById('ef-cliente');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  const sb2=document.getElementById('ef-cliente-search'); if(sb2)sb2.value='';
+  document.getElementById('ef-importe').value=f.total||'';
+  document.getElementById('ef-fecha').value=f.fecha_factura||'';
+  document.getElementById('ef-cuenta-pago').checked=!!f.cuenta_como_pago;
+  document.getElementById('ef-notas').value=f.lugar||'';
+  document.getElementById('modal-efectivo-title').textContent='Editar cobro '+(f.numero||'');
+  {const efb=document.getElementById('save-ef-btn');efb.textContent='Guardar cambios';efb.onclick=()=>actualizarEfectivo(id);}
+  lockCliente('ef', f.cliente_id);
+  openModal('modal-efectivo');
+}
+
+async function actualizarEfectivo(id){
+  const clienteId=document.getElementById('ef-cliente').value;
+  if(!clienteId){toast('Selecciona un cliente','err');return;}
+  const importe=parseFloat(document.getElementById('ef-importe').value)||0;
+  if(!importe){toast('Introduce el importe','err');return;}
+  const cuentaPago=document.getElementById('ef-cuenta-pago').checked;
+  const btn=document.getElementById('save-ef-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+  const payload={cliente_id:clienteId,fecha_factura:document.getElementById('ef-fecha').value||null,base:importe,total:importe,cobrado:importe,cuenta_como_pago:cuentaPago,lugar:document.getElementById('ef-notas').value};
+  const {error}=await sb.from('facturas').update(payload).eq('id',id);
+  btn.disabled=false;btn.textContent='Guardar cambios';
+  if(error){toast('Error: '+error.message,'err');return;}
+  closeModal('modal-efectivo');
+  await loadAllData();renderFacturasConMetricas(facTabActual);renderDashboard();
+  if(document.getElementById('clientes').classList.contains('active'))renderClientes();
+  toast('Cobro actualizado');
+}
+
 async function guardarEfectivo(){
   const clienteId=document.getElementById('ef-cliente').value;
-  if(!clienteId){alert('Selecciona un cliente');return;}
+  if(!clienteId){toast('Selecciona un cliente','err');return;}
   const importe=parseFloat(document.getElementById('ef-importe').value)||0;
-  if(!importe){alert('Introduce el importe');return;}
+  if(!importe){toast('Introduce el importe','err');return;}
   const cuentaPago=document.getElementById('ef-cuenta-pago').checked;
   const btn=document.getElementById('save-ef-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
@@ -2174,7 +2210,7 @@ function renderFacturas(filtro){
       <td>${fmt(fac.total)} €</td>
       <td>${fac.estado==='Cobrada'?'<span class="badge badge-green">Cobrada</span>':'<span class="badge badge-amber">Pendiente</span>'}</td>
       <td style="white-space:nowrap">
-        ${!esEfectivo?`<button class="btn-icon blue" onclick="verFactura('${fac.id}')">📄 Ver</button>`:''}
+        ${!esEfectivo?`<button class="btn-icon blue" onclick="verFactura('${fac.id}')">📄 Ver</button>`:`<button class="btn-icon blue" onclick="editarEfectivo('${fac.id}')">✏️ Editar</button>`}
         <button class="btn-icon red" onclick="eliminarFac('${fac.id}')" style="margin-left:4px">🗑</button>
       </td>
     </tr>`;
