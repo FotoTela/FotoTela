@@ -139,6 +139,10 @@ tr:hover td{background:#FAFBFF}
 .firma-legal{font-size:10.5px;color:var(--ink-soft);margin-top:12px;line-height:1.5;text-align:center}
 .firma-ya{display:none;text-align:center;padding:24px 12px;background:#E1F5EE;border-radius:12px;margin-bottom:12px}
 .firma-ya.show{display:block}
+/* --- Cliente bloqueado (abierto desde ficha) --- */
+.cli-locked{display:flex;align-items:center;gap:10px;background:var(--brand-light);border:1px solid #D6DBFF;border-radius:10px;padding:10px 14px;font-size:14px;color:var(--ink)}
+.cli-locked .cl-ava{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.cli-locked .cl-sub{font-size:12px;color:var(--ink-soft)}
 
 .public-success-icon{width:56px;height:56px;background:#E1F5EE;color:#0F6E56;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
 @media(max-width:768px){
@@ -745,13 +749,14 @@ tr:hover td{background:#FAFBFF}
     <div class="modal-header"><span class="modal-title">Nuevo presupuesto</span><button class="btn-icon" onclick="closeModal('modal-presupuesto')">✕</button></div>
     <div class="modal-body">
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
-        <input id="p-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('p-cliente','p-cliente-search')" style="margin-bottom:6px">
-        <select id="p-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
+        <div id="p-cli-picker"><input id="p-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('p-cliente','p-cliente-search')" style="margin-bottom:6px">
+        <select id="p-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select></div>
+        <div id="p-cli-locked" class="cli-locked" style="display:none"></div>
       </div></div>
       <div class="form-row"><div><label class="flabel">Lugar del evento</label><input id="p-lugar" class="finput"></div><div><label class="flabel">Fecha evento</label><input id="p-fecha" type="date" class="finput"></div></div>
       <label class="flabel" style="margin-bottom:8px">Conceptos</label>
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <select id="p-srv-quick" class="finput" style="font-size:12px;flex:1"><option value="">Añadir desde catálogo...</option></select>
+        <select id="p-srv-quick" class="finput" style="font-size:12px;flex:1" onchange="addLineaDesdeServicio()"><option value="">Añadir desde catálogo...</option></select>
         <button onclick="addLineaDesdeServicio()" class="btn-secondary" style="white-space:nowrap;font-size:12px">+ Del catálogo</button>
       </div>
       <div class="lineas-wrap" id="p-lineas"></div>
@@ -815,8 +820,9 @@ tr:hover td{background:#FAFBFF}
       </div>
       <div class="form-row full" id="fac-pres-selector" style="display:none"><div><label class="flabel">Presupuesto</label><select id="fc-presupuesto" onchange="autoFillFacDesdePres()" class="finput"><option value="">Seleccionar...</option></select></div></div>
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
-        <input id="fc-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('fc-cliente','fc-cliente-search')" style="margin-bottom:6px">
-        <select id="fc-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
+        <div id="fc-cli-picker"><input id="fc-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('fc-cliente','fc-cliente-search')" style="margin-bottom:6px">
+        <select id="fc-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select></div>
+        <div id="fc-cli-locked" class="cli-locked" style="display:none"></div>
       </div></div>
       <div class="form-row full">
         <div><label class="flabel">Emisor *</label>
@@ -830,7 +836,7 @@ tr:hover td{background:#FAFBFF}
       <div class="form-row full"><div><label class="flabel">Lugar del evento</label><input id="fc-lugar" class="finput"></div></div>
       <label class="flabel" style="margin-bottom:8px">Conceptos</label>
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <select id="fc-srv-quick" class="finput" style="font-size:12px;flex:1"><option value="">Añadir desde catálogo...</option></select>
+        <select id="fc-srv-quick" class="finput" style="font-size:12px;flex:1" onchange="addLineaFacDesdeServicio()"><option value="">Añadir desde catálogo...</option></select>
         <button onclick="addLineaFacDesdeServicio()" class="btn-secondary" style="white-space:nowrap;font-size:12px">+ Del catálogo</button>
       </div>
       <div class="lineas-wrap" id="fc-lineas"></div>
@@ -861,8 +867,9 @@ tr:hover td{background:#FAFBFF}
         </select>
       </div></div>
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
-        <input id="ct-cli-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ct-cliente','ct-cli-search')" style="margin-bottom:6px">
-        <select id="ct-cliente" class="finput" size="4" style="height:auto" onchange="autoFillContrato()"><option value="">Seleccionar...</option></select>
+        <div id="ct-cli-picker"><input id="ct-cli-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ct-cliente','ct-cli-search')" style="margin-bottom:6px">
+        <select id="ct-cliente" class="finput" size="4" style="height:auto" onchange="autoFillContrato()"><option value="">Seleccionar...</option></select></div>
+        <div id="ct-cli-locked" class="cli-locked" style="display:none"></div>
       </div></div>
       <div class="form-row">
         <div><label class="flabel">Fecha del contrato</label><input id="ct-fecha-cont" type="date" class="finput"></div>
@@ -1099,8 +1106,9 @@ tr:hover td{background:#FAFBFF}
     <div class="modal-body">
       <!-- Cliente y servicio -->
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
-        <input id="ev-cli-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ev-cliente','ev-cli-search')" style="margin-bottom:6px">
-        <select id="ev-cliente" class="finput" size="3" style="height:auto" onchange="autoFillEvento()"><option value="">Seleccionar...</option></select>
+        <div id="ev-cli-picker"><input id="ev-cli-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ev-cliente','ev-cli-search')" style="margin-bottom:6px">
+        <select id="ev-cliente" class="finput" size="3" style="height:auto" onchange="autoFillEvento()"><option value="">Seleccionar...</option></select></div>
+        <div id="ev-cli-locked" class="cli-locked" style="display:none"></div>
       </div></div>
       <div class="form-row">
         <div><label class="flabel">Servicio</label>
@@ -1490,6 +1498,31 @@ function copiarFirmaLink(){
   const btn=event.target; const o=btn.textContent; btn.textContent='¡Copiado!'; setTimeout(()=>btn.textContent=o,1500);
 }
 
+// ======= HELPERS: cliente bloqueado + match de catalogo =======
+function lockCliente(prefix, clienteId){
+  const picker=document.getElementById(prefix+'-cli-picker');
+  const locked=document.getElementById(prefix+'-cli-locked');
+  const sel=document.getElementById(prefix+'-cliente');
+  if(!picker||!locked)return;
+  if(clienteId){
+    if(sel)sel.value=clienteId;
+    const c=CLIENTES.find(x=>x.id===clienteId);
+    picker.style.display='none'; locked.style.display='flex';
+    const ini=(c&&c.nombre?c.nombre.charAt(0):'?').toUpperCase();
+    const sub=c?[c.tipo_evento,c.fecha_evento?fmtDate(c.fecha_evento):''].filter(Boolean).join(' \u00b7 '):'';
+    locked.innerHTML='<div class="cl-ava">'+ini+'</div><div><div style="font-weight:600">'+(c?c.nombre:'\u2014')+'</div>'+(sub?'<div class="cl-sub">'+sub+'</div>':'')+'</div>';
+  } else { picker.style.display=''; locked.style.display='none'; locked.innerHTML=''; }
+}
+function matchServicioCatalogo(txt){
+  if(!txt)return null;
+  const t=txt.toLowerCase().trim();
+  const act=SERVICIOS.filter(s=>s.activo);
+  let srv=act.find(s=>t.includes(s.nombre.toLowerCase())); if(srv)return srv;
+  srv=act.find(s=>s.nombre.toLowerCase().includes(t)); if(srv)return srv;
+  const w=t.split(/[\s,]+/)[0];
+  return act.find(s=>s.nombre.toLowerCase().includes(w))||null;
+}
+
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
@@ -1841,7 +1874,7 @@ function abrirNuevoPresupuesto(clienteIdPref){
       if(c.ubicacion_evento)document.getElementById('p-lugar').value=c.ubicacion_evento;
       // Prellenar línea con servicio de interés
       if(c.servicios_interes){
-        const srv=SERVICIOS.find(s=>s.nombre.toLowerCase().includes(c.servicios_interes.toLowerCase().split(' ')[0]));
+        const srv=matchServicioCatalogo(c.servicios_interes);
         if(srv)presLineas=[{id:'tmp'+(lineaIdCounter++),descripcion:srv.nombre,detalle:srv.descripcion||'',precio_unitario:srv.precio_base||0,unidades:1}];
       }
     }
@@ -1853,6 +1886,7 @@ function abrirNuevoPresupuesto(clienteIdPref){
   // Poblar catálogo (si no se hizo arriba)
   const pSrv2=document.getElementById('p-srv-quick');
   if(pSrv2){pSrv2.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>pSrv2.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
+  lockCliente('p', clienteIdPref||null);
   renderLineasPres();calcPresTotales();openModal('modal-presupuesto');
 }
 
@@ -2010,6 +2044,7 @@ function abrirNuevaFacturaCliente(clienteIdPref){
       }
     }
   } else {document.getElementById('fc-cliente').value='';}
+  lockCliente('fc', clienteIdPref||null);
   switchFacSource('cero');renderLineasFac();calcFacTotales();openModal('modal-factura');
 }
 
@@ -2554,6 +2589,7 @@ function abrirNuevoContrato(clienteIdPref){
   document.getElementById('ct-fecha-cont').value=new Date().toISOString().split('T')[0];
   ['ct-fecha-ev','ct-horario','ct-ubicacion','ct-servicios','ct-importe','ct-reserva','ct-condiciones','ct-notas'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   if(clienteIdPref){sel.value=clienteIdPref;autoFillContrato();}
+  lockCliente('ct', clienteIdPref||null);
   openModal('modal-contrato');
 }
 
@@ -2566,7 +2602,7 @@ function autoFillContrato(){
   if(c.importe_total&&c.importe_total>0)document.getElementById('ct-importe').value=c.importe_total;
   // Servicios: buscar del catálogo o usar servicios_interes
   if(c.servicios_interes){
-    const srv=SERVICIOS.find(s=>s.nombre.toLowerCase().includes(c.servicios_interes.toLowerCase().split(' ')[0]));
+    const srv=matchServicioCatalogo(c.servicios_interes);
     if(srv){
       const linea=srv.nombre+(srv.descripcion?' — '+srv.descripcion:'')+(srv.precio_base?' ('+fmt(srv.precio_base)+' €)':'');
       document.getElementById('ct-servicios').value=linea;
@@ -3379,7 +3415,6 @@ function abrirNuevoEvento(clienteIdPref){
   sel.innerHTML='<option value="">Seleccionar...</option>';
   CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
   const sb2=document.getElementById('ev-cli-search');if(sb2)sb2.value='';
-  if(clienteIdPref){sel.value=clienteIdPref;autoFillEvento();}
   // Poblar servicio
   const srvSel=document.getElementById('ev-servicio');
   srvSel.innerHTML='<option value="">Sin servicio</option>';
@@ -3395,6 +3430,8 @@ function abrirNuevoEvento(clienteIdPref){
   renderEquipoChecksEvento([]);
   renderPersonasChecksEvento([]);
   renderCostesEvento();
+  if(clienteIdPref){sel.value=clienteIdPref;autoFillEvento();}
+  lockCliente('ev', clienteIdPref||null);
   openModal('modal-evento');
 }
 
@@ -3408,6 +3445,11 @@ function autoFillEvento(){
     document.getElementById('ev-hora-fin').value=hp[1]||'';
   }
   if(c.ubicacion_evento)document.getElementById('ev-ubicacion').value=c.ubicacion_evento;
+  if(c.servicios_interes){
+    const srv=matchServicioCatalogo(c.servicios_interes);
+    const ss=document.getElementById('ev-servicio');
+    if(srv&&ss){ss.value=srv.id;autoFillEquipoEvento();}
+  }
 }
 
 function autoFillEquipoEvento(){
@@ -3594,6 +3636,7 @@ async function editarEvento(id){
   renderEquipoChecksEvento(equipoAsig);
   renderPersonasChecksEvento(personasAsig);
   renderCostesEvento();
+  lockCliente('ev', (document.getElementById('ev-cliente').value)||null);
   openModal('modal-evento');
 }
 
@@ -4051,6 +4094,7 @@ async function editarPresupuesto(id){
   // Poblar catálogo
   const pSrv=document.getElementById('p-srv-quick');
   if(pSrv){pSrv.innerHTML='<option value="">Añadir desde catálogo...</option>';SERVICIOS.filter(s=>s.activo).forEach(s=>pSrv.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);}
+  lockCliente('p', (document.getElementById('p-cliente').value)||null);
   renderLineasPres();calcPresTotales();openModal('modal-presupuesto');
 }
 
