@@ -775,7 +775,7 @@ tr:hover td{background:#FAFBFF}
       <div class="form-row" style="margin-top:14px"><div><label class="flabel">IVA %</label><select id="p-iva" onchange="calcPresTotales()" class="finput"><option value="21">21%</option><option value="10">10%</option><option value="0">0%</option></select></div><div><label class="flabel">Validez (días)</label><input id="p-validez" type="number" value="15" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Notas</label><input id="p-notas" class="finput"></div></div>
       <div class="totales-box">
-        <div class="totales-row"><span>Total neto</span><span id="p-total-neto">0,00 €</span></div>
+        <div class="totales-row"><span>Base imponible</span><span id="p-total-neto">0,00 €</span></div>
         <div class="totales-row"><span id="p-iva-label">IVA 21%</span><span id="p-total-iva">0,00 €</span></div>
         <div class="totales-row final"><span>Total</span><span id="p-total-final">0,00 €</span></div>
       </div>
@@ -797,8 +797,9 @@ tr:hover td{background:#FAFBFF}
         Este registro es interno, no tiene IVA ni datos fiscales. Se usa para controlar lo cobrado en mano.
       </div>
       <div class="form-row full"><div><label class="flabel">Cliente *</label>
-        <input id="ef-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ef-cliente','ef-cliente-search')" style="margin-bottom:6px">
-        <select id="ef-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select>
+        <div id="ef-cli-picker"><input id="ef-cliente-search" class="finput" placeholder="Buscar cliente..." oninput="filtrarSelectCliente('ef-cliente','ef-cliente-search')" style="margin-bottom:6px">
+        <select id="ef-cliente" class="finput" size="4" style="height:auto"><option value="">Seleccionar...</option></select></div>
+        <div id="ef-cli-locked" class="cli-locked" style="display:none"></div>
       </div></div>
       <div class="form-row">
         <div><label class="flabel">Importe (€) *</label><input id="ef-importe" type="number" class="finput" placeholder="150"></div>
@@ -1876,22 +1877,24 @@ function delLinea(tipo,id){
 }
 
 function calcPresTotales(){
-  const neto=presLineas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const total=presLineas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
   const ivaPct=parseFloat(document.getElementById('p-iva').value)||21;
-  const iva=neto*ivaPct/100;
-  document.getElementById('p-total-neto').textContent=fmt(neto)+' €';
-  document.getElementById('p-iva-label').textContent='IVA '+ivaPct+'%';
+  const base=ivaPct?total/(1+ivaPct/100):total;
+  const iva=total-base;
+  document.getElementById('p-total-neto').textContent=fmt(base)+' €';
+  document.getElementById('p-iva-label').textContent='IVA '+ivaPct+'% (incluido)';
   document.getElementById('p-total-iva').textContent=fmt(iva)+' €';
-  document.getElementById('p-total-final').textContent=fmt(neto+iva)+' €';
+  document.getElementById('p-total-final').textContent=fmt(total)+' €';
 }
 function calcFacTotales(){
-  const neto=facLineas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const total=facLineas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
   const ivaPct=parseFloat(document.getElementById('fc-iva').value)||21;
-  const iva=neto*ivaPct/100;
-  document.getElementById('fc-total-neto').textContent=fmt(neto)+' €';
-  document.getElementById('fc-iva-label').textContent='IVA '+ivaPct+'%';
+  const base=ivaPct?total/(1+ivaPct/100):total;
+  const iva=total-base;
+  document.getElementById('fc-total-neto').textContent=fmt(base)+' €';
+  document.getElementById('fc-iva-label').textContent='IVA '+ivaPct+'% (incluido)';
   document.getElementById('fc-total-iva').textContent=fmt(iva)+' €';
-  document.getElementById('fc-total-final').textContent=fmt(neto+iva)+' €';
+  document.getElementById('fc-total-final').textContent=fmt(total)+' €';
 }
 
 function abrirNuevoPresupuesto(clienteIdPref){
@@ -1934,14 +1937,14 @@ async function guardarPresupuesto(){
   if(!c){alert('Selecciona un cliente');return;}
   const lineasValidas=presLineas.filter(l=>l.descripcion.trim());
   if(lineasValidas.length===0){alert('Añade al menos un concepto');return;}
-  const neto=lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const total=+(lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0)).toFixed(2);
   const ivaPct=parseFloat(document.getElementById('p-iva').value)||21;
-  const ivaEur=+(neto*ivaPct/100).toFixed(2);
-  const total=+(neto+ivaEur).toFixed(2);
+  const base=ivaPct?+(total/(1+ivaPct/100)).toFixed(2):total;
+  const ivaEur=+(total-base).toFixed(2);
   const btn=document.getElementById('save-pres-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const numero='P'+new Date().getFullYear()+String(PRESUPUESTOS.length+1).padStart(2,'0');
-  const payload={user_id:currentUser.id,numero,cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_dias:parseInt(document.getElementById('p-validez').value)||15,notas:document.getElementById('p-notas').value,estado:'Pendiente'};
+  const payload={user_id:currentUser.id,numero,cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_dias:parseInt(document.getElementById('p-validez').value)||15,notas:document.getElementById('p-notas').value,estado:'Pendiente'};
   const {data,error}=await sb.from('presupuestos').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver presupuesto';toast('Error: '+error.message,'err');return;}
   await sb.from('presupuesto_lineas').insert(lineasValidas.map((l,i)=>({user_id:currentUser.id,presupuesto_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
@@ -2010,8 +2013,7 @@ function actualizarNumeroFac(){
   document.getElementById('fc-numero').value = nextNumFac(emisor, 'formal');
 }
 
-function abrirNuevoEfectivo(){
-  // Poblar selector de cliente
+function abrirNuevoEfectivo(clienteIdPref){
   const sel=document.getElementById('ef-cliente');
   sel.innerHTML='<option value="">Seleccionar...</option>';
   CLIENTES.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
@@ -2021,6 +2023,7 @@ function abrirNuevoEfectivo(){
   document.getElementById('ef-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ef-cuenta-pago').checked=true;
   document.getElementById('ef-notas').value='';
+  lockCliente('ef', clienteIdPref||null);
   openModal('modal-efectivo');
 }
 
@@ -2107,13 +2110,13 @@ async function guardarFactura(){
   const tipo='formal';
   const lineasValidas=facLineas.filter(l=>l.descripcion.trim());
   if(lineasValidas.length===0){alert('Añade al menos un concepto');return;}
-  const neto=lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0);
+  const total=+(lineasValidas.reduce((a,l)=>a+(l.precio_unitario||0)*(l.unidades||1),0)).toFixed(2);
   const ivaPct=parseFloat(document.getElementById('fc-iva').value)||21;
-  const ivaEur=+(neto*ivaPct/100).toFixed(2);const total=+(neto+ivaEur).toFixed(2);
+  const base=ivaPct?+(total/(1+ivaPct/100)).toFixed(2):total;const ivaEur=+(total-base).toFixed(2);
   const cobrado=parseFloat(document.getElementById('fc-cobrado').value)||0;
   const btn=document.getElementById('save-fac-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,emisor,tipo,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:neto,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente',cuenta_como_pago:false};
+  const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,emisor,tipo,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente',cuenta_como_pago:false};
   const {data,error}=await sb.from('facturas').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver factura';alert('Error: '+error.message);return;}
   await sb.from('factura_lineas').insert(lineasValidas.map((l,i)=>({user_id:currentUser.id,factura_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
@@ -2599,7 +2602,7 @@ function buildPresupuestoHTML(p,c,lineas){
     </div>
     <table class="pdf-table"><thead><tr><th>Concepto</th><th>Uds</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="pdf-totales">
-      <div class="pdf-trow"><span>Total neto</span><span>${fmt(p.base)} €</span></div>
+      <div class="pdf-trow"><span>Base imponible</span><span>${fmt(p.base)} €</span></div>
       <div class="pdf-trow"><span>IVA ${p.iva_pct}%</span><span>${fmt(p.iva_eur)} €</span></div>
       <div class="pdf-trow final"><span>Total</span><span>${fmt(p.total)} €</span></div>
     </div>
@@ -4256,7 +4259,10 @@ function renderFichaResumen(c){
   const facs = FACTURAS.filter(f=>f.cliente_id===c.id);
   const pres = PRESUPUESTOS.filter(p=>p.cliente_id===c.id);
   const cts = CONTRATOS.filter(ct=>ct.cliente_id===c.id);
-  const totalFacturado = facs.filter(f=>f.tipo==='formal').reduce((a,f)=>a+Number(f.total||0),0);
+  const cobradoFormal = facs.filter(f=>f.tipo==='formal').reduce((a,f)=>a+Number(f.total||0),0);
+  const cobradoEfec = facs.filter(f=>f.tipo==='efectivo'&&f.cuenta_como_pago).reduce((a,f)=>a+Number(f.total||0),0);
+  const efecExtra = facs.filter(f=>f.tipo==='efectivo'&&!f.cuenta_como_pago).reduce((a,f)=>a+Number(f.total||0),0);
+  const cobradoTotal = cobradoFormal+cobradoEfec;
   const contacto = CONTACTOS.find(ct=>ct.id===c.contacto_potencial_id);
   const estadoColor = {Futuro:'#E8F4FF',Pasado:'#F0F0F5',Potencial:'#FFF8E8',Archivado:'#F5F5F5'};
   const estadoText = {Futuro:'#1565C0',Pasado:'#5B5E68',Potencial:'#92400E',Archivado:'#9CA0AA'};
@@ -4304,7 +4310,8 @@ function renderFichaResumen(c){
           <div style="font-size:26px;font-weight:800">${fmt(c.importe_total)} €</div>
           ${pend!==null&&pend>0?`<div style="font-size:11px;opacity:.75;margin-top:4px">Pendiente: ${fmt(pend)} €</div>`:''}
         </div>`:''}
-        <div style="font-size:12px;color:#9CA0AA;margin-bottom:8px">Total facturado: <strong style="color:#1a1d2e">${fmt(totalFacturado)} €</strong></div>
+        <div style="font-size:12px;color:#9CA0AA;margin-bottom:6px">Cobrado: <strong style="color:#0F6E56">${fmt(cobradoTotal)} €</strong>${(cobradoFormal>0&&cobradoEfec>0)?` <span style="color:#9CA0AA">(factura ${fmt(cobradoFormal)} € · efectivo ${fmt(cobradoEfec)} €)</span>`:''}</div>
+        ${efecExtra>0?`<div style="font-size:12px;color:#9CA0AA;margin-bottom:8px">Extras/propinas en efectivo: <strong style="color:#1a1d2e">${fmt(efecExtra)} €</strong></div>`:''}
         <div class="ficha-stat-grid">
           <div class="ficha-stat" onclick="switchFichaTab('documentos',document.querySelectorAll('.ficha-tab')[1])">
             <div class="ficha-stat-num">${pres.length}</div>
@@ -4335,6 +4342,9 @@ function renderFichaResumen(c){
           </button>
           <button class="ficha-quick-btn" onclick="closeFicha();crearEventoDesdeCliente('${c.id}')">
             <span class="qicon" style="background:#FFF0F0">📅</span>Evento
+          </button>
+          <button class="ficha-quick-btn" onclick="closeFicha();abrirNuevoEfectivo('${c.id}')" style="grid-column:1/-1">
+            <span class="qicon" style="background:#E1F5EE">💵</span>Registrar cobro en efectivo
           </button>
         </div>
       </div>
