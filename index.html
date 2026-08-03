@@ -3574,7 +3574,8 @@ async function guardarCliente(){
   const iniH=document.getElementById('f-hora-ini')?document.getElementById('f-hora-ini').value:'';
   const finH=document.getElementById('f-hora-fin')?document.getElementById('f-hora-fin').value:'';
   const horarioFinal=iniH&&finH?iniH+' - '+finH:'';
-  const payload={nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,horario:horarioFinal,ubicacion_evento:document.getElementById('f-ubicacion').value,homenajeado:document.getElementById('f-homenajeado').value,servicios_interes:document.getElementById('f-servicios').value,notas:document.getElementById('f-notas').value,contacto_potencial_id:document.getElementById('f-contacto').value||null};
+  const gv=(id)=>{const el=document.getElementById(id);return el?el.value:'';};
+  const payload={nombre,dni:gv('f-dni'),telefono:gv('f-tel'),email:gv('f-email'),direccion:gv('f-dir'),ciudad:gv('f-ciudad'),cp:gv('f-cp'),tipo_evento:gv('f-tipo')||'Boda',fecha_evento:gv('f-fecha')||null,horario:horarioFinal,ubicacion_evento:gv('f-ubicacion'),homenajeado:gv('f-homenajeado'),servicios_interes:gv('f-servicios'),notas:gv('f-notas'),contacto_potencial_id:gv('f-contacto')||null};
   const editId=document.getElementById('f-cliente-id').value;
   let error;
   if(editId){
