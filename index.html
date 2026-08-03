@@ -102,7 +102,7 @@ tr:hover td{background:#FAFBFF}
 .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .6s linear infinite;margin-right:6px;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lineas-wrap{border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
-.linea-row{display:grid;grid-template-columns:2fr 90px 90px 90px 36px;gap:8px;padding:10px;border-bottom:1px solid var(--line);align-items:start}
+.linea-row{position:relative;display:grid;grid-template-columns:2fr 90px 90px 90px 36px;gap:8px;padding:10px;border-bottom:1px solid var(--line);align-items:start}
 .linea-row:last-child{border-bottom:none}
 .linea-row input,.linea-row textarea{font-size:12px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;width:100%;font-family:inherit}
 .linea-row textarea{resize:vertical;min-height:32px}
@@ -133,7 +133,7 @@ tr:hover td{background:#FAFBFF}
   .sidebar.open{transform:translateX(0)}
   .content{padding:16px}
   .mobile-menu-btn{display:flex!important}
-  .linea-row{grid-template-columns:1fr;gap:6px}
+  .linea-row{position:relative;grid-template-columns:1fr;gap:6px}
   .form-row{grid-template-columns:1fr}
 }
 .mobile-menu-btn{display:none;background:#fff;border:1px solid var(--line);border-radius:8px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-bottom:14px}
@@ -1554,17 +1554,32 @@ function buildFichaClienteHTML(c){
 }
 
 function lineaRowHTML(linea,tipo){
-  return`<div class="linea-row" data-id="${linea.id}">
-    <div>
-      <input placeholder="Concepto (ej. Fotomatón Boda 3h)" value="${linea.descripcion||''}" oninput="updateLinea('${tipo}','${linea.id}','descripcion',this.value)">
-      <textarea placeholder="Detalle (opcional)" oninput="updateLinea('${tipo}','${linea.id}','detalle',this.value)" style="margin-top:6px">${linea.detalle||''}</textarea>
+  const precio = linea.precio_unitario!=null ? linea.precio_unitario : '';
+  const subtotal = (Number(linea.precio_unitario)||0)*(Number(linea.unidades)||1);
+  return`<div class="linea-row" data-id="${linea.id}" style="background:#fff;border:1px solid #E8EAF0;border-radius:10px;padding:12px 14px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:start">
+      <div>
+        <input class="finput" placeholder="Nombre del servicio" value="${linea.descripcion||''}" oninput="updateLinea('${tipo}','${linea.id}','descripcion',this.value)" style="margin-bottom:6px;font-weight:500">
+        <textarea class="finput" placeholder="Descripción (opcional)" oninput="updateLinea('${tipo}','${linea.id}','detalle',this.value)" style="font-size:12px;color:var(--ink-soft);resize:vertical;min-height:38px;padding:6px 10px">${linea.detalle||''}</textarea>
+      </div>
+      <div style="min-width:110px">
+        <div style="font-size:10px;color:#9CA0AA;font-weight:600;margin-bottom:4px;text-transform:uppercase">Precio €</div>
+        <input class="finput" type="number" placeholder="0.00" value="${precio}" oninput="updateLinea('${tipo}','${linea.id}','precio_unitario',parseFloat(this.value)||0);updateSubtotal(this)" style="font-weight:600;font-size:14px" onchange="recalc('${tipo}')">
+      </div>
+      <div style="min-width:60px">
+        <div style="font-size:10px;color:#9CA0AA;font-weight:600;margin-bottom:4px;text-transform:uppercase">Uds</div>
+        <input class="finput" type="number" placeholder="1" value="${linea.unidades||1}" oninput="updateLinea('${tipo}','${linea.id}','unidades',parseInt(this.value)||1)" onchange="recalc('${tipo}')">
+      </div>
+      <div style="min-width:80px;text-align:right">
+        <div style="font-size:10px;color:#9CA0AA;font-weight:600;margin-bottom:4px;text-transform:uppercase">Total</div>
+        <div style="font-size:15px;font-weight:700;color:var(--brand);padding-top:8px">${fmt(subtotal)} €</div>
+      </div>
     </div>
-    <input type="number" placeholder="Precio" value="${linea.precio_unitario||''}" oninput="updateLinea('${tipo}','${linea.id}','precio_unitario',this.value)">
-    <input type="number" placeholder="Uds" value="${linea.unidades||1}" oninput="updateLinea('${tipo}','${linea.id}','unidades',this.value)">
-    <div class="linea-subtotal">${fmt((linea.precio_unitario||0)*(linea.unidades||1))} €</div>
-    <button class="linea-del" onclick="delLinea('${tipo}','${linea.id}')" title="Eliminar">✕</button>
+    <button onclick="delLinea('${tipo}','${linea.id}')" style="position:absolute;right:8px;top:8px;background:none;border:none;color:#9CA0AA;cursor:pointer;font-size:16px;padding:2px 6px">✕</button>
   </div>`;
 }
+
+function recalc(tipo){tipo==='pres'?calcPresTotales():calcFacTotales();}
 
 function addLineaPres(){presLineas.push({id:'tmp'+(lineaIdCounter++),descripcion:'',detalle:'',precio_unitario:0,unidades:1});renderLineasPres();}
 function renderLineasPres(){document.getElementById('p-lineas').innerHTML=presLineas.map(l=>lineaRowHTML(l,'pres')).join('')||'<div style="padding:16px;text-align:center;font-size:12px;color:var(--ink-soft)">Añade al menos un concepto</div>';}
