@@ -2930,8 +2930,8 @@ async function verContrato(id){
 
 function buildContratoHTML(ct,c){
   const emisorData={
-    Henry:{nombre:'Henry Giovanni Medina Rodríguez',nif:'49459823W',pronombre:'EL PRESTADOR'},
-    Nuria:{nombre:'Núria Díaz López',nif:'49271218C',pronombre:'LA PRESTADORA'}
+    Henry:{nombre:'Henry Giovanni Medina Rodríguez',nif:'49459823W',pronombre:'EL PRESTADOR',cuenta:'ES44 0182 6308 7402 0161 1473'},
+    Nuria:{nombre:'Núria Díaz López',nif:'49271218C',pronombre:'LA PRESTADORA',cuenta:'ES92 0182 6308 7802 0161 1480'}
   };
   const em=emisorData[ct.emisor||'Henry']||emisorData.Henry;
   const hoy=new Date();
@@ -2959,7 +2959,9 @@ function buildContratoHTML(ct,c){
   +'<div class="ct-cuadro"><div class="ct-cuadro-row"><span>Reserva (a la firma)</span><span>'+fmt(ct.reserva||0)+' €</span></div>'
   +'<div class="ct-cuadro-row"><span>Resto (una semana antes del día del evento o el mismo día)</span><span>'+fmt(restoPago)+' €</span></div>'
   +'<div class="ct-cuadro-row"><span>Precio total del servicio</span><span>'+fmt(ct.importe_total||0)+' €</span></div></div>'
-  +'<div class="ct-parrafo">El pago se realizará mediante transferencia bancaria a la cuenta <strong>'+CUENTA+'</strong>, indicando como concepto el número de presupuesto y el nombre del evento.</div></div>'
+  +'<div class="ct-parrafo">La <strong>reserva</strong> se abonará mediante transferencia bancaria a la cuenta <strong>'+em.cuenta+'</strong> en el momento de la firma del presente contrato.</div>'
+  +'<div class="ct-parrafo">El <strong>importe restante</strong> podrá abonarse de una de las siguientes formas: (i) mediante <strong>transferencia bancaria</strong> a la misma cuenta, que deberá quedar íntegramente pagado como máximo <strong>una semana antes del día del evento</strong>; o (ii) en <strong>efectivo</strong>, el <strong>mismo día del evento</strong>.</div>'
+  +'<div class="ct-parrafo">En los pagos por transferencia se indicará como concepto el número de presupuesto y el nombre del evento.</div></div>'
   +'<div class="ct-seccion"><div class="ct-seccion-num">4. Cancelaciones</div>'
   +'<div class="ct-parrafo"><strong>Cancelación por parte de EL CLIENTE:</strong></div>'
   +'<ul class="ct-lista"><li>Con más de 30 días de antelación: pérdida de la reserva abonada.</li><li>Con menos de 30 días de antelación: pérdida del 100% del importe total.</li><li>Cambio de fecha: sujeto a disponibilidad, comunicado con la máxima antelación posible.</li></ul>'
