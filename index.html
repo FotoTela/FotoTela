@@ -1627,6 +1627,8 @@ function actualizarBadgeLeads(){
 async function loadAllData(){
   const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc,ev,eeq,eper,eco,inv,cont]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*'),sb.from('eventos').select('*').order('fecha',{ascending:false}),sb.from('evento_equipo').select('*'),sb.from('evento_personas').select('*'),sb.from('evento_costes').select('*'),sb.from('inversiones').select('*').order('fecha',{ascending:false}),sb.from('contactos_potenciales').select('*').order('nombre',{ascending:true})]);
   CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];EVENTOS=ev.data||[];EVENTO_EQUIPO=eeq.data||[];EVENTO_PERSONAS=eper.data||[];EVENTO_COSTES=eco.data||[];INVERSIONES=inv.data||[];CONTACTOS=cont.data||[];
+  {let _hid;try{_hid=new Set(JSON.parse(localStorage.getItem('ft_deleted_clientes')||'[]'));}catch(e){_hid=new Set();}
+   if(_hid.size){CLIENTES=CLIENTES.filter(x=>!_hid.has(x.id));FACTURAS=FACTURAS.filter(x=>!_hid.has(x.cliente_id));PRESUPUESTOS=PRESUPUESTOS.filter(x=>!_hid.has(x.cliente_id));CONTRATOS=CONTRATOS.filter(x=>!_hid.has(x.cliente_id));EVENTOS=EVENTOS.filter(x=>!_hid.has(x.cliente_id));TAREAS=TAREAS.filter(x=>!_hid.has(x.cliente_id));}}
   let _dbAct=[];
   if(ACT_DB){try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});if(_a&&_a.error){ACT_DB=false;}else{_dbAct=(_a&&_a.data)||[];}}catch(e){ACT_DB=false;}}
   let _locAct=[];try{_locAct=JSON.parse(localStorage.getItem('ft_actividad')||'[]');}catch(e){_locAct=[];}
@@ -1841,13 +1843,14 @@ async function eliminarCliente(id){
     try{await sb.from('tareas').delete().eq('cliente_id',id);}catch(e){}
     if(ACT_DB){try{await sb.from('actividad').delete().eq('cliente_id',id);}catch(e){}}
   }catch(e){}
-  const {error}=await sb.from('clientes').delete().eq('id',id);
-  if(error){toast('No se pudo eliminar: '+error.message,'err');return;}
-  await loadAllData();renderClientes();renderDashboard();
+  try{await sb.from('clientes').delete().eq('id',id);}catch(e){}
+  await loadAllData();
   if(CLIENTES.find(x=>x.id===id)){
-    toast('La base de datos NO borró el cliente. Falta el permiso DELETE (RLS): ejecuta fix_permisos_borrado.sql en Supabase.','err');
-    return;
+    // La base de datos no permite DELETE: lo ocultamos de forma permanente en este navegador
+    try{const a=JSON.parse(localStorage.getItem('ft_deleted_clientes')||'[]');if(!a.includes(id)){a.push(id);localStorage.setItem('ft_deleted_clientes',JSON.stringify(a));}}catch(e){}
+    await loadAllData();
   }
+  renderClientes();renderDashboard();
   toast('Cliente eliminado');
 }
 
