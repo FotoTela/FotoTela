@@ -143,7 +143,7 @@ tr:hover td{background:#FAFBFF}
 .firma-ya{display:none;text-align:center;padding:24px 12px;background:#E1F5EE;border-radius:12px;margin-bottom:12px}
 .firma-ya.show{display:block}
 /* --- Cliente bloqueado (abierto desde ficha) --- */
-.cli-locked{display:flex;align-items:center;gap:10px;background:var(--brand-light);border:1px solid #D6DBFF;border-radius:10px;padding:10px 14px;font-size:14px;color:var(--ink)}.cli-results{margin-top:6px;background:#fff;border:1.5px solid var(--line);border-radius:10px;max-height:200px;overflow-y:auto;padding:4px}.cli-res-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--ink)}.cli-res-item:hover{background:var(--brand-light)}.cli-res-ava{width:26px;height:26px;border-radius:7px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex:none}.cli-res-name{font-weight:600;display:block}.cli-res-sub{font-size:11px;color:var(--ink-soft)}.cli-res-empty{padding:10px;font-size:13px;color:var(--ink-soft);text-align:center}.cli-locked .cl-x{margin-left:auto;background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px}.cli-locked .cl-x:hover{background:#fff}
+.cli-locked{display:flex;align-items:center;gap:10px;background:var(--brand-light);border:1px solid #D6DBFF;border-radius:10px;padding:10px 14px;font-size:14px;color:var(--ink)}.cli-results{margin-top:6px;background:#fff;border:1.5px solid var(--line);border-radius:10px;max-height:200px;overflow-y:auto;padding:4px}.cli-res-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--ink)}.cli-res-item:hover{background:var(--brand-light)}.cli-res-ava{width:26px;height:26px;border-radius:7px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex:none}.cli-res-name{font-weight:600;display:block}.cli-res-sub{font-size:11px;color:var(--ink-soft)}.cli-res-empty{padding:10px;font-size:13px;color:var(--ink-soft);text-align:center}.list-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}.lf-in{font-size:13px;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}.lf-lbl{font-size:12px;color:var(--ink-soft)}.cli-locked .cl-x{margin-left:auto;background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px}.cli-locked .cl-x:hover{background:#fff}
 .cli-locked .cl-ava{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
 .cli-locked .cl-sub{font-size:12px;color:var(--ink-soft)}
 /* --- Toasts --- */
@@ -453,6 +453,8 @@ tr:hover td{background:#FAFBFF}
       <option value="Pasado">Pasado</option>
       <option value="Archivado">Archivado</option>
     </select>
+    <span class="lf-lbl">Evento del</span><input id="cli-df" class="lf-in" type="date" onchange="renderClientes()"><span class="lf-lbl">al</span><input id="cli-dt" class="lf-in" type="date" onchange="renderClientes()">
+    <button class="btn-secondary" onclick="document.getElementById('cli-search').value='';document.getElementById('cli-estado-filter').value='';document.getElementById('cli-df').value='';document.getElementById('cli-dt').value='';renderClientes()">Limpiar</button>
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -465,6 +467,7 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Presupuestos</div></div>
     <button class="btn-primary" onclick="abrirNuevoPresupuesto()">+ Nuevo presupuesto</button>
   </div>
+  <div class="list-filter"><input id="pres-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderPresupuestos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="pres-df" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">al</span><input id="pres-dt" class="lf-in" type="date" onchange="renderPresupuestos()"><button class="btn-secondary" onclick="document.getElementById('pres-q').value='';document.getElementById('pres-df').value='';document.getElementById('pres-dt').value='';renderPresupuestos()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº</th><th>Cliente</th><th>Evento</th><th>Total</th><th>Válido hasta</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="pres-tbody"></tbody>
@@ -485,6 +488,7 @@ tr:hover td{background:#FAFBFF}
     <div class="tab" id="tab-fac-nuria" onclick="switchTabFac('Nuria',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Núria</div>
     <div class="tab" id="tab-fac-efectivo" onclick="switchTabFac('efectivo',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Efectivo</div>
   </div>
+  <div class="list-filter"><input id="fac-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderFacturasConMetricas(facTabActual)" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="fac-df" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">al</span><input id="fac-dt" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><button class="btn-secondary" onclick="document.getElementById('fac-q').value='';document.getElementById('fac-df').value='';document.getElementById('fac-dt').value='';renderFacturasConMetricas(facTabActual)">Limpiar</button></div>
   <div class="metrics-grid" id="fac-metrics" style="margin-bottom:16px"></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº Factura</th><th>Emisor</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -495,6 +499,7 @@ tr:hover td{background:#FAFBFF}
 <div id="cobros" class="page">
   <div class="page-header"><div><div class="page-title">Cobros</div></div></div>
   <div class="metrics-grid" id="cobros-metrics"></div>
+  <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';renderCobros()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Cliente</th><th>Total</th><th>Cobrado</th><th>Pendiente</th></tr></thead>
     <tbody id="cobros-tbody"></tbody>
@@ -548,6 +553,7 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Contratos</div><div class="page-sub">Documentos de contratación del servicio</div></div>
     <button class="btn-primary" onclick="abrirNuevoContrato()">+ Nuevo contrato</button>
   </div>
+  <div class="list-filter"><input id="ct-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderContratos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="ct-df" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">al</span><input id="ct-dt" class="lf-in" type="date" onchange="renderContratos()"><button class="btn-secondary" onclick="document.getElementById('ct-q').value='';document.getElementById('ct-df').value='';document.getElementById('ct-dt').value='';renderContratos()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº</th><th>Cliente</th><th>Fecha evento</th><th>Servicios</th><th>Importe</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="contratos-tbody"></tbody>
@@ -1764,7 +1770,7 @@ function renderClientes(){
     const matchQ=!q||(c.nombre||'').toLowerCase().includes(q)||(c.telefono||'').includes(q)||(c.email||'').toLowerCase().includes(q);
     const estado=calcEstadoCliente(c);
     const matchE=!ef||estado===ef;
-    return matchQ&&matchE;
+    return matchQ&&matchE&&_inRange(c.fecha_evento,_fv('cli-df'),_fv('cli-dt'));
   });
   document.getElementById('cli-tbody').innerHTML=data.length?data.map(c=>{
     const estado=calcEstadoCliente(c);
@@ -2006,10 +2012,15 @@ async function guardarPresupuesto(){
   verPresupuesto(data.id);
 }
 
+function _fv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function _matchTxt(s,q){return !q||String(s||'').toLowerCase().includes(q);}
+function _inRange(d,f,t){if(!f&&!t)return true;if(!d)return false;const x=String(d).slice(0,10);if(f&&x<f)return false;if(t&&x>t)return false;return true;}
 function renderPresupuestos(){
   const tbody=document.getElementById('pres-tbody');
-  if(!PRESUPUESTOS.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty">Sin presupuestos.</div></td></tr>';return;}
-  tbody.innerHTML=PRESUPUESTOS.map(p=>{
+  const _q=_fv('pres-q').toLowerCase();
+  const data=PRESUPUESTOS.filter(p=>{const c=CLIENTES.find(x=>x.id===p.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(p.numero||''),_q)&&_inRange(p.fecha_evento||p.created_at,_fv('pres-df'),_fv('pres-dt'));});
+  if(!data.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty">Sin resultados.</div></td></tr>';return;}
+  tbody.innerHTML=data.map(p=>{
     const c=CLIENTES.find(x=>x.id===p.cliente_id);
     const ep=estadoPresupuesto(p);
     const bg=ep==='caducado'?'background:#FFF5F5':ep==='aceptado'?'background:#F0FFF7':'';
@@ -2256,6 +2267,7 @@ function renderFacturas(filtro){
   if(f==='Henry')data=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo');
   else if(f==='Nuria')data=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo');
   else if(f==='efectivo')data=FACTURAS.filter(x=>x.tipo==='efectivo');
+  {const _q=_fv('fac-q').toLowerCase(),_df=_fv('fac-df'),_dt=_fv('fac-dt');data=data.filter(x=>{const c=CLIENTES.find(y=>y.id===x.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(x.numero||''),_q)&&_inRange(x.fecha_factura,_df,_dt);});}
   const totalH=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
   const totalN=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
   const totalEf=FACTURAS.filter(x=>x.tipo==='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
@@ -2295,7 +2307,8 @@ function renderCobros(){
     <div class="metric-card accent"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(total)} €</div></div>
     <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(cobrado)} €</div></div>
     <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(pendiente)} €</div></div>`;
-  document.getElementById('cobros-tbody').innerHTML=FACTURAS.length?FACTURAS.map(f=>{
+  const _q=_fv('cobros-q').toLowerCase();const _dataCo=FACTURAS.filter(f=>{const c=CLIENTES.find(x=>x.id===f.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(f.numero||''),_q)&&_inRange(f.fecha_factura,_fv('cobros-df'),_fv('cobros-dt'));});
+  document.getElementById('cobros-tbody').innerHTML=_dataCo.length?_dataCo.map(f=>{
     const c=CLIENTES.find(x=>x.id===f.cliente_id);
     return`<tr><td style="font-weight:600">${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${fmt(f.cobrado)} €</td><td style="color:${f.pendiente>0?'#A32D2D':'var(--ink-soft)'}">${f.pendiente>0?fmt(f.pendiente)+' €':'—'}</td></tr>`;
   }).join(''):'<tr><td colspan="4"><div class="empty">Sin facturas todavía.</div></td></tr>';
@@ -2780,7 +2793,8 @@ async function guardarContrato(){
 }
 
 function renderContratos(){
-  document.getElementById('contratos-tbody').innerHTML=CONTRATOS.length?CONTRATOS.map(ct=>{
+  const _q=_fv('ct-q').toLowerCase();const _dataCt=CONTRATOS.filter(ct=>{const c=CLIENTES.find(x=>x.id===ct.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(ct.numero||''),_q)&&_inRange(ct.fecha_evento||ct.created_at,_fv('ct-df'),_fv('ct-dt'));});
+  document.getElementById('contratos-tbody').innerHTML=_dataCt.length?_dataCt.map(ct=>{
     const c=CLIENTES.find(x=>x.id===ct.cliente_id);
     let badgeCt;
     if(ct.firmado_at){badgeCt='<span class="badge" style="background:#E1F5EE;color:#0F6E56">✓ Firmado '+fmtDate(String(ct.firmado_at).split('T')[0])+'</span>';}
