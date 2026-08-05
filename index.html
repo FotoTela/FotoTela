@@ -1611,7 +1611,9 @@ function actualizarBadgeLeads(){
 async function loadAllData(){
   const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc,ev,eeq,eper,eco,inv,cont]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*'),sb.from('eventos').select('*').order('fecha',{ascending:false}),sb.from('evento_equipo').select('*'),sb.from('evento_personas').select('*'),sb.from('evento_costes').select('*'),sb.from('inversiones').select('*').order('fecha',{ascending:false}),sb.from('contactos_potenciales').select('*').order('nombre',{ascending:true})]);
   CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];EVENTOS=ev.data||[];EVENTO_EQUIPO=eeq.data||[];EVENTO_PERSONAS=eper.data||[];EVENTO_COSTES=eco.data||[];INVERSIONES=inv.data||[];CONTACTOS=cont.data||[];
-  try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});ACTIVIDAD=(_a&&_a.data)||[];}catch(e){ACTIVIDAD=[];}
+  let _dbAct=[];try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});_dbAct=(_a&&_a.data)||[];}catch(e){_dbAct=[];}
+  let _locAct=[];try{_locAct=JSON.parse(localStorage.getItem('ft_actividad')||'[]');}catch(e){_locAct=[];}
+  ACTIVIDAD=_dbAct.concat(_locAct);
   if(localStorage.getItem('ft_seen_cli')===null){try{localStorage.setItem('ft_seen_cli',JSON.stringify(CLIENTES.map(c=>c.id)));}catch(e){}}
   actualizarBadgeLeads();
 }
@@ -2814,7 +2816,11 @@ async function eliminarContrato(id){
 
 async function logActividad(clienteId,texto,icono){
   if(!clienteId||!currentUser)return;
-  try{await sb.from('actividad').insert({user_id:currentUser.id,cliente_id:clienteId,texto:texto,icono:icono||'\u2022'});}catch(e){}
+  const row={cliente_id:clienteId,texto:texto,icono:icono||'\u2022',created_at:new Date().toISOString()};
+  let ok=false;
+  try{const {error}=await sb.from('actividad').insert({user_id:currentUser.id,cliente_id:clienteId,texto:texto,icono:row.icono});ok=!error;}catch(e){ok=false;}
+  if(!ok){try{const arr=JSON.parse(localStorage.getItem('ft_actividad')||'[]');arr.push(row);if(arr.length>3000)arr.splice(0,arr.length-3000);localStorage.setItem('ft_actividad',JSON.stringify(arr));}catch(e){}}
+  ACTIVIDAD.unshift(row);
 }
 
 async function refrescarFichaDocs(){
