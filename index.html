@@ -1364,6 +1364,7 @@ const EMISOR={nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avin
 let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],EQUIPO=[],CONSUMIBLES=[],GASTOS=[],SERVICIOS=[],SERVICIO_CONSUMIBLES=[],EVENTOS=[],EVENTO_EQUIPO=[],EVENTO_PERSONAS=[],EVENTO_COSTES=[],INVERSIONES=[],CONTACTOS=[];
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear(),calDay=new Date().getDate(),calView='mes';
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
+let ACTIVIDAD=[];
 
 function fmt(n){return Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtDate(s){if(!s)return '';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});}
@@ -1610,6 +1611,7 @@ function actualizarBadgeLeads(){
 async function loadAllData(){
   const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc,ev,eeq,eper,eco,inv,cont]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*'),sb.from('eventos').select('*').order('fecha',{ascending:false}),sb.from('evento_equipo').select('*'),sb.from('evento_personas').select('*'),sb.from('evento_costes').select('*'),sb.from('inversiones').select('*').order('fecha',{ascending:false}),sb.from('contactos_potenciales').select('*').order('nombre',{ascending:true})]);
   CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];EVENTOS=ev.data||[];EVENTO_EQUIPO=eeq.data||[];EVENTO_PERSONAS=eper.data||[];EVENTO_COSTES=eco.data||[];INVERSIONES=inv.data||[];CONTACTOS=cont.data||[];
+  try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});ACTIVIDAD=(_a&&_a.data)||[];}catch(e){ACTIVIDAD=[];}
   if(localStorage.getItem('ft_seen_cli')===null){try{localStorage.setItem('ft_seen_cli',JSON.stringify(CLIENTES.map(c=>c.id)));}catch(e){}}
   actualizarBadgeLeads();
 }
@@ -2269,7 +2271,7 @@ function renderFacturas(filtro){
     </tr>`;
   }).join(''):'<tr><td colspan="6"><div class="empty">Sin facturas todavía.</div></td></tr>';
 }
-async function eliminarFac(id){if(!confirm('¿Eliminar esta factura?'))return;await sb.from('facturas').delete().eq('id',id);toast('Factura eliminada');await refrescarFichaDocs();}
+async function eliminarFac(id){if(!confirm('¿Eliminar esta factura?'))return;const _f=FACTURAS.find(x=>x.id===id);await sb.from('facturas').delete().eq('id',id);if(_f)await logActividad(_f.cliente_id,(_f.tipo==='efectivo'?'Cobro en efectivo ':'Factura ')+(_f.numero||'')+' eliminado ('+fmt(_f.total||0)+' €)','\uD83D\uDDD1\uFE0F');toast('Factura eliminada');await refrescarFichaDocs();}
 
 async function verFactura(id){
   const {data:lineas}=await sb.from('factura_lineas').select('*').eq('factura_id',id).order('orden');
@@ -2804,8 +2806,15 @@ async function toggleFirmado(id,estadoActual){
 
 async function eliminarContrato(id){
   if(!confirm('¿Eliminar este contrato?'))return;
+  const _ct=CONTRATOS.find(x=>x.id===id);
   await sb.from('contratos').delete().eq('id',id);
+  if(_ct)await logActividad(_ct.cliente_id,'Contrato '+(_ct.numero||'')+' eliminado','\uD83D\uDDD1\uFE0F');
   toast('Contrato eliminado');await refrescarFichaDocs();
+}
+
+async function logActividad(clienteId,texto,icono){
+  if(!clienteId||!currentUser)return;
+  try{await sb.from('actividad').insert({user_id:currentUser.id,cliente_id:clienteId,texto:texto,icono:icono||'\u2022'});}catch(e){}
 }
 
 async function refrescarFichaDocs(){
@@ -2820,14 +2829,17 @@ async function refrescarFichaDocs(){
     if(c&&body){
       if(fichaTabActual==='documentos')body.innerHTML=renderFichaDocumentos(c);
       else if(fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(c);
+      else if(fichaTabActual==='historial')body.innerHTML=renderFichaHistorial(c);
     }
   }
 }
 
 async function eliminarPresupuesto(id){
   if(!confirm('¿Eliminar este presupuesto?'))return;
+  const _p=PRESUPUESTOS.find(x=>x.id===id);
   await sb.from('presupuesto_lineas').delete().eq('presupuesto_id',id);
   await sb.from('presupuestos').delete().eq('id',id);
+  if(_p)await logActividad(_p.cliente_id,'Presupuesto '+(_p.numero||'')+' eliminado ('+fmt(_p.total||0)+' €)','\uD83D\uDDD1\uFE0F');
   toast('Presupuesto eliminado');await refrescarFichaDocs();
 }
 
@@ -2836,6 +2848,7 @@ async function toggleEstadoFactura(id){
   const nuevo=f.estado==='Cobrada'?'Pendiente':'Cobrada';
   const upd=nuevo==='Cobrada'?{estado:'Cobrada',cobrado:f.total,pendiente:0}:{estado:'Pendiente',cobrado:0,pendiente:f.total};
   await sb.from('facturas').update(upd).eq('id',id);
+  await logActividad(f.cliente_id,'Factura '+(f.numero||'')+' \u2192 '+nuevo,'\uD83D\uDD04');
   toast('Factura marcada como '+nuevo);await refrescarFichaDocs();
 }
 
@@ -2843,6 +2856,7 @@ async function toggleEstadoContrato(id){
   const ct=CONTRATOS.find(x=>x.id===id);if(!ct)return;
   const nuevo=ct.estado==='Firmado'?'Pendiente firma':'Firmado';
   await sb.from('contratos').update({estado:nuevo}).eq('id',id);
+  await logActividad(ct.cliente_id,'Contrato '+(ct.numero||'')+' \u2192 '+nuevo,'\uD83D\uDD04');
   toast('Contrato: '+nuevo);await refrescarFichaDocs();
 }
 
@@ -2889,6 +2903,7 @@ async function actualizarFactura(id){
   const lineasFin=descEur>0?lineasV.concat([{descripcion:'Descuento '+descPct+'%',detalle:'',precio_unitario:-descEur,unidades:1}]):lineasV;
   await sb.from('factura_lineas').insert(lineasFin.map((l,i)=>({user_id:currentUser.id,factura_id:id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
   btn.disabled=false;btn.textContent='Guardar y ver factura';btn.onclick=()=>guardarFactura();
+  {const _f=FACTURAS.find(x=>x.id===id);await logActividad(clienteId,'Factura '+((_f&&_f.numero)||'')+' editada','\u270F\uFE0F');}
   closeModal('modal-factura');toast('Factura actualizada');await refrescarFichaDocs();
 }
 
@@ -2916,6 +2931,7 @@ async function actualizarContrato(id){
   const btn=document.getElementById('save-ct-btn');btn.disabled=true;btn.innerHTML='<span class=\"spinner\"></span>Guardando...';
   await sb.from('contratos').update({cliente_id:clienteId,emisor:document.getElementById('ct-emisor').value||'Henry',fecha_contrato:document.getElementById('ct-fecha-cont').value||null,fecha_evento:document.getElementById('ct-fecha-ev').value||null,horario:document.getElementById('ct-horario').value,ubicacion:document.getElementById('ct-ubicacion').value,servicios:document.getElementById('ct-servicios').value,importe_total:parseFloat(document.getElementById('ct-importe').value)||0,reserva:parseFloat(document.getElementById('ct-reserva').value)||0,condiciones:document.getElementById('ct-condiciones').value,notas:document.getElementById('ct-notas').value}).eq('id',id);
   btn.disabled=false;btn.textContent='Guardar y ver contrato';btn.onclick=()=>guardarContrato();
+  {const _ct=CONTRATOS.find(x=>x.id===id);await logActividad(clienteId,'Contrato '+((_ct&&_ct.numero)||'')+' editado','\u270F\uFE0F');}
   closeModal('modal-contrato');toast('Contrato actualizado');await refrescarFichaDocs();
 }
 
@@ -2961,7 +2977,7 @@ function buildContratoHTML(ct,c){
   +'<div class="ct-cuadro-row"><span>Precio total del servicio</span><span>'+fmt(ct.importe_total||0)+' €</span></div></div>'
   +'<div class="ct-parrafo">La <strong>reserva</strong> se abonará mediante transferencia bancaria a la cuenta <strong>'+em.cuenta+'</strong> en el momento de la firma del presente contrato.</div>'
   +'<div class="ct-parrafo">El <strong>importe restante</strong> podrá abonarse de una de las siguientes formas: (i) mediante <strong>transferencia bancaria</strong> a la misma cuenta, que deberá quedar íntegramente pagado como máximo <strong>una semana antes del día del evento</strong>; o (ii) en <strong>efectivo</strong>, el <strong>mismo día del evento</strong>.</div>'
-  +'<div class="ct-parrafo">En los pagos por transferencia se indicará como concepto el número de presupuesto y el nombre del evento.</div></div>'
+  +'<div class="ct-parrafo">En los pagos por transferencia se indicará como concepto el número de presupuesto.</div></div>'
   +'<div class="ct-seccion"><div class="ct-seccion-num">4. Cancelaciones</div>'
   +'<div class="ct-parrafo"><strong>Cancelación por parte de EL CLIENTE:</strong></div>'
   +'<ul class="ct-lista"><li>Con más de 30 días de antelación: pérdida de la reserva abonada.</li><li>Con menos de 30 días de antelación: pérdida del 100% del importe total.</li><li>Cambio de fecha: sujeto a disponibilidad, comunicado con la máxima antelación posible.</li></ul>'
@@ -3932,6 +3948,8 @@ async function verEventoFull(id){
 
 async function eliminarEvento(id){
   if(!confirm('¿Eliminar este evento?'))return;
+  const _e=EVENTOS.find(x=>x.id===id);
+  if(_e)await logActividad(_e.cliente_id,'Evento del '+fmtDate(_e.fecha)+' eliminado','\uD83D\uDDD1\uFE0F');
   await sb.from('evento_equipo').delete().eq('evento_id',id);
   await sb.from('evento_personas').delete().eq('evento_id',id);
   await sb.from('evento_costes').delete().eq('evento_id',id);
@@ -4301,6 +4319,7 @@ async function guardarCliente(){
   const gv=(id)=>{const el=document.getElementById(id);return el?el.value:'';};
   const payload={nombre,dni:gv('f-dni'),telefono:gv('f-tel'),email:gv('f-email'),direccion:gv('f-dir'),ciudad:gv('f-ciudad'),cp:gv('f-cp'),tipo_evento:gv('f-tipo')||'Boda',fecha_evento:gv('f-fecha')||null,horario:horarioFinal,ubicacion_evento:gv('f-ubicacion'),homenajeado:gv('f-homenajeado'),servicios_interes:gv('f-servicios'),notas:gv('f-notas'),contacto_potencial_id:gv('f-contacto')||null};
   const editId=document.getElementById('f-cliente-id').value;
+  const _old=editId?(CLIENTES.find(x=>x.id===editId)||{}):null;
   let error;
   if(editId){
     ({error}=await sb.from('clientes').update(payload).eq('id',editId));
@@ -4314,6 +4333,14 @@ async function guardarCliente(){
   document.getElementById('modal-cliente-title').textContent='Nuevo cliente';
   ['f-nombre','f-dni','f-tel','f-email','f-dir','f-ciudad','f-cp','f-notas','f-fecha','f-ubicacion','f-horario','f-homenajeado','f-hora-ini','f-hora-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const fs=document.getElementById('f-servicios');if(fs)fs.value='';
+  if(editId&&_old){
+    const labels={nombre:'Nombre',dni:'DNI',telefono:'Teléfono',email:'Email',direccion:'Dirección',ciudad:'Ciudad',cp:'CP',tipo_evento:'Tipo de evento',fecha_evento:'Fecha del evento',horario:'Horario',ubicacion_evento:'Ubicación',homenajeado:'Homenajeado/a',servicios_interes:'Servicios de interés',notas:'Notas'};
+    for(const k in labels){
+      const ov=(_old[k]==null?'':String(_old[k])).trim();
+      const nv=(payload[k]==null?'':String(payload[k])).trim();
+      if(ov!==nv)await logActividad(editId,'Cambió '+labels[k]+': \"'+(ov||'\u2014')+'\" \u2192 \"'+(nv||'\u2014')+'\"','\u270F\uFE0F');
+    }
+  }
   await loadAllData();renderClientes();renderDashboard();
 }
 
@@ -4362,6 +4389,7 @@ async function actualizarPresupuesto(id){
   btn.disabled=false;btn.textContent='Guardar presupuesto';
   btn.onclick=()=>guardarPresupuesto();
   closeModal('modal-presupuesto');
+  {const _p=PRESUPUESTOS.find(x=>x.id===id);await logActividad(clienteId,'Presupuesto '+((_p&&_p.numero)||'')+' editado','\u270F\uFE0F');}
   await refrescarFichaDocs();
 }
 
@@ -4680,8 +4708,9 @@ function renderFichaHistorial(c){
     ...pres.map(p=>({fecha:p.created_at,texto:'Presupuesto '+p.numero+' — '+fmt(p.total||0)+' €',icono:'📋'})),
     ...cts.map(ct=>({fecha:ct.created_at,texto:'Contrato '+ct.numero+(ct.estado==='Firmado'?' ✓ Firmado':''),icono:'📝'})),
     ...evs.map(ev=>({fecha:ev.created_at,texto:'Evento creado — '+fmtDate(ev.fecha),icono:'📅'})),
+    ...ACTIVIDAD.filter(a=>a.cliente_id===c.id).map(a=>({fecha:a.created_at,texto:a.texto,icono:a.icono||'\u2022'})),
     {fecha:c.created_at,texto:'Cliente registrado',icono:'👤'},
-  ].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  ].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 
   if(!items.length) return '<div class="ficha-card"><div style="color:var(--ink-soft);text-align:center;padding:20px">Sin actividad registrada</div></div>';
 
