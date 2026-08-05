@@ -430,7 +430,7 @@ tr:hover td{background:#FAFBFF}
 <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
 
 <div id="dashboard" class="page active">
-  <div class="page-header"><div><div class="page-title">Dashboard</div><div class="page-sub">Resumen de tu negocio</div></div></div>
+  <div class="page-header"><div><div class="page-title">Dashboard</div><div class="page-sub">Resumen de tu negocio</div></div><button class="btn-secondary" onclick="exportarExcel()">⬇ Exportar a Excel</button></div>
   <div class="metrics-grid" id="dash-metrics"></div>
   <div id="dash-empty-hint" class="empty" style="display:none">Aún no tienes datos. Empieza creando tu primer cliente.</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
@@ -447,7 +447,7 @@ tr:hover td{background:#FAFBFF}
 
 <div id="clientes" class="page">
   <div class="page-header">
-    <div><div class="page-title">Clientes</div><div class="page-sub">Tus clientes guardados en la base de datos</div></div>
+    <div><div class="page-title">Clientes</div><div class="page-sub">Tus clientes guardados en la base de datos</div></div><button class="btn-secondary" onclick="exportarExcel()">⬇ Excel</button>
     <div class="header-actions">
       <button class="btn-secondary" onclick="openShareModal()">Compartir formulario</button>
       <button class="btn-primary" onclick="openModal('modal-cliente')">+ Nuevo cliente</button>
@@ -473,7 +473,7 @@ tr:hover td{background:#FAFBFF}
 
 <div id="presupuestos" class="page">
   <div class="page-header">
-    <div><div class="page-title">Presupuestos</div></div>
+    <div><div class="page-title">Presupuestos</div></div><button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;margin-right:8px">⬇ Excel</button>
     <button class="btn-primary" onclick="abrirNuevoPresupuesto()">+ Nuevo presupuesto</button>
   </div>
   <div class="list-filter"><input id="pres-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderPresupuestos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="pres-df" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">al</span><input id="pres-dt" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">Ordenar</span><select id="pres-sort" class="lf-in" onchange="renderPresupuestos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('pres-q').value='';document.getElementById('pres-df').value='';document.getElementById('pres-dt').value='';renderPresupuestos()">Limpiar</button></div>
@@ -485,7 +485,7 @@ tr:hover td{background:#FAFBFF}
 
 <div id="facturas" class="page">
   <div class="page-header">
-    <div><div class="page-title">Facturas</div></div>
+    <div><div class="page-title">Facturas</div></div><button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;margin-right:8px">⬇ Excel</button>
     <div class="header-actions">
       <button class="btn-secondary" onclick="abrirNuevoEfectivo()">+ Cobro en efectivo</button>
       <button class="btn-primary" onclick="abrirNuevaFactura()">+ Nueva factura</button>
@@ -506,7 +506,7 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 <div id="cobros" class="page">
-  <div class="page-header"><div><div class="page-title">Cobros</div></div></div>
+  <div class="page-header"><div><div class="page-title">Cobros</div></div><button class="btn-secondary" onclick="exportarExcel()">⬇ Exportar a Excel</button></div>
   <div class="metrics-grid" id="cobros-metrics"></div>
   <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">Ordenar</span><select id="cobros-sort" class="lf-in" onchange="renderCobros()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';renderCobros()">Limpiar</button></div>
   <div class="table-wrap"><table>
@@ -559,7 +559,7 @@ tr:hover td{background:#FAFBFF}
 
 <div id="contratos" class="page">
   <div class="page-header">
-    <div><div class="page-title">Contratos</div><div class="page-sub">Documentos de contratación del servicio</div></div>
+    <div><div class="page-title">Contratos</div><div class="page-sub">Documentos de contratación del servicio</div></div><button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;margin-right:8px">⬇ Excel</button>
     <button class="btn-primary" onclick="abrirNuevoContrato()">+ Nuevo contrato</button>
   </div>
   <div class="list-filter"><input id="ct-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderContratos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="ct-df" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">al</span><input id="ct-dt" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">Ordenar</span><select id="ct-sort" class="lf-in" onchange="renderContratos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('ct-q').value='';document.getElementById('ct-df').value='';document.getElementById('ct-dt').value='';renderContratos()">Limpiar</button></div>
@@ -1380,7 +1380,7 @@ let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],E
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear(),calDay=new Date().getDate(),calView='mes';
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 let ACTIVIDAD=[];
-let ACT_DB=true;  // se apaga solo si la tabla 'actividad' no está disponible (evita spam de 403)
+let ACT_DB=false;  // historial en el navegador; se pone a true solo si creas la tabla 'actividad' en Supabase
 
 function fmt(n){return Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtDate(s){if(!s)return '';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});}
@@ -1827,6 +1827,39 @@ async function guardarCliente(){
   await loadAllData();renderClientes();renderDashboard();
 }
 
+function _loadXLSX(){return new Promise(function(res,rej){if(window.XLSX)return res();var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=function(){res();};sc.onerror=function(){rej(new Error('cdn'));};document.head.appendChild(sc);});}
+function _cname(id){var c=CLIENTES.find(function(x){return x.id===id;});return c?c.nombre:'';}
+async function exportarExcel(){
+  var num=function(v){return Number(v||0);};
+  try{
+    toast('Preparando Excel...');
+    await _loadXLSX();
+    var wb=XLSX.utils.book_new();
+    var clientes=CLIENTES.map(function(c){return {'Nombre':c.nombre||'','DNI':c.dni||'','Telefono':c.telefono||'','Email':c.email||'','Direccion':c.direccion||'','Ciudad':c.ciudad||'','CP':c.cp||'','Tipo evento':c.tipo_evento||'','Fecha evento':c.fecha_evento||'','Servicios':c.servicios_interes||'','Importe total':num(c.importe_total),'Estado':calcEstadoCliente(c)};});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(clientes),'Clientes');
+    var pres=PRESUPUESTOS.map(function(p){return {'N':p.numero||'','Cliente':_cname(p.cliente_id),'Fecha evento':p.fecha_evento||'','Total':num(p.total),'Estado':p.estado||'','Creado':(p.created_at||'').slice(0,10)};});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(pres),'Presupuestos');
+    var facf=FACTURAS.filter(function(f){return f.tipo!=='efectivo';}).map(function(f){return {'N':f.numero||'','Emisor':f.emisor||'','Cliente':_cname(f.cliente_id),'Fecha':f.fecha_factura||'','Base':num(f.base),'IVA %':num(f.iva_pct),'IVA EUR':num(f.iva_eur),'Total':num(f.total),'Cobrado':num(f.cobrado),'Pendiente':num(f.pendiente),'Estado':f.estado||''};});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(facf),'Facturas');
+    var cobros=FACTURAS.map(function(f){return {'Cliente':_cname(f.cliente_id),'N':f.numero||'','Tipo':(f.tipo==='efectivo'?'Efectivo':'Factura'),'Fecha':f.fecha_factura||'','Total':num(f.total),'Cobrado':num(f.cobrado),'Pendiente':num(f.pendiente)};});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cobros),'Cobros');
+    var cts=CONTRATOS.map(function(c){return {'N':c.numero||'','Cliente':_cname(c.cliente_id),'Fecha evento':c.fecha_evento||'','Importe':num(c.importe_total),'Estado':c.estado||''};});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cts),'Contratos');
+    var evs=EVENTOS.map(function(e){return {'Cliente':_cname(e.cliente_id),'Fecha':e.fecha||'','Ubicacion':e.ubicacion||'','Estado':e.estado||'','Notas':e.notas||''};});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(evs),'Eventos');
+    XLSX.writeFile(wb,'FotoTela_datos_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    toast('Excel descargado');
+  }catch(e){
+    try{
+      var head=['Nombre','DNI','Telefono','Email','Direccion','Ciudad','CP','Tipo evento','Fecha evento','Servicios','Importe total','Estado'];
+      var rows=[head].concat(CLIENTES.map(function(c){return [c.nombre,c.dni,c.telefono,c.email,c.direccion,c.ciudad,c.cp,c.tipo_evento,c.fecha_evento,c.servicios_interes,c.importe_total,calcEstadoCliente(c)];}));
+      var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+      var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='FotoTela_clientes.csv';a.click();
+      toast('Descargado en CSV (Excel no disponible sin conexión)');
+    }catch(e2){toast('No se pudo exportar','err');}
+  }
+}
 async function eliminarCliente(id){
   if(!confirm('¿Eliminar este cliente? Se borrarán también sus presupuestos, facturas, contratos y eventos.'))return;
   const facIds=FACTURAS.filter(f=>f.cliente_id===id).map(f=>f.id);
