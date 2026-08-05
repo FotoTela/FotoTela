@@ -397,14 +397,23 @@ tr:hover td{background:#FAFBFF}
     </div>
   </div>
 
+  <!-- CALENDARIO -->
+  <div class="nav-group">
+    <div class="nav-group-header" onclick="toggleNavGroup(this)">
+      <span>📅 Agenda</span><span class="nav-arrow">▶</span>
+    </div>
+    <div class="nav-sub">
+      <div class="nav-item" onclick="nav('calendario',this)">Calendario</div>
+      <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
+    </div>
+  </div>
+
   <!-- OPERACIONES -->
   <div class="nav-group">
     <div class="nav-group-header" onclick="toggleNavGroup(this)">
       <span>⚙️ Operaciones</span><span class="nav-arrow">▶</span>
     </div>
     <div class="nav-sub">
-      <div class="nav-item" onclick="nav('calendario',this)">Calendario</div>
-      <div class="nav-item" onclick="nav('tareas',this)">Tareas <span class="nav-badge" id="tareas-badge"></span></div>
       <div class="nav-item" onclick="nav('personas',this)">Equipo</div>
       <div class="nav-item" onclick="nav('equipo',this)">Material <span class="nav-badge" id="stock-badge"></span></div>
       <div class="nav-item" onclick="nav('catalogo',this)">Catálogo</div>
@@ -454,7 +463,7 @@ tr:hover td{background:#FAFBFF}
       <option value="Archivado">Archivado</option>
     </select>
     <span class="lf-lbl">Evento del</span><input id="cli-df" class="lf-in" type="date" onchange="renderClientes()"><span class="lf-lbl">al</span><input id="cli-dt" class="lf-in" type="date" onchange="renderClientes()">
-    <button class="btn-secondary" onclick="document.getElementById('cli-search').value='';document.getElementById('cli-estado-filter').value='';document.getElementById('cli-df').value='';document.getElementById('cli-dt').value='';renderClientes()">Limpiar</button>
+    <span class="lf-lbl">Ordenar</span><select id="cli-sort" class="lf-in" onchange="renderClientes()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cli-search').value='';document.getElementById('cli-estado-filter').value='';document.getElementById('cli-df').value='';document.getElementById('cli-dt').value='';renderClientes()">Limpiar</button>
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -467,7 +476,7 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Presupuestos</div></div>
     <button class="btn-primary" onclick="abrirNuevoPresupuesto()">+ Nuevo presupuesto</button>
   </div>
-  <div class="list-filter"><input id="pres-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderPresupuestos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="pres-df" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">al</span><input id="pres-dt" class="lf-in" type="date" onchange="renderPresupuestos()"><button class="btn-secondary" onclick="document.getElementById('pres-q').value='';document.getElementById('pres-df').value='';document.getElementById('pres-dt').value='';renderPresupuestos()">Limpiar</button></div>
+  <div class="list-filter"><input id="pres-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderPresupuestos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="pres-df" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">al</span><input id="pres-dt" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">Ordenar</span><select id="pres-sort" class="lf-in" onchange="renderPresupuestos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('pres-q').value='';document.getElementById('pres-df').value='';document.getElementById('pres-dt').value='';renderPresupuestos()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº</th><th>Cliente</th><th>Evento</th><th>Total</th><th>Válido hasta</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="pres-tbody"></tbody>
@@ -488,7 +497,7 @@ tr:hover td{background:#FAFBFF}
     <div class="tab" id="tab-fac-nuria" onclick="switchTabFac('Nuria',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Núria</div>
     <div class="tab" id="tab-fac-efectivo" onclick="switchTabFac('efectivo',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Efectivo</div>
   </div>
-  <div class="list-filter"><input id="fac-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderFacturasConMetricas(facTabActual)" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="fac-df" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">al</span><input id="fac-dt" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><button class="btn-secondary" onclick="document.getElementById('fac-q').value='';document.getElementById('fac-df').value='';document.getElementById('fac-dt').value='';renderFacturasConMetricas(facTabActual)">Limpiar</button></div>
+  <div class="list-filter"><input id="fac-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderFacturasConMetricas(facTabActual)" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="fac-df" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">al</span><input id="fac-dt" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">Ordenar</span><select id="fac-sort" class="lf-in" onchange="renderFacturasConMetricas(facTabActual)"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('fac-q').value='';document.getElementById('fac-df').value='';document.getElementById('fac-dt').value='';renderFacturasConMetricas(facTabActual)">Limpiar</button></div>
   <div class="metrics-grid" id="fac-metrics" style="margin-bottom:16px"></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº Factura</th><th>Emisor</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -499,9 +508,9 @@ tr:hover td{background:#FAFBFF}
 <div id="cobros" class="page">
   <div class="page-header"><div><div class="page-title">Cobros</div></div></div>
   <div class="metrics-grid" id="cobros-metrics"></div>
-  <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';renderCobros()">Limpiar</button></div>
+  <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">Ordenar</span><select id="cobros-sort" class="lf-in" onchange="renderCobros()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';renderCobros()">Limpiar</button></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Cliente</th><th>Total</th><th>Cobrado</th><th>Pendiente</th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Nº</th><th>Tipo</th><th>Fecha</th><th>Total</th><th>Cobrado</th><th>Pendiente</th></tr></thead>
     <tbody id="cobros-tbody"></tbody>
   </table></div>
 </div>
@@ -553,7 +562,7 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Contratos</div><div class="page-sub">Documentos de contratación del servicio</div></div>
     <button class="btn-primary" onclick="abrirNuevoContrato()">+ Nuevo contrato</button>
   </div>
-  <div class="list-filter"><input id="ct-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderContratos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="ct-df" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">al</span><input id="ct-dt" class="lf-in" type="date" onchange="renderContratos()"><button class="btn-secondary" onclick="document.getElementById('ct-q').value='';document.getElementById('ct-df').value='';document.getElementById('ct-dt').value='';renderContratos()">Limpiar</button></div>
+  <div class="list-filter"><input id="ct-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderContratos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="ct-df" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">al</span><input id="ct-dt" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">Ordenar</span><select id="ct-sort" class="lf-in" onchange="renderContratos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('ct-q').value='';document.getElementById('ct-df').value='';document.getElementById('ct-dt').value='';renderContratos()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº</th><th>Cliente</th><th>Fecha evento</th><th>Servicios</th><th>Importe</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="contratos-tbody"></tbody>
@@ -1766,12 +1775,13 @@ async function limpiarEstadoForzado(id){
 function renderClientes(){
   const q=(document.getElementById('cli-search').value||'').toLowerCase();
   const ef=document.getElementById('cli-estado-filter').value;
-  const data=CLIENTES.filter(c=>{
+  let data=CLIENTES.filter(c=>{
     const matchQ=!q||(c.nombre||'').toLowerCase().includes(q)||(c.telefono||'').includes(q)||(c.email||'').toLowerCase().includes(q);
     const estado=calcEstadoCliente(c);
     const matchE=!ef||estado===ef;
     return matchQ&&matchE&&_inRange(c.fecha_evento,_fv('cli-df'),_fv('cli-dt'));
   });
+  data=_sortList(data,'cli-sort',c=>c.nombre,c=>c.created_at,c=>c.fecha_evento);
   document.getElementById('cli-tbody').innerHTML=data.length?data.map(c=>{
     const estado=calcEstadoCliente(c);
     const esForzado=!!c.estado_forzado;
@@ -1814,8 +1824,23 @@ async function guardarCliente(){
 }
 
 async function eliminarCliente(id){
-  if(!confirm('¿Eliminar este cliente?'))return;
-  await sb.from('clientes').delete().eq('id',id);
+  if(!confirm('¿Eliminar este cliente? Se borrarán también sus presupuestos, facturas, contratos y eventos.'))return;
+  const facIds=FACTURAS.filter(f=>f.cliente_id===id).map(f=>f.id);
+  const presIds=PRESUPUESTOS.filter(p=>p.cliente_id===id).map(p=>p.id);
+  const evtIds=EVENTOS.filter(e=>e.cliente_id===id).map(e=>e.id);
+  try{
+    if(facIds.length)await sb.from('factura_lineas').delete().in('factura_id',facIds);
+    if(presIds.length)await sb.from('presupuesto_lineas').delete().in('presupuesto_id',presIds);
+    if(evtIds.length){await sb.from('evento_equipo').delete().in('evento_id',evtIds);await sb.from('evento_personas').delete().in('evento_id',evtIds);await sb.from('evento_costes').delete().in('evento_id',evtIds);}
+    await sb.from('facturas').delete().eq('cliente_id',id);
+    await sb.from('presupuestos').delete().eq('cliente_id',id);
+    await sb.from('contratos').delete().eq('cliente_id',id);
+    await sb.from('eventos').delete().eq('cliente_id',id);
+    try{await sb.from('actividad').delete().eq('cliente_id',id);}catch(e){}
+  }catch(e){}
+  const {error}=await sb.from('clientes').delete().eq('id',id);
+  if(error){toast('No se pudo eliminar: '+error.message,'err');return;}
+  toast('Cliente eliminado');
   await loadAllData();renderClientes();renderDashboard();
 }
 
@@ -2015,10 +2040,19 @@ async function guardarPresupuesto(){
 function _fv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
 function _matchTxt(s,q){return !q||String(s||'').toLowerCase().includes(q);}
 function _inRange(d,f,t){if(!f&&!t)return true;if(!d)return false;const x=String(d).slice(0,10);if(f&&x<f)return false;if(t&&x>t)return false;return true;}
+function _sortList(arr,sortId,nameFn,dateFn,evFn){
+  const m=_fv(sortId)||'recientes';const a=arr.slice();
+  if(m==='az')a.sort((x,y)=>String(nameFn(x)||'').localeCompare(String(nameFn(y)||''),'es'));
+  else if(m==='za')a.sort((x,y)=>String(nameFn(y)||'').localeCompare(String(nameFn(x)||''),'es'));
+  else if(m==='antiguos')a.sort((x,y)=>String(dateFn(x)||'').localeCompare(String(dateFn(y)||'')));
+  else if(m==='proximos')a.sort((x,y)=>String(evFn(x)||'9999-99-99').localeCompare(String(evFn(y)||'9999-99-99')));
+  else a.sort((x,y)=>String(dateFn(y)||'').localeCompare(String(dateFn(x)||'')));
+  return a;
+}
 function renderPresupuestos(){
   const tbody=document.getElementById('pres-tbody');
   const _q=_fv('pres-q').toLowerCase();
-  const data=PRESUPUESTOS.filter(p=>{const c=CLIENTES.find(x=>x.id===p.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(p.numero||''),_q)&&_inRange(p.fecha_evento||p.created_at,_fv('pres-df'),_fv('pres-dt'));});
+  let data=PRESUPUESTOS.filter(p=>{const c=CLIENTES.find(x=>x.id===p.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(p.numero||''),_q)&&_inRange(p.fecha_evento||p.created_at,_fv('pres-df'),_fv('pres-dt'));});data=_sortList(data,'pres-sort',p=>{const _c=CLIENTES.find(x=>x.id===p.cliente_id);return _c?_c.nombre:'';},p=>p.created_at,p=>p.fecha_evento);
   if(!data.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty">Sin resultados.</div></td></tr>';return;}
   tbody.innerHTML=data.map(p=>{
     const c=CLIENTES.find(x=>x.id===p.cliente_id);
@@ -2267,7 +2301,7 @@ function renderFacturas(filtro){
   if(f==='Henry')data=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo');
   else if(f==='Nuria')data=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo');
   else if(f==='efectivo')data=FACTURAS.filter(x=>x.tipo==='efectivo');
-  {const _q=_fv('fac-q').toLowerCase(),_df=_fv('fac-df'),_dt=_fv('fac-dt');data=data.filter(x=>{const c=CLIENTES.find(y=>y.id===x.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(x.numero||''),_q)&&_inRange(x.fecha_factura,_df,_dt);});}
+  {const _q=_fv('fac-q').toLowerCase(),_df=_fv('fac-df'),_dt=_fv('fac-dt');data=data.filter(x=>{const c=CLIENTES.find(y=>y.id===x.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(x.numero||''),_q)&&_inRange(x.fecha_factura,_df,_dt);});data=_sortList(data,'fac-sort',x=>{const _c=CLIENTES.find(y=>y.id===x.cliente_id);return _c?_c.nombre:'';},x=>x.fecha_factura,x=>{const _c=CLIENTES.find(y=>y.id===x.cliente_id);return _c?_c.fecha_evento:'';});}
   const totalH=FACTURAS.filter(x=>x.emisor==='Henry'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
   const totalN=FACTURAS.filter(x=>x.emisor==='Nuria'&&x.tipo!=='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
   const totalEf=FACTURAS.filter(x=>x.tipo==='efectivo').reduce((a,x)=>a+Number(x.total||0),0);
@@ -2307,11 +2341,11 @@ function renderCobros(){
     <div class="metric-card accent"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(total)} €</div></div>
     <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(cobrado)} €</div></div>
     <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(pendiente)} €</div></div>`;
-  const _q=_fv('cobros-q').toLowerCase();const _dataCo=FACTURAS.filter(f=>{const c=CLIENTES.find(x=>x.id===f.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(f.numero||''),_q)&&_inRange(f.fecha_factura,_fv('cobros-df'),_fv('cobros-dt'));});
+  const _q=_fv('cobros-q').toLowerCase();let _dataCo=FACTURAS.filter(f=>{const c=CLIENTES.find(x=>x.id===f.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(f.numero||''),_q)&&_inRange(f.fecha_factura,_fv('cobros-df'),_fv('cobros-dt'));});_dataCo=_sortList(_dataCo,'cobros-sort',f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.nombre:'';},f=>f.fecha_factura,f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.fecha_evento:'';});
   document.getElementById('cobros-tbody').innerHTML=_dataCo.length?_dataCo.map(f=>{
     const c=CLIENTES.find(x=>x.id===f.cliente_id);
-    return`<tr><td style="font-weight:600">${c?c.nombre:'—'}</td><td>${fmt(f.total)} €</td><td>${fmt(f.cobrado)} €</td><td style="color:${f.pendiente>0?'#A32D2D':'var(--ink-soft)'}">${f.pendiente>0?fmt(f.pendiente)+' €':'—'}</td></tr>`;
-  }).join(''):'<tr><td colspan="4"><div class="empty">Sin facturas todavía.</div></td></tr>';
+    return`<tr><td style="font-weight:600">${c?c.nombre:'—'}</td><td>${f.numero||'—'}</td><td>${f.tipo==='efectivo'?'<span style="background:#EAF7F0;color:#0F6E56;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">Efectivo</span>':'<span style="background:var(--brand-light);color:var(--brand);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">Factura</span>'}</td><td>${f.fecha_factura?fmtDate(f.fecha_factura):'—'}</td><td>${fmt(f.total)} €</td><td>${fmt(f.cobrado)} €</td><td style="color:${f.pendiente>0?'#A32D2D':'var(--ink-soft)'}">${f.pendiente>0?fmt(f.pendiente)+' €':'—'}</td></tr>`;
+  }).join(''):'<tr><td colspan="7"><div class="empty">Sin facturas todavía.</div></td></tr>';
 }
 
 function renderCalendario(){
@@ -2793,7 +2827,7 @@ async function guardarContrato(){
 }
 
 function renderContratos(){
-  const _q=_fv('ct-q').toLowerCase();const _dataCt=CONTRATOS.filter(ct=>{const c=CLIENTES.find(x=>x.id===ct.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(ct.numero||''),_q)&&_inRange(ct.fecha_evento||ct.created_at,_fv('ct-df'),_fv('ct-dt'));});
+  const _q=_fv('ct-q').toLowerCase();let _dataCt=CONTRATOS.filter(ct=>{const c=CLIENTES.find(x=>x.id===ct.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(ct.numero||''),_q)&&_inRange(ct.fecha_evento||ct.created_at,_fv('ct-df'),_fv('ct-dt'));});_dataCt=_sortList(_dataCt,'ct-sort',ct=>{const _c=CLIENTES.find(x=>x.id===ct.cliente_id);return _c?_c.nombre:'';},ct=>ct.created_at,ct=>ct.fecha_evento);
   document.getElementById('contratos-tbody').innerHTML=_dataCt.length?_dataCt.map(ct=>{
     const c=CLIENTES.find(x=>x.id===ct.cliente_id);
     let badgeCt;
@@ -3572,8 +3606,8 @@ function renderCatalogo(){
           <div style="font-size:15px;font-weight:700;color:var(--ink)">${s.nombre}</div>
           ${s.descripcion?'<div style="font-size:12px;color:var(--ink-soft);margin-top:3px">'+s.descripcion+'</div>':''}
         </div>
-        <div style="text-align:right">
-          <div style="font-size:18px;font-weight:700;color:var(--brand)">${fmt(s.precio_base)} €</div>
+        <div style="text-align:right;flex:none;white-space:nowrap;padding-left:16px">
+          <div style="font-size:18px;font-weight:700;color:var(--brand);white-space:nowrap">${fmt(s.precio_base)} €</div>
           ${s.duracion_horas?'<div style="font-size:11px;color:var(--ink-soft)">'+s.duracion_horas+'h</div>':''}
         </div>
       </div>
