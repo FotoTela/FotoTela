@@ -2002,6 +2002,7 @@ async function guardarPresupuesto(){
   await sb.from('presupuesto_lineas').insert(lineasFinalP.map((l,i)=>({user_id:currentUser.id,presupuesto_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
   btn.disabled=false;btn.textContent='Guardar y ver presupuesto';
   closeModal('modal-presupuesto');await loadAllData();renderPresupuestos();renderDashboard();
+  await logActividad(clienteId,'Presupuesto '+numero+' creado ('+fmt(total)+' €)','\uD83D\uDCCB');
   verPresupuesto(data.id);
 }
 
@@ -2144,6 +2145,7 @@ async function guardarEfectivo(){
   const {error}=await sb.from('facturas').insert(payload);
   btn.disabled=false;btn.textContent='Registrar cobro';
   if(error){alert('Error: '+error.message);return;}
+  await logActividad(clienteId,'Cobro en efectivo '+numero+' registrado ('+fmt(importe)+' €)','\uD83D\uDCB5');
   closeModal('modal-efectivo');
   await loadAllData();renderFacturasConMetricas(facTabActual);renderDashboard();
   // Refrescar lista de clientes si está visible
@@ -2211,6 +2213,7 @@ async function guardarFactura(){
   const payload={user_id:currentUser.id,numero:document.getElementById('fc-numero').value,cliente_id:clienteId,emisor,tipo,fecha_factura:document.getElementById('fc-fecha').value||null,lugar:document.getElementById('fc-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,cobrado,pendiente:+(total-cobrado).toFixed(2),estado:cobrado>=total?'Cobrada':'Pendiente',cuenta_como_pago:false};
   const {data,error}=await sb.from('facturas').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver factura';alert('Error: '+error.message);return;}
+  await logActividad(clienteId,'Factura '+payload.numero+' creada ('+fmt(total)+' €)','\uD83E\uDDFE');
   const lineasFinalF=descEurF>0?lineasValidas.concat([{descripcion:'Descuento '+descPctF+'%',detalle:'',precio_unitario:-descEurF,unidades:1}]):lineasValidas;
   await sb.from('factura_lineas').insert(lineasFinalF.map((l,i)=>({user_id:currentUser.id,factura_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
   // Si es factura formal y el cliente no tiene importe_total, pedirlo
@@ -2772,6 +2775,7 @@ async function guardarContrato(){
   if(error){alert('Error: '+error.message);return;}
   closeModal('modal-contrato');
   await loadAllData();renderContratos();
+  await logActividad(clienteId,'Contrato '+numero+' creado','\uD83D\uDCDD');
   verContrato(data.id);
 }
 
@@ -4709,12 +4713,15 @@ function renderFichaHistorial(c){
   const cts = CONTRATOS.filter(ct=>ct.cliente_id===c.id);
   const evs = EVENTOS.filter(e=>e.cliente_id===c.id);
 
+  const actCli = ACTIVIDAD.filter(a=>a.cliente_id===c.id);
+  const creados = new Set();
+  actCli.forEach(a=>{ if(/cread|registr/i.test(a.texto)){ const m=a.texto.match(/(C-\d{4}-\d+|EF-\d{4}-\d+|[HN]-\d{4}-\d+|P\d+)/); if(m)creados.add(m[1]); } });
   const items = [
-    ...facs.map(f=>({fecha:f.created_at,texto:'Factura '+f.numero+' — '+fmt(f.total||0)+' €',icono:'🧾'})),
-    ...pres.map(p=>({fecha:p.created_at,texto:'Presupuesto '+p.numero+' — '+fmt(p.total||0)+' €',icono:'📋'})),
-    ...cts.map(ct=>({fecha:ct.created_at,texto:'Contrato '+ct.numero+(ct.estado==='Firmado'?' ✓ Firmado':''),icono:'📝'})),
-    ...evs.map(ev=>({fecha:ev.created_at,texto:'Evento creado — '+fmtDate(ev.fecha),icono:'📅'})),
-    ...ACTIVIDAD.filter(a=>a.cliente_id===c.id).map(a=>({fecha:a.created_at,texto:a.texto,icono:a.icono||'\u2022'})),
+    ...facs.filter(f=>!creados.has(f.numero)).map(f=>({fecha:f.created_at,texto:(f.tipo==='efectivo'?'Cobro en efectivo ':'Factura ')+f.numero+' — '+fmt(f.total||0)+' €',icono:f.tipo==='efectivo'?'💵':'🧾'})),
+    ...pres.filter(p=>!creados.has(p.numero)).map(p=>({fecha:p.created_at,texto:'Presupuesto '+p.numero+' — '+fmt(p.total||0)+' €',icono:'📋'})),
+    ...cts.filter(ct=>!creados.has(ct.numero)).map(ct=>({fecha:ct.created_at,texto:'Contrato '+ct.numero+(ct.estado==='Firmado'?' ✓ Firmado':''),icono:'📝'})),
+    ...evs.map(ev=>({fecha:ev.created_at,texto:'Evento — '+fmtDate(ev.fecha),icono:'📅'})),
+    ...actCli.map(a=>({fecha:a.created_at,texto:a.texto,icono:a.icono||'\u2022'})),
     {fecha:c.created_at,texto:'Cliente registrado',icono:'👤'},
   ].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 
