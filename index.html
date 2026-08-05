@@ -1380,6 +1380,7 @@ let CLIENTES=[],PRESUPUESTOS=[],FACTURAS=[],CONTRATOS=[],TAREAS=[],PERSONAS=[],E
 let calMonth=new Date().getMonth()+1,calYear=new Date().getFullYear(),calDay=new Date().getDate(),calView='mes';
 let currentUser=null,presLineas=[],facLineas=[],lineaIdCounter=0,activeDoc=null,activeDocType=null;
 let ACTIVIDAD=[];
+let ACT_DB=true;  // se apaga solo si la tabla 'actividad' no está disponible (evita spam de 403)
 
 function fmt(n){return Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtDate(s){if(!s)return '';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});}
@@ -1626,7 +1627,8 @@ function actualizarBadgeLeads(){
 async function loadAllData(){
   const [c,p,f,ct,t,per,eq,cons,gas,srv,srvc,ev,eeq,eper,eco,inv,cont]=await Promise.all([sb.from('clientes').select('*').order('created_at',{ascending:false}),sb.from('presupuestos').select('*').order('created_at',{ascending:false}),sb.from('facturas').select('*').order('created_at',{ascending:false}),sb.from('contratos').select('*').order('created_at',{ascending:false}),sb.from('tareas').select('*').order('fecha_limite',{ascending:true}),sb.from('personas').select('*').order('created_at',{ascending:false}),sb.from('equipo').select('*').order('created_at',{ascending:false}),sb.from('consumibles').select('*').order('nombre',{ascending:true}),sb.from('gastos').select('*').order('fecha',{ascending:false}),sb.from('servicios').select('*').order('nombre',{ascending:true}),sb.from('servicio_consumibles').select('*'),sb.from('eventos').select('*').order('fecha',{ascending:false}),sb.from('evento_equipo').select('*'),sb.from('evento_personas').select('*'),sb.from('evento_costes').select('*'),sb.from('inversiones').select('*').order('fecha',{ascending:false}),sb.from('contactos_potenciales').select('*').order('nombre',{ascending:true})]);
   CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];EVENTOS=ev.data||[];EVENTO_EQUIPO=eeq.data||[];EVENTO_PERSONAS=eper.data||[];EVENTO_COSTES=eco.data||[];INVERSIONES=inv.data||[];CONTACTOS=cont.data||[];
-  let _dbAct=[];try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});_dbAct=(_a&&_a.data)||[];}catch(e){_dbAct=[];}
+  let _dbAct=[];
+  if(ACT_DB){try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});if(_a&&_a.error){ACT_DB=false;}else{_dbAct=(_a&&_a.data)||[];}}catch(e){ACT_DB=false;}}
   let _locAct=[];try{_locAct=JSON.parse(localStorage.getItem('ft_actividad')||'[]');}catch(e){_locAct=[];}
   ACTIVIDAD=_dbAct.concat(_locAct);
   if(localStorage.getItem('ft_seen_cli')===null){try{localStorage.setItem('ft_seen_cli',JSON.stringify(CLIENTES.map(c=>c.id)));}catch(e){}}
@@ -1836,7 +1838,8 @@ async function eliminarCliente(id){
     await sb.from('presupuestos').delete().eq('cliente_id',id);
     await sb.from('contratos').delete().eq('cliente_id',id);
     await sb.from('eventos').delete().eq('cliente_id',id);
-    try{await sb.from('actividad').delete().eq('cliente_id',id);}catch(e){}
+    try{await sb.from('tareas').delete().eq('cliente_id',id);}catch(e){}
+    if(ACT_DB){try{await sb.from('actividad').delete().eq('cliente_id',id);}catch(e){}}
   }catch(e){}
   const {error}=await sb.from('clientes').delete().eq('id',id);
   if(error){toast('No se pudo eliminar: '+error.message,'err');return;}
@@ -2870,7 +2873,7 @@ async function logActividad(clienteId,texto,icono){
   if(!clienteId||!currentUser)return;
   const row={cliente_id:clienteId,texto:texto,icono:icono||'\u2022',created_at:new Date().toISOString()};
   let ok=false;
-  try{const {error}=await sb.from('actividad').insert({user_id:currentUser.id,cliente_id:clienteId,texto:texto,icono:row.icono});ok=!error;}catch(e){ok=false;}
+  if(ACT_DB){try{const {error}=await sb.from('actividad').insert({user_id:currentUser.id,cliente_id:clienteId,texto:texto,icono:row.icono});if(error){ACT_DB=false;}else{ok=true;}}catch(e){ACT_DB=false;}}
   if(!ok){try{const arr=JSON.parse(localStorage.getItem('ft_actividad')||'[]');arr.push(row);if(arr.length>3000)arr.splice(0,arr.length-3000);localStorage.setItem('ft_actividad',JSON.stringify(arr));}catch(e){}}
   ACTIVIDAD.unshift(row);
 }
