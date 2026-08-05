@@ -1841,8 +1841,9 @@ async function eliminarCliente(id){
     try{await sb.from('tareas').delete().eq('cliente_id',id);}catch(e){}
     if(ACT_DB){try{await sb.from('actividad').delete().eq('cliente_id',id);}catch(e){}}
   }catch(e){}
-  const {error}=await sb.from('clientes').delete().eq('id',id);
+  const {data:_del,error}=await sb.from('clientes').delete().eq('id',id).select();
   if(error){toast('No se pudo eliminar: '+error.message,'err');return;}
+  if(!_del||!_del.length){toast('No se pudo borrar: la base de datos no permite eliminar (falta permiso DELETE en RLS). Ejecuta fix_permisos_borrado.sql en Supabase.','err');return;}
   toast('Cliente eliminado');
   await loadAllData();renderClientes();renderDashboard();
 }
