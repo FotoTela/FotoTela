@@ -285,7 +285,22 @@ tr:hover td{background:#FAFBFF}
       </div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="pf-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
       <div class="form-row full"><div><label class="flabel">Cuéntanos sobre tu evento</label><textarea id="pf-notas" class="finput" rows="3" style="resize:vertical"></textarea></div></div>
-      <button class="btn-primary" id="pf-submit-btn" style="width:100%;justify-content:center;margin-top:6px" onclick="submitPublicForm()">Enviar</button>
+      <div class="form-row full" style="margin-top:10px">
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--ink-soft);line-height:1.55;max-height:150px;overflow-y:auto">
+          <strong>Informacion basica sobre proteccion de datos</strong><br>
+          <strong>Responsable:</strong> FotoTela Events &mdash; Henry Giovanni Medina Rodriguez (NIF 49459823W) y Nuria Diaz Lopez (NIF 49271218C). Avinguda Pi i Margall 5, 08140 Caldes de Montbui (Barcelona). Contacto: info@fototela.com<br>
+          <strong>Finalidad:</strong> gestionar tu solicitud de informacion y presupuesto y, en su caso, la prestacion del servicio contratado.<br>
+          <strong>Legitimacion:</strong> tu consentimiento y la aplicacion de medidas precontractuales a peticion tuya.<br>
+          <strong>Destinatarios:</strong> no se cederan datos a terceros, salvo obligacion legal.<br>
+          <strong>Conservacion:</strong> mientras dure la relacion y durante los plazos legalmente exigibles.<br>
+          <strong>Derechos:</strong> acceso, rectificacion, supresion, oposicion, limitacion y portabilidad, escribiendo a info@fototela.com. Tambien puedes reclamar ante la Agencia Espanola de Proteccion de Datos (www.aepd.es).
+        </div>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--ink);margin-top:10px;cursor:pointer">
+        <input type="checkbox" id="pf-consent" style="margin-top:3px;flex:none">
+        <span>He leido y acepto el tratamiento de mis datos con la finalidad indicada y la politica de privacidad. *</span>
+      </label>
+      <button class="btn-primary" id="pf-submit-btn" style="width:100%;justify-content:center;margin-top:12px" onclick="submitPublicForm()">Enviar</button>
     </div>
     <div id="public-success" class="public-success">
       <div class="public-success-icon">✓</div>
@@ -463,7 +478,7 @@ tr:hover td{background:#FAFBFF}
       <option value="Archivado">Archivado</option>
     </select>
     <span class="lf-lbl">Evento del</span><input id="cli-df" class="lf-in" type="date" onchange="renderClientes()"><span class="lf-lbl">al</span><input id="cli-dt" class="lf-in" type="date" onchange="renderClientes()">
-    <span class="lf-lbl">Ordenar</span><select id="cli-sort" class="lf-in" onchange="renderClientes()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cli-search').value='';document.getElementById('cli-estado-filter').value='';document.getElementById('cli-df').value='';document.getElementById('cli-dt').value='';renderClientes()">Limpiar</button>
+    <span class="lf-lbl">Ordenar</span><select id="cli-sort" class="lf-in" onchange="renderClientes()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option><option value="reserva">Fecha de reserva</option></select><button class="btn-secondary" onclick="document.getElementById('cli-search').value='';document.getElementById('cli-estado-filter').value='';document.getElementById('cli-df').value='';document.getElementById('cli-dt').value='';document.getElementById('cli-sort').value='recientes';renderClientes()">Limpiar</button>
   </div>
   <div class="table-wrap"><table>
     <thead><tr><th>Cliente</th><th>Contacto</th><th>Evento</th><th>Fecha</th><th>Ubicación evento</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -476,7 +491,7 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Presupuestos</div></div><button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;margin-right:8px">⬇ Excel</button>
     <button class="btn-primary" onclick="abrirNuevoPresupuesto()">+ Nuevo presupuesto</button>
   </div>
-  <div class="list-filter"><input id="pres-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderPresupuestos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="pres-df" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">al</span><input id="pres-dt" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">Ordenar</span><select id="pres-sort" class="lf-in" onchange="renderPresupuestos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('pres-q').value='';document.getElementById('pres-df').value='';document.getElementById('pres-dt').value='';renderPresupuestos()">Limpiar</button></div>
+  <div class="list-filter"><input id="pres-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderPresupuestos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="pres-df" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">al</span><input id="pres-dt" class="lf-in" type="date" onchange="renderPresupuestos()"><span class="lf-lbl">Ordenar</span><select id="pres-sort" class="lf-in" onchange="renderPresupuestos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('pres-q').value='';document.getElementById('pres-df').value='';document.getElementById('pres-dt').value='';document.getElementById('pres-sort').value='recientes';renderPresupuestos()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº</th><th>Cliente</th><th>Evento</th><th>Total</th><th>Válido hasta</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="pres-tbody"></tbody>
@@ -497,7 +512,7 @@ tr:hover td{background:#FAFBFF}
     <div class="tab" id="tab-fac-nuria" onclick="switchTabFac('Nuria',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Núria</div>
     <div class="tab" id="tab-fac-efectivo" onclick="switchTabFac('efectivo',this)" style="padding:6px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-weight:600;color:var(--ink-soft)">Efectivo</div>
   </div>
-  <div class="list-filter"><input id="fac-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderFacturasConMetricas(facTabActual)" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="fac-df" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">al</span><input id="fac-dt" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">Ordenar</span><select id="fac-sort" class="lf-in" onchange="renderFacturasConMetricas(facTabActual)"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('fac-q').value='';document.getElementById('fac-df').value='';document.getElementById('fac-dt').value='';renderFacturasConMetricas(facTabActual)">Limpiar</button></div>
+  <div class="list-filter"><input id="fac-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderFacturasConMetricas(facTabActual)" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="fac-df" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">al</span><input id="fac-dt" class="lf-in" type="date" onchange="renderFacturasConMetricas(facTabActual)"><span class="lf-lbl">Ordenar</span><select id="fac-sort" class="lf-in" onchange="renderFacturasConMetricas(facTabActual)"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('fac-q').value='';document.getElementById('fac-df').value='';document.getElementById('fac-dt').value='';document.getElementById('fac-sort').value='recientes';renderFacturasConMetricas(facTabActual)">Limpiar</button></div>
   <div class="metrics-grid" id="fac-metrics" style="margin-bottom:16px"></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº Factura</th><th>Emisor</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -508,7 +523,7 @@ tr:hover td{background:#FAFBFF}
 <div id="cobros" class="page">
   <div class="page-header"><div><div class="page-title">Cobros</div></div><button class="btn-secondary" onclick="exportarExcel()">⬇ Exportar a Excel</button></div>
   <div class="metrics-grid" id="cobros-metrics"></div>
-  <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">Ordenar</span><select id="cobros-sort" class="lf-in" onchange="renderCobros()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';renderCobros()">Limpiar</button></div>
+  <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">Ordenar</span><select id="cobros-sort" class="lf-in" onchange="renderCobros()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';document.getElementById('cobros-sort').value='recientes';renderCobros()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Cliente</th><th>Nº</th><th>Tipo</th><th>Fecha</th><th>Total</th><th>Cobrado</th><th>Pendiente</th></tr></thead>
     <tbody id="cobros-tbody"></tbody>
@@ -562,7 +577,7 @@ tr:hover td{background:#FAFBFF}
     <div><div class="page-title">Contratos</div><div class="page-sub">Documentos de contratación del servicio</div></div><button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;margin-right:8px">⬇ Excel</button>
     <button class="btn-primary" onclick="abrirNuevoContrato()">+ Nuevo contrato</button>
   </div>
-  <div class="list-filter"><input id="ct-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderContratos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="ct-df" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">al</span><input id="ct-dt" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">Ordenar</span><select id="ct-sort" class="lf-in" onchange="renderContratos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('ct-q').value='';document.getElementById('ct-df').value='';document.getElementById('ct-dt').value='';renderContratos()">Limpiar</button></div>
+  <div class="list-filter"><input id="ct-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderContratos()" style="flex:1;min-width:180px"><span class="lf-lbl">Evento del</span><input id="ct-df" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">al</span><input id="ct-dt" class="lf-in" type="date" onchange="renderContratos()"><span class="lf-lbl">Ordenar</span><select id="ct-sort" class="lf-in" onchange="renderContratos()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('ct-q').value='';document.getElementById('ct-df').value='';document.getElementById('ct-dt').value='';document.getElementById('ct-sort').value='recientes';renderContratos()">Limpiar</button></div>
   <div class="table-wrap"><table>
     <thead><tr><th>Nº</th><th>Cliente</th><th>Fecha evento</th><th>Servicios</th><th>Importe</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="contratos-tbody"></tbody>
@@ -712,10 +727,10 @@ tr:hover td{background:#FAFBFF}
   <div class="modal">
     <div class="modal-header"><span class="modal-title" id="modal-cliente-title">Nuevo cliente</span><button class="btn-icon" onclick="closeModal('modal-cliente')">✕</button></div>
     <div class="modal-body">
-      <div class="form-row"><div><label class="flabel">Nombre y apellidos *</label><input id="f-nombre" class="finput"></div><div><label class="flabel">DNI</label><input id="f-dni" class="finput"></div></div>
-      <div class="form-row"><div><label class="flabel">Teléfono</label><input id="f-tel" class="finput"></div><div><label class="flabel">Email</label><input id="f-email" class="finput"></div></div>
-      <div class="form-row full"><div><label class="flabel">Dirección fiscal</label><input id="f-dir" class="finput"></div></div>
-      <div class="form-row"><div><label class="flabel">Ciudad</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP</label><input id="f-cp" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Nombre y apellidos *</label><input id="f-nombre" class="finput"></div><div><label class="flabel">DNI *</label><input id="f-dni" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Teléfono *</label><input id="f-tel" class="finput"></div><div><label class="flabel">Email *</label><input id="f-email" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Dirección fiscal *</label><input id="f-dir" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Ciudad *</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP *</label><input id="f-cp" class="finput"></div></div>
       <div class="form-row"><div><label class="flabel">Tipo de evento</label><select id="f-tipo" class="finput"><option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option></select></div><div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="f-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
       <div class="form-row">
@@ -1402,6 +1417,8 @@ async function submitPublicForm(){
   const errBox=document.getElementById('public-error');
   errBox.style.display='none';
   if(!nombre||!tel){errBox.textContent='El nombre y el teléfono son obligatorios';errBox.style.display='block';return;}
+  const _cons=document.getElementById('pf-consent');
+  if(!_cons||!_cons.checked){errBox.textContent='Debes aceptar la política de privacidad para continuar';errBox.style.display='block';return;}
   const btn=document.getElementById('pf-submit-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Enviando...';
   const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
@@ -1785,7 +1802,8 @@ function renderClientes(){
     const matchE=!ef||estado===ef;
     return matchQ&&matchE&&_inRange(c.fecha_evento,_fv('cli-df'),_fv('cli-dt'));
   });
-  data=_sortList(data,'cli-sort',c=>c.nombre,c=>c.created_at,c=>c.fecha_evento);
+  const _resCli={};FACTURAS.forEach(f=>{if(f.tipo!=='efectivo'&&f.fecha_factura){if(!_resCli[f.cliente_id]||f.fecha_factura<_resCli[f.cliente_id])_resCli[f.cliente_id]=f.fecha_factura;}});
+  data=_sortList(data,'cli-sort',c=>c.nombre,c=>c.created_at,c=>c.fecha_evento,c=>_resCli[c.id]);
   document.getElementById('cli-tbody').innerHTML=data.length?data.map(c=>{
     const estado=calcEstadoCliente(c);
     const esForzado=!!c.estado_forzado;
@@ -1814,7 +1832,10 @@ function renderClientes(){
 
 async function guardarCliente(){
   const nombre=document.getElementById('f-nombre').value.trim();
-  if(!nombre){alert('El nombre es obligatorio');return;}
+  if(!nombre){toast('El nombre y apellidos son obligatorios','err');return;}
+  {const _reqC={'f-dni':'el DNI','f-tel':'el teléfono','f-email':'el email','f-dir':'la dirección fiscal','f-ciudad':'la ciudad','f-cp':'el CP'};
+   for(const _id in _reqC){const _el=document.getElementById(_id);if(!_el||!_el.value.trim()){toast('Falta '+_reqC[_id],'err');if(_el)_el.focus();return;}}
+   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(document.getElementById('f-email').value.trim())){toast('El email no es válido','err');document.getElementById('f-email').focus();return;}}
   const btn=document.getElementById('save-cliente-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const payload={user_id:currentUser.id,nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,ubicacion_evento:document.getElementById('f-ubicacion').value,servicios_interes:document.getElementById('f-servicios').value,notas:document.getElementById('f-notas').value,contacto_potencial_id:document.getElementById('f-contacto').value||null,estado:'Potencial',estado_forzado:null,origen:'manual'};
@@ -1946,28 +1967,27 @@ function buildFichaClienteHTML(c){
 function lineaRowHTML(linea,tipo){
   const precio = linea.precio_unitario!=null ? linea.precio_unitario : '';
   const subtotal = (Number(linea.precio_unitario)||0)*(Number(linea.unidades)||1);
-  return`<div class="linea-row" data-id="${linea.id}" style="background:#fff;border:1px solid #E8EAF0;border-radius:10px;padding:12px 14px;margin-bottom:8px">
-    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:start">
-      <div>
-        <input class="finput" placeholder="Nombre del servicio" value="${linea.descripcion||''}" oninput="updateLinea('${tipo}','${linea.id}','descripcion',this.value)" style="margin-bottom:6px;font-weight:500">
-        <textarea class="finput" placeholder="Descripción (opcional)" oninput="updateLinea('${tipo}','${linea.id}','detalle',this.value)" style="font-size:12px;color:var(--ink-soft);resize:vertical;min-height:38px;padding:6px 10px">${linea.detalle||''}</textarea>
-      </div>
-      <div style="min-width:110px">
+  return`<div class="linea-row" data-id="${linea.id}" style="position:relative;background:#fff;border:1px solid #E8EAF0;border-radius:10px;padding:14px;margin-bottom:8px">
+    <input class="finput" placeholder="Nombre del servicio" value="${linea.descripcion||''}" oninput="updateLinea('${tipo}','${linea.id}','descripcion',this.value)" style="font-weight:600;margin-bottom:8px;padding-right:30px;width:100%">
+    <textarea class="finput" placeholder="Descripción / detalle (opcional)" oninput="updateLinea('${tipo}','${linea.id}','detalle',this.value)" style="font-size:12px;color:var(--ink-soft);resize:vertical;min-height:46px;width:100%;margin-bottom:10px">${linea.detalle||''}</textarea>
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:1;min-width:130px">
         <div style="font-size:10px;color:#9CA0AA;font-weight:600;margin-bottom:4px;text-transform:uppercase">Precio €</div>
         <input class="finput" type="number" placeholder="0.00" value="${precio}" oninput="updateLinea('${tipo}','${linea.id}','precio_unitario',parseFloat(this.value)||0);updateSubtotal(this)" style="font-weight:600;font-size:14px" onchange="recalc('${tipo}')">
       </div>
-      <div style="min-width:60px">
+      <div style="width:80px">
         <div style="font-size:10px;color:#9CA0AA;font-weight:600;margin-bottom:4px;text-transform:uppercase">Uds</div>
-        <input class="finput" type="number" placeholder="1" value="${linea.unidades||1}" oninput="updateLinea('${tipo}','${linea.id}','unidades',parseInt(this.value)||1)" onchange="recalc('${tipo}')">
+        <input class="finput" type="number" placeholder="1" value="${linea.unidades||1}" oninput="updateLinea('${tipo}','${linea.id}','unidades',parseInt(this.value)||1);updateSubtotal(this)" onchange="recalc('${tipo}')">
       </div>
-      <div style="min-width:80px;text-align:right">
+      <div style="width:100px;text-align:right">
         <div style="font-size:10px;color:#9CA0AA;font-weight:600;margin-bottom:4px;text-transform:uppercase">Total</div>
-        <div style="font-size:15px;font-weight:700;color:var(--brand);padding-top:8px">${fmt(subtotal)} €</div>
+        <div class="linea-total" style="font-size:15px;font-weight:700;color:var(--brand);padding-top:8px">${fmt(subtotal)} €</div>
       </div>
     </div>
     <button onclick="delLinea('${tipo}','${linea.id}')" style="position:absolute;right:8px;top:8px;background:none;border:none;color:#9CA0AA;cursor:pointer;font-size:16px;padding:2px 6px">✕</button>
   </div>`;
 }
+function updateSubtotal(inp){try{const row=inp.closest('.linea-row');if(!row)return;const ins=row.querySelectorAll('input[type=number]');const pr=parseFloat(ins[0]&&ins[0].value)||0,ud=parseInt(ins[1]&&ins[1].value)||1;const t=row.querySelector('.linea-total');if(t)t.textContent=fmt(pr*ud)+' €';}catch(e){}}
 
 function recalc(tipo){tipo==='pres'?calcPresTotales():calcFacTotales();}
 
@@ -2083,12 +2103,13 @@ async function guardarPresupuesto(){
 function _fv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
 function _matchTxt(s,q){return !q||String(s||'').toLowerCase().includes(q);}
 function _inRange(d,f,t){if(!f&&!t)return true;if(!d)return false;const x=String(d).slice(0,10);if(f&&x<f)return false;if(t&&x>t)return false;return true;}
-function _sortList(arr,sortId,nameFn,dateFn,evFn){
+function _sortList(arr,sortId,nameFn,dateFn,evFn,reservaFn){
   const m=_fv(sortId)||'recientes';const a=arr.slice();
   if(m==='az')a.sort((x,y)=>String(nameFn(x)||'').localeCompare(String(nameFn(y)||''),'es'));
   else if(m==='za')a.sort((x,y)=>String(nameFn(y)||'').localeCompare(String(nameFn(x)||''),'es'));
   else if(m==='antiguos')a.sort((x,y)=>String(dateFn(x)||'').localeCompare(String(dateFn(y)||'')));
   else if(m==='proximos')a.sort((x,y)=>String(evFn(x)||'9999-99-99').localeCompare(String(evFn(y)||'9999-99-99')));
+  else if(m==='reserva'&&reservaFn)a.sort((x,y)=>String(reservaFn(x)||'9999-99-99').localeCompare(String(reservaFn(y)||'9999-99-99')));
   else a.sort((x,y)=>String(dateFn(y)||'').localeCompare(String(dateFn(x)||'')));
   return a;
 }
@@ -2359,7 +2380,7 @@ function renderFacturas(filtro){
       <td>${fmt(fac.total)} €</td>
       <td>${fac.estado==='Cobrada'?'<span class="badge badge-green">Cobrada</span>':'<span class="badge badge-amber">Pendiente</span>'}</td>
       <td style="white-space:nowrap">
-        ${!esEfectivo?`<button class="btn-icon blue" onclick="verFactura('${fac.id}')">${ICO.view} Ver</button>`:`<button class="btn-icon blue" onclick="editarEfectivo('${fac.id}')">${ICO.edit} Editar</button>`}
+        ${!esEfectivo?`<button class="btn-icon blue" onclick="verFactura('${fac.id}')">${ICO.view} Ver</button><button class="btn-icon green" title="Marcar cobrada / pendiente" onclick="toggleEstadoFactura('${fac.id}')">${ICO.cycle}</button><button class="btn-icon blue" title="Editar" onclick="editarFactura('${fac.id}')">${ICO.edit}</button>`:`<button class="btn-icon blue" onclick="editarEfectivo('${fac.id}')">${ICO.edit} Editar</button>`}
         <button class="btn-icon red" onclick="eliminarFac('${fac.id}')" style="margin-left:4px">${ICO.trash}</button>
       </td>
     </tr>`;
@@ -2377,9 +2398,10 @@ async function verFactura(id){
 }
 
 function renderCobros(){
-  const total=FACTURAS.reduce((a,f)=>a+Number(f.total||0),0);
-  const cobrado=FACTURAS.reduce((a,f)=>a+Number(f.cobrado||0),0);
-  const pendiente=FACTURAS.reduce((a,f)=>a+Number(f.pendiente||0),0);
+  const _form=FACTURAS.filter(f=>f.tipo!=='efectivo');const _efe=FACTURAS.filter(f=>f.tipo==='efectivo');
+  const total=_form.reduce((a,f)=>a+Number(f.total||0),0);
+  const cobrado=_form.reduce((a,f)=>a+Number(f.cobrado||0),0)+_efe.reduce((a,f)=>a+Number(f.total||0),0);
+  const pendiente=_form.reduce((a,f)=>a+Number(f.pendiente||0),0);
   document.getElementById('cobros-metrics').innerHTML=`
     <div class="metric-card accent"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(total)} €</div></div>
     <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(cobrado)} €</div></div>
@@ -4411,7 +4433,10 @@ function editarCliente(id){
 // Override guardarCliente para soportar edición
 async function guardarCliente(){
   const nombre=document.getElementById('f-nombre').value.trim();
-  if(!nombre){alert('El nombre es obligatorio');return;}
+  if(!nombre){toast('El nombre y apellidos son obligatorios','err');return;}
+  {const _reqC={'f-dni':'el DNI','f-tel':'el teléfono','f-email':'el email','f-dir':'la dirección fiscal','f-ciudad':'la ciudad','f-cp':'el CP'};
+   for(const _id in _reqC){const _el=document.getElementById(_id);if(!_el||!_el.value.trim()){toast('Falta '+_reqC[_id],'err');if(_el)_el.focus();return;}}
+   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(document.getElementById('f-email').value.trim())){toast('El email no es válido','err');document.getElementById('f-email').focus();return;}}
   const btn=document.getElementById('save-cliente-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const iniH=document.getElementById('f-hora-ini')?document.getElementById('f-hora-ini').value:'';
