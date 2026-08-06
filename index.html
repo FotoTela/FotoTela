@@ -88,7 +88,7 @@ tr:hover td{background:#FAFBFF}
 .metric-label{font-size:11px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
 .metric-value{font-size:24px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
 .empty{text-align:center;padding:48px 20px;color:#9CA0AA;font-size:13px}
-.modal-overlay{position:fixed;inset:0;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;overflow-y:auto}
+.modal-overlay{position:fixed;inset:0;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:600;padding:20px;overflow-y:auto}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;margin:auto}
 .modal.wide{max-width:760px}
 .modal-header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}
@@ -1384,6 +1384,7 @@ tr:hover td{background:#FAFBFF}
     <div class="modal-header">
       <span class="modal-title" id="pdf-modal-title">Documento</span>
       <div style="display:flex;gap:8px">
+        <button class="btn-secondary" id="pdf-firmar-btn" style="display:none">✍ Enviar a firmar</button>
         <button class="btn-primary" onclick="downloadPDF()">⬇ Descargar PDF</button>
         <button class="btn-icon" onclick="closeModal('modal-pdf')">✕</button>
       </div>
@@ -1668,6 +1669,7 @@ async function loadAllData(){
 
 function openModal(id){
   document.getElementById(id).style.display='flex';
+  if(id==='modal-pdf'){const _fb=document.getElementById('pdf-firmar-btn');if(_fb)_fb.style.display='none';}
   if(id==='modal-cliente')poblarSelectorContacto();
 }
 function closeModal(id){document.getElementById(id).style.display='none';}
@@ -3084,6 +3086,7 @@ async function verContrato(id){
   document.getElementById('pdf-modal-title').textContent='Contrato '+ct.numero;
   document.getElementById('pdf-preview').innerHTML=buildContratoHTML(ct,c);
   openModal('modal-pdf');
+  {const _fb=document.getElementById('pdf-firmar-btn');if(_fb&&!ct.firmado_at){_fb.style.display='';_fb.onclick=function(){closeModal('modal-pdf');enviarAFirmar(ct.id);};}}
 }
 
 function buildContratoHTML(ct,c){
@@ -4498,7 +4501,7 @@ async function editarPresupuesto(id){
   document.getElementById('p-cliente').value=p.cliente_id||'';
   document.getElementById('p-lugar').value=p.lugar||'';
   document.getElementById('p-fecha').value=p.fecha_evento||'';
-  document.getElementById('p-validez-hasta').value=p.validez_hasta||'';
+  {const _pv=document.getElementById('p-validez');if(_pv)_pv.value=15;}
   document.getElementById('p-iva').value=p.iva_pct||21;
   document.getElementById('p-notas').value=p.notas||'';
   {const pd=document.getElementById('p-descuento');if(pd)pd.value='0';const pr=document.getElementById('p-desc-row');if(pr)pr.style.display='none';}
@@ -4790,6 +4793,7 @@ function renderFichaDocumentos(c){
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${ct.estado==='Firmado'?'#E8F8F0':'#F5F5F5'};color:${ct.estado==='Firmado'?'#0F6E56':'#9CA0AA'}">${ct.estado||'Borrador'}</span>
+        ${!ct.firmado_at?`<button class="btn-icon green" title="Enviar a firmar" onclick="event.stopPropagation();enviarAFirmar('${ct.id}')">${ICO.sign}</button>`:''}
         <button class="btn-icon green" title="Cambiar estado (firmado/pendiente)" onclick="event.stopPropagation();toggleEstadoContrato('${ct.id}')">${ICO.cycle}</button>
         <button class="btn-icon blue" title="Editar" onclick="event.stopPropagation();editarContrato('${ct.id}')">${ICO.edit}</button>
         <button class="btn-icon red" title="Borrar" onclick="event.stopPropagation();eliminarContrato('${ct.id}')">${ICO.trash}</button>
