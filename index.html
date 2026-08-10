@@ -442,7 +442,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-B</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-C</div>
 </nav>
 
 <main class="content">
@@ -2029,7 +2029,7 @@ function updateLinea(tipo,id,campo,valor){
   const arr=tipo==='pres'?presLineas:facLineas;
   const l=arr.find(x=>x.id===id);if(!l)return;
   l[campo]=(campo==='precio_unitario'||campo==='unidades')?parseFloat(valor)||0:valor;
-  if(tipo==='pres'){renderLineasPres();calcPresTotales();}else{renderLineasFac();calcFacTotales();}
+  if(tipo==='pres')calcPresTotales();else calcFacTotales();
 }
 function delLinea(tipo,id){
   if(tipo==='pres'){presLineas=presLineas.filter(x=>x.id!==id);renderLineasPres();calcPresTotales();}
