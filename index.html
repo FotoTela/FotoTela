@@ -106,7 +106,7 @@ tr:hover td{background:#FAFBFF}
 .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .6s linear infinite;margin-right:6px;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lineas-wrap{border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
-.linea-row{position:relative;display:grid;grid-template-columns:2fr 90px 90px 90px 36px;gap:8px;padding:10px;border-bottom:1px solid var(--line);align-items:start}
+.linea-row{position:relative;padding:10px;border-bottom:1px solid var(--line)}
 .linea-row:last-child{border-bottom:none}
 .linea-row input,.linea-row textarea{font-size:12px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;width:100%;font-family:inherit}
 .linea-row textarea{resize:vertical;min-height:32px}
@@ -442,7 +442,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-A</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-B</div>
 </nav>
 
 <main class="content">
@@ -2793,7 +2793,7 @@ function clienteDetailHTML(c){
 function buildFacturaHTML(f,c,lineas){
   const emisorData={
     Henry:{nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354'},
-    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'644416100'}
+    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona, España',tel:'644416100'}
   };
   const em=emisorData[f.emisor]||emisorData.Henry;
   const rows=lineas.map(l=>`<tr><td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td><td>${fmt(l.unidades)}</td><td>${fmt(l.precio_unitario)}€</td><td>${fmt(l.precio_unitario*l.unidades)} €</td></tr>`).join('');
@@ -2830,7 +2830,7 @@ function buildPresupuestoHTML(p,c,lineas){
   const reservaP=_reservaPres(p.id,p.numero);
   const emisorData={
     Henry:{nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'},
-    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'644416100',cuenta:'ES92 0182 6308 7802 0161 1480'}
+    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona, España',tel:'644416100',cuenta:'ES92 0182 6308 7802 0161 1480'}
   };
   const em=emisorData[_emisorPres(p.id,p.numero)]||emisorData.Henry;
   const rows=lineas.map(l=>`<tr><td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td><td>${fmt(l.unidades)}</td><td>${fmt(l.precio_unitario)}€</td><td>${fmt(l.precio_unitario*l.unidades)} €</td></tr>`).join('');
@@ -3112,8 +3112,8 @@ async function verContrato(id){
 
 function buildContratoHTML(ct,c){
   const emisorData={
-    Henry:{nombre:'Henry Giovanni Medina Rodríguez',nif:'49459823W',pronombre:'EL PRESTADOR',cuenta:'ES44 0182 6308 7402 0161 1473'},
-    Nuria:{nombre:'Núria Díaz López',nif:'49271218C',pronombre:'LA PRESTADORA',cuenta:'ES92 0182 6308 7802 0161 1480'}
+    Henry:{nombre:'Henry Giovanni Medina Rodríguez',nif:'49459823W',pronombre:'EL PRESTADOR',cuenta:'ES44 0182 6308 7402 0161 1473',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona'},
+    Nuria:{nombre:'Núria Díaz López',nif:'49271218C',pronombre:'LA PRESTADORA',cuenta:'ES92 0182 6308 7802 0161 1480',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona'}
   };
   const em=emisorData[ct.emisor||'Henry']||emisorData.Henry;
   const hoy=new Date();
@@ -3126,7 +3126,7 @@ function buildContratoHTML(ct,c){
 
   return '<style>'+pdfStyles()+'.ct-doc{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;max-width:760px;margin:0 auto;padding:36px;background:#fff}.ct-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid #1a1a1a}.ct-logo{height:70px;width:auto}.ct-header-right{text-align:right;font-size:10px;color:#555;line-height:1.6}.ct-titulo{text-align:center;font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:24px;padding:10px 0;border-top:1px solid #ddd;border-bottom:1px solid #ddd}.ct-seccion{margin-bottom:18px}.ct-seccion-num{font-size:11px;font-weight:700;letter-spacing:.08em;color:#1543E5;text-transform:uppercase;margin-bottom:6px}.ct-parrafo{font-size:11.5px;color:#333;line-height:1.75;margin-bottom:6px}.ct-lista{font-size:11.5px;color:#333;line-height:1.75;padding-left:18px;margin-bottom:6px}.ct-lista li{margin-bottom:4px}.ct-cuadro{border:1px solid #ddd;border-radius:6px;padding:14px 18px;margin-bottom:18px;background:#f9f9f9}.ct-cuadro-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #eee}.ct-cuadro-row:last-child{border-bottom:none;font-weight:700;font-size:13px;padding-top:8px}.ct-firmas{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:40px}.ct-firma-box{text-align:center}.ct-firma-linea{border-top:1px solid #1a1a1a;padding-top:8px;margin-top:50px;font-size:11px;color:#555}.ct-firma-nombre{font-size:12px;font-weight:700;margin-top:4px}.ct-firma-nif{font-size:10px;color:#888}.ct-pie{margin-top:24px;padding-top:12px;border-top:1px solid #eee;font-size:9.5px;color:#aaa;text-align:center}</style>'
   +'<div class="ct-doc" id="pdf-to-print">'
-  +'<div class="ct-header"><img src="'+LOGO_B64+'" class="ct-logo" alt="FotoTela Events"><div class="ct-header-right"><div style="font-weight:700;font-size:12px;color:#1a1a1a">'+em.nombre+'</div><div>NIF '+em.nif+'</div><div>Avinguda Pi i Margall, 5</div><div>08140 Caldes de Montbui, Barcelona</div><div>info@fototela.com</div></div></div>'
+  +'<div class="ct-header"><img src="'+LOGO_B64+'" class="ct-logo" alt="FotoTela Events"><div class="ct-header-right"><div style="font-weight:700;font-size:12px;color:#1a1a1a">'+em.nombre+'</div><div>NIF '+em.nif+'</div><div>'+em.dir+'</div><div>'+em.ciudad+'</div><div>info@fototela.com</div></div></div>'
   +'<div class="ct-titulo">Contrato de prestación de servicios &mdash; Fotomatón y eventos</div>'
   +'<div class="ct-seccion"><div class="ct-seccion-num">Reunidos</div>'
   +'<div class="ct-parrafo">De una parte, <strong>'+em.nombre+'</strong>, con NIF <strong>'+em.nif+'</strong>, en adelante <strong>'+em.pronombre+'</strong>.</div>'
@@ -3170,7 +3170,7 @@ function buildContratoHTML(ct,c){
   +(ct.firma_dni?'<div class="ct-firma-nif">DNI '+ct.firma_dni+'</div>':dniClienteHtml)
   +(ct.firmado_at?'<div class="ct-firma-nif" style="margin-top:5px;color:#0F6E56">✓ Firmado digitalmente el '+new Date(ct.firmado_at).toLocaleString('es-ES')+(ct.firma_ip?' · IP '+ct.firma_ip:'')+'</div>':'')
   +'</div></div>'
-  +'<div class="ct-pie">FotoTela Events &middot; '+em.nombre+' &middot; NIF '+em.nif+' &middot; Avinguda Pi i Margall 5, 08140 Caldes de Montbui &middot; info@fototela.com</div>'
+  +'<div class="ct-pie">FotoTela Events &middot; '+em.nombre+' &middot; NIF '+em.nif+' &middot; '+em.dir+', '+em.ciudad+' &middot; info@fototela.com</div>'
   +'</div>';
 }
 
@@ -4554,7 +4554,7 @@ async function actualizarPresupuesto(id){
   const base=ivaPct?+(total/(1+ivaPct/100)).toFixed(2):total;const ivaEur=+(total-base).toFixed(2);
   const btn=document.getElementById('save-pres-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
-  await sb.from('presupuestos').update({cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_hasta:document.getElementById('p-validez-hasta').value||null,notas:document.getElementById('p-notas').value}).eq('id',id);
+  await sb.from('presupuestos').update({cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_hasta:(function(){var d=parseInt((document.getElementById('p-validez')||{}).value)||15;var dt=new Date();dt.setDate(dt.getDate()+d);return dt.toISOString().slice(0,10);})(),notas:document.getElementById('p-notas').value}).eq('id',id);
   await sb.from('presupuesto_lineas').delete().eq('presupuesto_id',id);
   await sb.from('presupuesto_lineas').insert(lineasV.map((l,i)=>({user_id:currentUser.id,presupuesto_id:id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
   btn.disabled=false;btn.textContent='Guardar presupuesto';
