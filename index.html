@@ -435,6 +435,7 @@ tr:hover td{background:#FAFBFF}
       <div class="nav-item" onclick="nav('personas',this)">Equipo</div>
       <div class="nav-item" onclick="nav('equipo',this)">Material <span class="nav-badge" id="stock-badge"></span></div>
       <div class="nav-item" onclick="nav('catalogo',this)">Catálogo</div>
+      <div class="nav-item" onclick="nav('configuracion',this)">⚙ Configuración</div>
     </div>
   </div>
   <div class="user-foot">
@@ -442,7 +443,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-C</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-D</div>
 </nav>
 
 <main class="content">
@@ -590,6 +591,7 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 
+<div id="configuracion" class="page"><div class="page-header"><div><div class="page-title">Configuración</div><div class="page-sub">Datos que aparecen en presupuestos, facturas y contratos</div></div><button class="btn-primary" onclick="guardarConfig()">Guardar cambios</button></div><div style="max-width:920px;display:grid;grid-template-columns:1fr 1fr;gap:18px"><div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px"><div style="font-weight:700;font-size:15px;margin-bottom:14px;color:var(--brand)">Henry</div><label class="flabel">Nombre completo</label><input id="cfg-Henry-nombre" class="finput" style="margin-bottom:10px"><label class="flabel">NIF</label><input id="cfg-Henry-nif" class="finput" style="margin-bottom:10px"><label class="flabel">Dirección</label><input id="cfg-Henry-dir" class="finput" style="margin-bottom:10px"><label class="flabel">Ciudad / CP</label><input id="cfg-Henry-ciudad" class="finput" style="margin-bottom:10px"><label class="flabel">Teléfono</label><input id="cfg-Henry-tel" class="finput" style="margin-bottom:10px"><label class="flabel">Cuenta bancaria (IBAN)</label><input id="cfg-Henry-cuenta" class="finput"></div><div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px"><div style="font-weight:700;font-size:15px;margin-bottom:14px;color:var(--brand)">Núria</div><label class="flabel">Nombre completo</label><input id="cfg-Nuria-nombre" class="finput" style="margin-bottom:10px"><label class="flabel">NIF</label><input id="cfg-Nuria-nif" class="finput" style="margin-bottom:10px"><label class="flabel">Dirección</label><input id="cfg-Nuria-dir" class="finput" style="margin-bottom:10px"><label class="flabel">Ciudad / CP</label><input id="cfg-Nuria-ciudad" class="finput" style="margin-bottom:10px"><label class="flabel">Teléfono</label><input id="cfg-Nuria-tel" class="finput" style="margin-bottom:10px"><label class="flabel">Cuenta bancaria (IBAN)</label><input id="cfg-Nuria-cuenta" class="finput"></div></div><div style="max-width:920px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:18px"><div style="font-weight:700;font-size:15px;margin-bottom:10px">Otros</div><label class="flabel">Señal de reserva por defecto (€)</label><input id="cfg-reserva" type="number" class="finput" style="max-width:200px"><div style="font-size:11px;color:var(--ink-soft);margin-top:8px">Los cambios se guardan en este navegador y se aplican al instante en los documentos.</div></div></div>
 <div id="tareas" class="page">
   <div class="page-header">
     <div><div class="page-title">Tareas y recordatorios</div><div class="page-sub">Organiza las acciones pendientes</div></div>
@@ -1742,10 +1744,30 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById(page).classList.add('active');if(el)el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-  const r={clientes:renderClientes,contactos:renderContactos,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo};
+  const r={clientes:renderClientes,contactos:renderContactos,presupuestos:renderPresupuestos,contratos:renderContratos,facturas:()=>renderFacturasConMetricas(facTabActual),cobros:renderCobros,gastos:renderGastos,ganancias:renderGanancias,dashboard:renderDashboard,calendario:renderCalendario,tareas:()=>renderTareas('todas'),personas:renderPersonas,equipo:renderEquipoYConsumibles,catalogo:renderCatalogo,configuracion:renderConfig};
   if(r[page])r[page]();
 }
 
+function emisorCfg(who){
+  const def={
+    Henry:{nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'},
+    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona, España',tel:'644416100',cuenta:'ES92 0182 6308 7802 0161 1480'}
+  };
+  let cfg={};try{cfg=JSON.parse(localStorage.getItem('ft_config')||'{}');}catch(e){}
+  return Object.assign({},def[who]||def.Henry,cfg[who]||{});
+}
+function getReservaSenal(){try{const cfg=JSON.parse(localStorage.getItem('ft_config')||'{}');if(cfg.reserva!=null&&cfg.reserva!=='')return Number(cfg.reserva);}catch(e){}return RESERVA_SENAL;}
+function renderConfig(){
+  ['Henry','Nuria'].forEach(function(w){const d=emisorCfg(w);['nombre','nif','dir','ciudad','tel','cuenta'].forEach(function(f){const el=document.getElementById('cfg-'+w+'-'+f);if(el)el.value=d[f]||'';});});
+  const r=document.getElementById('cfg-reserva');if(r)r.value=getReservaSenal();
+}
+function guardarConfig(){
+  let cfg={};try{cfg=JSON.parse(localStorage.getItem('ft_config')||'{}');}catch(e){}
+  ['Henry','Nuria'].forEach(function(w){cfg[w]=cfg[w]||{};['nombre','nif','dir','ciudad','tel','cuenta'].forEach(function(f){const el=document.getElementById('cfg-'+w+'-'+f);if(el)cfg[w][f]=el.value;});});
+  const r=document.getElementById('cfg-reserva');if(r)cfg.reserva=parseFloat(r.value)||RESERVA_SENAL;
+  try{localStorage.setItem('ft_config',JSON.stringify(cfg));}catch(e){}
+  toast('Configuración guardada');
+}
 function totalContratadoCliente(c){const ct=CONTRATOS.find(x=>x.cliente_id===c.id&&Number(x.importe_total)>0);return ct?Number(ct.importe_total):Number(c.importe_total||0);}
 function _pagoOv(id){try{const m=JSON.parse(localStorage.getItem('ft_pago')||'{}');return m[id]||null;}catch(e){return null;}}
 function _setPagoOv(id,val){try{const m=JSON.parse(localStorage.getItem('ft_pago')||'{}');if(val)m[id]=val;else delete m[id];localStorage.setItem('ft_pago',JSON.stringify(m));}catch(e){}}
@@ -1773,7 +1795,10 @@ function renderDashboard(){
 }
 
 
+function _estadoOv(id){try{const m=JSON.parse(localStorage.getItem('ft_estado')||'{}');return m[id]||null;}catch(e){return null;}}
+function _setEstadoOv(id,val){try{const m=JSON.parse(localStorage.getItem('ft_estado')||'{}');if(val)m[id]=val;else delete m[id];localStorage.setItem('ft_estado',JSON.stringify(m));}catch(e){}}
 function calcEstadoCliente(c){
+  {const _eo=_estadoOv(c.id);if(_eo)return _eo;}
   // Si tiene estado forzado manualmente, respetarlo
   if(c.estado_forzado)return c.estado_forzado;
   const hoy=new Date();hoy.setHours(0,0,0,0);
@@ -1813,8 +1838,12 @@ async function forzarEstado(id,estadoActual){
 }
 async function aplicarEstado(nuevo){
   closeModal('modal-estado');
-  await sb.from('clientes').update({estado_forzado:nuevo}).eq('id',estadoClienteId);
-  await loadAllData();renderClientes();
+  const _id=estadoClienteId;
+  _setEstadoOv(_id,nuevo);
+  try{await sb.from('clientes').update({estado_forzado:nuevo}).eq('id',_id);}catch(e){}
+  await loadAllData();try{renderClientes();}catch(e){}try{renderDashboard();}catch(e){}
+  if(fichaClienteId===_id){const cc=CLIENTES.find(x=>x.id===_id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}
+  toast('Estado cambiado a '+nuevo);
 }
 
 async function limpiarEstadoForzado(id){
@@ -2071,7 +2100,7 @@ function abrirNuevoPresupuesto(clienteIdPref){
   populateClientSelects();
   {const spb=document.getElementById('save-pres-btn');if(spb){spb.onclick=()=>guardarPresupuesto();spb.textContent='Guardar y ver presupuesto';}}
   presLineas=[];  // reset
-  {const _pr=document.getElementById('p-reserva');if(_pr)_pr.value=RESERVA_SENAL;}
+  {const _pr=document.getElementById('p-reserva');if(_pr)_pr.value=getReservaSenal();}
   {const _pe=document.getElementById('p-emisor');if(_pe)_pe.value='Henry';}
   {const pd=document.getElementById('p-descuento');if(pd)pd.value='0';const pr=document.getElementById('p-desc-row');if(pr)pr.style.display='none';}
   ['p-lugar','p-notas'].forEach(id=>document.getElementById(id).value='');
@@ -2791,10 +2820,7 @@ function clienteDetailHTML(c){
 }
 
 function buildFacturaHTML(f,c,lineas){
-  const emisorData={
-    Henry:{nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354'},
-    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona, España',tel:'644416100'}
-  };
+  const emisorData={Henry:emisorCfg('Henry'),Nuria:emisorCfg('Nuria')};
   const em=emisorData[f.emisor]||emisorData.Henry;
   const rows=lineas.map(l=>`<tr><td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td><td>${fmt(l.unidades)}</td><td>${fmt(l.precio_unitario)}€</td><td>${fmt(l.precio_unitario*l.unidades)} €</td></tr>`).join('');
   return`<style>${pdfStyles()}</style>
@@ -2828,10 +2854,7 @@ function _setEmisorPres(id,numero,val){try{const m=JSON.parse(localStorage.getIt
 function _setReservaPres(id,numero,val){try{const m=JSON.parse(localStorage.getItem('ft_reserva_pres')||'{}');if(id)m[id]=val;if(numero)m['n:'+numero]=val;localStorage.setItem('ft_reserva_pres',JSON.stringify(m));}catch(e){}}
 function buildPresupuestoHTML(p,c,lineas){
   const reservaP=_reservaPres(p.id,p.numero);
-  const emisorData={
-    Henry:{nombre:'HENRY GIOVANNI MEDINA RODRIGUEZ',nif:'49459823W',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona, España',tel:'666097354',cuenta:'ES44 0182 6308 7402 0161 1473'},
-    Nuria:{nombre:'NÚRIA DÍAZ LÓPEZ',nif:'49271218C',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona, España',tel:'644416100',cuenta:'ES92 0182 6308 7802 0161 1480'}
-  };
+  const emisorData={Henry:emisorCfg('Henry'),Nuria:emisorCfg('Nuria')};
   const em=emisorData[_emisorPres(p.id,p.numero)]||emisorData.Henry;
   const rows=lineas.map(l=>`<tr><td><div class="pdf-concepto">${l.descripcion}</div>${l.detalle?'<div class="pdf-concepto-detalle">'+l.detalle.replace(/\n/g,'<br>')+'</div>':''}</td><td>${fmt(l.unidades)}</td><td>${fmt(l.precio_unitario)}€</td><td>${fmt(l.precio_unitario*l.unidades)} €</td></tr>`).join('');
   return`<style>${pdfStyles()}</style>
@@ -3112,8 +3135,8 @@ async function verContrato(id){
 
 function buildContratoHTML(ct,c){
   const emisorData={
-    Henry:{nombre:'Henry Giovanni Medina Rodríguez',nif:'49459823W',pronombre:'EL PRESTADOR',cuenta:'ES44 0182 6308 7402 0161 1473',dir:'Avinguda Pi i Margall, 5',ciudad:'08140 Caldes de Montbui, Barcelona'},
-    Nuria:{nombre:'Núria Díaz López',nif:'49271218C',pronombre:'LA PRESTADORA',cuenta:'ES92 0182 6308 7802 0161 1480',dir:'Calle Milena Jesenská, 43',ciudad:'08206 Sabadell, Barcelona'}
+    Henry:Object.assign({pronombre:'EL PRESTADOR'},emisorCfg('Henry')),
+    Nuria:Object.assign({pronombre:'LA PRESTADORA'},emisorCfg('Nuria'))
   };
   const em=emisorData[ct.emisor||'Henry']||emisorData.Henry;
   const hoy=new Date();
