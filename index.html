@@ -282,7 +282,7 @@ tr:hover td{background:#FAFBFF}
             <option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option>
           </select>
         </div>
-        <div><label class="flabel">Fecha del evento</label><input id="pf-fecha" type="date" class="finput"></div>
+        <div><label class="flabel">Fecha del evento *</label><input id="pf-fecha" type="date" class="finput"></div>
       </div>
       <div class="form-row">
         <div><label class="flabel">Hora inicio (aprox.) *</label><input id="pf-hora-ini" type="time" class="finput"></div>
@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-G</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-H</div>
 </nav>
 
 <main class="content">
@@ -1440,7 +1440,7 @@ async function submitPublicForm(){
   const tel=document.getElementById('pf-tel').value.trim();
   const errBox=document.getElementById('public-error');
   errBox.style.display='none';
-  const _pfreq=[['pf-nombre','el nombre completo'],['pf-dni','el DNI'],['pf-dir','la dirección fiscal'],['pf-tel','el teléfono'],['pf-email','el correo electrónico'],['pf-hora-ini','la hora aproximada'],['pf-ubicacion','la ubicación del evento']];
+  const _pfreq=[['pf-nombre','el nombre completo'],['pf-dni','el DNI'],['pf-dir','la dirección fiscal'],['pf-tel','el teléfono'],['pf-email','el correo electrónico'],['pf-fecha','la fecha del evento'],['pf-hora-ini','la hora aproximada'],['pf-ubicacion','la ubicación del evento']];
   for(var _i=0;_i<_pfreq.length;_i++){var _el=document.getElementById(_pfreq[_i][0]);if(!_el||!_el.value.trim()){errBox.textContent='Falta por rellenar: '+_pfreq[_i][1];errBox.style.display='block';if(_el)_el.focus();return;}}
   var _pem=document.getElementById('pf-email').value.trim();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(_pem)){errBox.textContent='El correo electrónico no es válido';errBox.style.display='block';document.getElementById('pf-email').focus();return;}
