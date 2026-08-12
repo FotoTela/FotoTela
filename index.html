@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FotoTela Events</title>
@@ -262,13 +265,13 @@ tr:hover td{background:#FAFBFF}
       <div id="public-error" class="login-error"></div>
       <div class="form-row">
         <div><label class="flabel">Nombre completo *</label><input id="pf-nombre" class="finput"></div>
-        <div><label class="flabel">DNI</label><input id="pf-dni" class="finput"></div>
+        <div><label class="flabel">DNI *</label><input id="pf-dni" class="finput"></div>
       </div>
       <div class="form-row">
         <div><label class="flabel">Teléfono *</label><input id="pf-tel" class="finput"></div>
-        <div><label class="flabel">Email</label><input id="pf-email" type="email" class="finput"></div>
+        <div><label class="flabel">Email *</label><input id="pf-email" type="email" class="finput"></div>
       </div>
-      <div class="form-row full"><div><label class="flabel">Dirección</label><input id="pf-dir" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Dirección fiscal *</label><input id="pf-dir" class="finput"></div></div>
       <div class="form-row">
         <div><label class="flabel">Ciudad</label><input id="pf-ciudad" class="finput"></div>
         <div><label class="flabel">CP</label><input id="pf-cp" class="finput"></div>
@@ -282,10 +285,10 @@ tr:hover td{background:#FAFBFF}
         <div><label class="flabel">Fecha del evento</label><input id="pf-fecha" type="date" class="finput"></div>
       </div>
       <div class="form-row">
-        <div><label class="flabel">Hora inicio (aprox.)</label><input id="pf-hora-ini" type="time" class="finput"></div>
+        <div><label class="flabel">Hora inicio (aprox.) *</label><input id="pf-hora-ini" type="time" class="finput"></div>
         <div><label class="flabel">Hora fin (aprox.)</label><input id="pf-hora-fin" type="time" class="finput"></div>
       </div>
-      <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="pf-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
+      <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...) *</label><input id="pf-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
       <div class="form-row full"><div><label class="flabel">Cuéntanos sobre tu evento</label><textarea id="pf-notas" class="finput" rows="3" style="resize:vertical"></textarea></div></div>
       <div class="form-row full" style="margin-top:10px">
         <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--ink-soft);line-height:1.55;max-height:150px;overflow-y:auto">
@@ -443,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-E</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-G</div>
 </nav>
 
 <main class="content">
@@ -734,10 +737,10 @@ tr:hover td{background:#FAFBFF}
   <div class="modal">
     <div class="modal-header"><span class="modal-title" id="modal-cliente-title">Nuevo cliente</span><button class="btn-icon" onclick="closeModal('modal-cliente')">✕</button></div>
     <div class="modal-body">
-      <div class="form-row"><div><label class="flabel">Nombre y apellidos *</label><input id="f-nombre" class="finput"></div><div><label class="flabel">DNI *</label><input id="f-dni" class="finput"></div></div>
-      <div class="form-row"><div><label class="flabel">Teléfono *</label><input id="f-tel" class="finput"></div><div><label class="flabel">Email *</label><input id="f-email" class="finput"></div></div>
-      <div class="form-row full"><div><label class="flabel">Dirección fiscal *</label><input id="f-dir" class="finput"></div></div>
-      <div class="form-row"><div><label class="flabel">Ciudad *</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP *</label><input id="f-cp" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Nombre y apellidos</label><input id="f-nombre" class="finput"></div><div><label class="flabel">DNI</label><input id="f-dni" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Teléfono</label><input id="f-tel" class="finput"></div><div><label class="flabel">Email</label><input id="f-email" class="finput"></div></div>
+      <div class="form-row full"><div><label class="flabel">Dirección fiscal</label><input id="f-dir" class="finput"></div></div>
+      <div class="form-row"><div><label class="flabel">Ciudad</label><input id="f-ciudad" class="finput"></div><div><label class="flabel">CP</label><input id="f-cp" class="finput"></div></div>
       <div class="form-row"><div><label class="flabel">Tipo de evento</label><select id="f-tipo" class="finput"><option>Boda</option><option>Comunión</option><option>Cumpleaños</option><option>Corporativo</option><option>Otro</option></select></div><div><label class="flabel">Fecha evento</label><input id="f-fecha" type="date" class="finput"></div></div>
       <div class="form-row full"><div><label class="flabel">Ubicación del evento (sala, finca, dirección...)</label><input id="f-ubicacion" class="finput" placeholder="Ej: Masia Can Ribas, Sabadell"></div></div>
       <div class="form-row">
@@ -1437,12 +1440,15 @@ async function submitPublicForm(){
   const tel=document.getElementById('pf-tel').value.trim();
   const errBox=document.getElementById('public-error');
   errBox.style.display='none';
-  if(!nombre||!tel){errBox.textContent='El nombre y el teléfono son obligatorios';errBox.style.display='block';return;}
+  const _pfreq=[['pf-nombre','el nombre completo'],['pf-dni','el DNI'],['pf-dir','la dirección fiscal'],['pf-tel','el teléfono'],['pf-email','el correo electrónico'],['pf-hora-ini','la hora aproximada'],['pf-ubicacion','la ubicación del evento']];
+  for(var _i=0;_i<_pfreq.length;_i++){var _el=document.getElementById(_pfreq[_i][0]);if(!_el||!_el.value.trim()){errBox.textContent='Falta por rellenar: '+_pfreq[_i][1];errBox.style.display='block';if(_el)_el.focus();return;}}
+  var _pem=document.getElementById('pf-email').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(_pem)){errBox.textContent='El correo electrónico no es válido';errBox.style.display='block';document.getElementById('pf-email').focus();return;}
   const _cons=document.getElementById('pf-consent');
   if(!_cons||!_cons.checked){errBox.textContent='Debes aceptar la política de privacidad para continuar';errBox.style.display='block';return;}
   const btn=document.getElementById('pf-submit-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Enviando...';
-  const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
+  const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),horario:(document.getElementById('pf-hora-ini').value+(document.getElementById('pf-hora-fin').value?' - '+document.getElementById('pf-hora-fin').value:'')),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
   const {error}=await sbPublic.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Enviar';
   if(error){errBox.textContent='Ha ocurrido un error. Inténtalo de nuevo.';errBox.style.display='block';console.error(error);return;}
@@ -1906,10 +1912,7 @@ function renderClientes(){
 
 async function guardarCliente(){
   const nombre=document.getElementById('f-nombre').value.trim();
-  if(!nombre){toast('El nombre y apellidos son obligatorios','err');return;}
-  {const _reqC={'f-dni':'el DNI','f-tel':'el teléfono','f-email':'el email','f-dir':'la dirección fiscal','f-ciudad':'la ciudad','f-cp':'el CP'};
-   for(const _id in _reqC){const _el=document.getElementById(_id);if(!_el||!_el.value.trim()){toast('Falta '+_reqC[_id],'err');if(_el)_el.focus();return;}}
-   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(document.getElementById('f-email').value.trim())){toast('El email no es válido','err');document.getElementById('f-email').focus();return;}}
+  // Desde el panel no hay campos obligatorios: podemos guardar con lo que queramos.
   const btn=document.getElementById('save-cliente-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const payload={user_id:currentUser.id,nombre,dni:document.getElementById('f-dni').value,telefono:document.getElementById('f-tel').value,email:document.getElementById('f-email').value,direccion:document.getElementById('f-dir').value,ciudad:document.getElementById('f-ciudad').value,cp:document.getElementById('f-cp').value,tipo_evento:document.getElementById('f-tipo').value,fecha_evento:document.getElementById('f-fecha').value||null,ubicacion_evento:document.getElementById('f-ubicacion').value,servicios_interes:document.getElementById('f-servicios').value,notas:document.getElementById('f-notas').value,contacto_potencial_id:document.getElementById('f-contacto').value||null,estado:'Potencial',estado_forzado:null,origen:'manual'};
@@ -4508,10 +4511,7 @@ function editarCliente(id){
 // Override guardarCliente para soportar edición
 async function guardarCliente(){
   const nombre=document.getElementById('f-nombre').value.trim();
-  if(!nombre){toast('El nombre y apellidos son obligatorios','err');return;}
-  {const _reqC={'f-dni':'el DNI','f-tel':'el teléfono','f-email':'el email','f-dir':'la dirección fiscal','f-ciudad':'la ciudad','f-cp':'el CP'};
-   for(const _id in _reqC){const _el=document.getElementById(_id);if(!_el||!_el.value.trim()){toast('Falta '+_reqC[_id],'err');if(_el)_el.focus();return;}}
-   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(document.getElementById('f-email').value.trim())){toast('El email no es válido','err');document.getElementById('f-email').focus();return;}}
+  // Desde el panel no hay campos obligatorios: podemos guardar con lo que queramos.
   const btn=document.getElementById('save-cliente-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const iniH=document.getElementById('f-hora-ini')?document.getElementById('f-hora-ini').value:'';
