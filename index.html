@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-K</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-L</div>
 </nav>
 
 <main class="content">
@@ -1820,12 +1820,31 @@ function estadoPresupuesto(p){const hoy=new Date();hoy.setHours(0,0,0,0);const t
 function badgePresupuesto(p){const e=estadoPresupuesto(p);if(e==='aceptado')return'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Aceptado</span>';if(e==='caducado')return'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Caducado</span>';return'<span class="badge" style="background:#EEEFF2;color:#5B5E68">Pendiente</span>';}
 function renderDashboard(){
   const hoy=new Date();hoy.setHours(0,0,0,0);
-  const totalH=FACTURAS.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.total||0),0);
-  const totalN=FACTURAS.filter(f=>f.tipo==='formal'&&f.emisor==='Nuria').reduce((a,f)=>a+Number(f.total||0),0);
-  const totalPend=CLIENTES.reduce((a,c)=>{const p=pendienteCliente(c);return a+(p||0);},0);
+  const _yr=hoy.getFullYear();
+  const _form=FACTURAS.filter(f=>f.tipo!=='efectivo');
+  const _efe=FACTURAS.filter(f=>f.tipo==='efectivo');
+  const totalH=_form.filter(f=>f.emisor==='Henry').reduce((a,f)=>a+Number(f.total||0),0);
+  const totalN=_form.filter(f=>f.emisor==='Nuria').reduce((a,f)=>a+Number(f.total||0),0);
+  const totalCobrado=_form.reduce((a,f)=>a+Number(f.cobrado||0),0)+_efe.reduce((a,f)=>a+Number(f.total||0),0);
+  const totalPend=CLIENTES.reduce((a,c)=>a+(pendienteCliente(c)||0),0);
+  const totalHist=CLIENTES.reduce((a,c)=>a+totalContratadoCliente(c),0);
+  const aCobrar=function(y){return CLIENTES.filter(function(c){return c.fecha_evento&&(new Date(c.fecha_evento+'T00:00:00')).getFullYear()===y;}).reduce(function(a,c){return a+totalContratadoCliente(c);},0);};
+  const esteAno=aCobrar(_yr), proxAno=aCobrar(_yr+1);
+  const _conImp=CLIENTES.filter(function(c){return totalContratadoCliente(c)>0;});
+  const ticket=_conImp.length?totalHist/_conImp.length:0;
   const futuros=CLIENTES.filter(c=>calcEstadoCliente(c)==='Futuro').length;
   const potenciales=CLIENTES.filter(c=>calcEstadoCliente(c)==='Potencial').length;
-  document.getElementById('dash-metrics').innerHTML='<div class="metric-card accent"><div class="metric-label">Clientes</div><div class="metric-value">'+CLIENTES.length+'</div></div><div class="metric-card"><div class="metric-label">Futuros</div><div class="metric-value">'+futuros+'</div></div><div class="metric-card"><div class="metric-label">Potenciales</div><div class="metric-value">'+potenciales+'</div></div><div class="metric-card"><div class="metric-label">Henry</div><div class="metric-value">'+fmt(totalH)+' </div></div><div class="metric-card"><div class="metric-label">Nuria</div><div class="metric-value">'+fmt(totalN)+' </div></div><div class="metric-card"><div class="metric-label">Pdte cobro</div><div class="metric-value">'+fmt(totalPend)+' </div></div>';
+  const _card=function(l,v){return '<div class="metric-card"><div class="metric-label">'+l+'</div><div class="metric-value">'+v+'</div></div>';};
+  document.getElementById('dash-metrics').innerHTML=
+    '<div class="metric-card accent"><div class="metric-label">Total contratado (histórico)</div><div class="metric-value">'+fmt(totalHist)+' €</div></div>'
+   +_card('Cobrado (histórico)',fmt(totalCobrado)+' €')
+   +_card('Pendiente de cobro',fmt(totalPend)+' €')
+   +_card(_yr+' · a cobrar',fmt(esteAno)+' €')
+   +_card((_yr+1)+' · a cobrar',fmt(proxAno)+' €')
+   +_card('Ticket medio',fmt(ticket)+' €')
+   +_card('Facturado Henry',fmt(totalH)+' €')
+   +_card('Facturado Núria',fmt(totalN)+' €')
+   +'<div class="metric-card"><div class="metric-label">Clientes · Futuros · Pot.</div><div class="metric-value" style="font-size:18px">'+CLIENTES.length+' · '+futuros+' · '+potenciales+'</div></div>';
   const proximos=CLIENTES.filter(c=>calcEstadoCliente(c)==='Futuro'&&c.fecha_evento).map(c=>({...c,diff:Math.ceil((new Date(c.fecha_evento+'T00:00:00')-hoy)/86400000)})).filter(c=>c.diff>=0).sort((a,b)=>a.diff-b.diff).slice(0,6);
   const caducados=PRESUPUESTOS.filter(p=>estadoPresupuesto(p)==='caducado');
   document.getElementById('dash-empty-hint').style.display=CLIENTES.length===0?'block':'none';
@@ -2503,7 +2522,8 @@ function renderCobros(){
   const pendiente=_form.reduce((a,f)=>a+Number(f.pendiente||0),0);
   document.getElementById('cobros-metrics').innerHTML=`
     <div class="metric-card accent"><div class="metric-label">Facturado</div><div class="metric-value">${fmt(total)} €</div></div>
-    <div class="metric-card"><div class="metric-label">Cobrado</div><div class="metric-value">${fmt(cobrado)} €</div></div>
+    <div class="metric-card"><div class="metric-label">En efectivo</div><div class="metric-value">${fmt(_efe.reduce((a,f)=>a+Number(f.total||0),0))} €</div></div>
+    <div class="metric-card"><div class="metric-label">Cobrado (total)</div><div class="metric-value">${fmt(cobrado)} €</div></div>
     <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(pendiente)} €</div></div>`;
   const _q=_fv('cobros-q').toLowerCase();let _dataCo=FACTURAS.filter(f=>{const c=CLIENTES.find(x=>x.id===f.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(f.numero||''),_q)&&_inRange(f.fecha_factura,_fv('cobros-df'),_fv('cobros-dt'));});_dataCo=_sortList(_dataCo,'cobros-sort',f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.nombre:'';},f=>f.fecha_factura,f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.fecha_evento:'';});
   document.getElementById('cobros-tbody').innerHTML=_dataCo.length?_dataCo.map(f=>{
