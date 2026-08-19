@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-L</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-N</div>
 </nav>
 
 <main class="content">
@@ -1673,6 +1673,7 @@ async function loadAllData(){
   CLIENTES=c.data||[];PRESUPUESTOS=p.data||[];FACTURAS=f.data||[];CONTRATOS=ct.data||[];TAREAS=t.data||[];PERSONAS=per.data||[];EQUIPO=eq.data||[];CONSUMIBLES=cons.data||[];GASTOS=gas.data||[];SERVICIOS=srv.data||[];SERVICIO_CONSUMIBLES=srvc.data||[];EVENTOS=ev.data||[];EVENTO_EQUIPO=eeq.data||[];EVENTO_PERSONAS=eper.data||[];EVENTO_COSTES=eco.data||[];INVERSIONES=inv.data||[];CONTACTOS=cont.data||[];
   {let _hid;try{_hid=new Set(JSON.parse(localStorage.getItem('ft_deleted_clientes')||'[]'));}catch(e){_hid=new Set();}
    if(_hid.size){CLIENTES=CLIENTES.filter(x=>!_hid.has(x.id));FACTURAS=FACTURAS.filter(x=>!_hid.has(x.cliente_id));PRESUPUESTOS=PRESUPUESTOS.filter(x=>!_hid.has(x.cliente_id));CONTRATOS=CONTRATOS.filter(x=>!_hid.has(x.cliente_id));EVENTOS=EVENTOS.filter(x=>!_hid.has(x.cliente_id));TAREAS=TAREAS.filter(x=>!_hid.has(x.cliente_id));}}
+  {let _he;try{_he=new Set(JSON.parse(localStorage.getItem('ft_deleted_eventos')||'[]'));}catch(e){_he=new Set();}if(_he.size)EVENTOS=EVENTOS.filter(x=>!_he.has(x.id));}
   let _dbAct=[];
   if(ACT_DB){try{const _a=await sb.from('actividad').select('*').order('created_at',{ascending:false});if(_a&&_a.error){ACT_DB=false;}else{_dbAct=(_a&&_a.data)||[];}}catch(e){ACT_DB=false;}}
   let _locAct=[];try{_locAct=JSON.parse(localStorage.getItem('ft_actividad')||'[]');}catch(e){_locAct=[];}
@@ -1807,15 +1808,24 @@ function guardarConfig(){
   try{localStorage.setItem('ft_config',JSON.stringify(cfg));}catch(e){}
   toast('Configuración guardada');
 }
-function totalContratadoCliente(c){const ct=CONTRATOS.find(x=>x.cliente_id===c.id&&Number(x.importe_total)>0);return ct?Number(ct.importe_total):Number(c.importe_total||0);}
+function _totalOv(id){try{const m=JSON.parse(localStorage.getItem('ft_total')||'{}');return m[id]||null;}catch(e){return null;}}
+function _setTotalOv(id,imp,con){try{const m=JSON.parse(localStorage.getItem('ft_total')||'{}');m[id]={importe:imp,concepto:con};localStorage.setItem('ft_total',JSON.stringify(m));}catch(e){}}
+function conceptoContratado(c){const ov=_totalOv(c.id);return (ov&&ov.concepto!=null&&ov.concepto!=='')?ov.concepto:(c.servicios_interes||'');}
+function totalContratadoCliente(c){
+  const ct=CONTRATOS.find(x=>x.cliente_id===c.id&&Number(x.importe_total)>0);
+  if(ct)return Number(ct.importe_total);
+  const ov=_totalOv(c.id);
+  if(ov&&ov.importe!=null&&ov.importe!=='')return Number(ov.importe);
+  return Number(c.importe_total||0);
+}
 function _pagoOv(id){try{const m=JSON.parse(localStorage.getItem('ft_pago')||'{}');return m[id]||null;}catch(e){return null;}}
 function _setPagoOv(id,val){try{const m=JSON.parse(localStorage.getItem('ft_pago')||'{}');if(val)m[id]=val;else delete m[id];localStorage.setItem('ft_pago',JSON.stringify(m));}catch(e){}}
 function pendienteCliente(c){const t=totalContratadoCliente(c);if(!t||Number(t)===0)return null;if(_pagoOv(c.id)==='pagado')return 0;const cobradoFac=FACTURAS.filter(f=>f.cliente_id===c.id&&f.tipo==='formal').reduce((a,f)=>a+Number(f.total||0),0);const cobradoEfec=FACTURAS.filter(f=>f.cliente_id===c.id&&f.tipo==='efectivo'&&f.cuenta_como_pago).reduce((a,f)=>a+Number(f.total||0),0);return Math.max(0,Number(t)-(cobradoFac+cobradoEfec));}
 function estadoPagoCliente(c){const ov=_pagoOv(c.id);if(ov==='pagado')return'pagado';if(ov==='pendiente')return'pendiente';const t=totalContratadoCliente(c);if(!t||Number(t)===0)return null;return pendienteCliente(c)<=0.009?'pagado':'pendiente';}
 function badgePago(c){const est=estadoPagoCliente(c);const pend=pendienteCliente(c);const inner=est==='pagado'?'Pagado':(est==='pendiente'?(pend>0?'Falta '+fmt(pend):'Pendiente'):'Marcar pago');const style=est==='pagado'?'background:#E1F5EE;color:#0F6E56':(est==='pendiente'?'background:#FCEBEB;color:#A32D2D':'background:#F0F0F5;color:#9CA0AA');return'<span class="badge" onclick="event.stopPropagation();togglePagoCliente(\''+c.id+'\')" title="Clic para cambiar Pagado/Pendiente" style="cursor:pointer;'+style+'">'+inner+'</span>';}
 function togglePagoCliente(id){const c=CLIENTES.find(x=>x.id===id);if(!c)return;const est=estadoPagoCliente(c);_setPagoOv(id, est==='pagado'?'pendiente':'pagado');try{renderClientes();}catch(e){}try{renderDashboard();}catch(e){}try{renderCobros();}catch(e){}if(fichaClienteId===id){const cc=CLIENTES.find(x=>x.id===id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}toast('Pago: '+(est==='pagado'?'Pendiente':'Pagado'));}
-function editarTotalContratado(id){const c=CLIENTES.find(x=>x.id===id);if(!c)return;document.getElementById('tc-cliente-id').value=id;document.getElementById('tc-importe').value=c.importe_total||'';document.getElementById('tc-concepto').value=c.servicios_interes||'';openModal('modal-total-contratado');}
-async function guardarTotalContratado(){const id=document.getElementById('tc-cliente-id').value;const imp=parseFloat(document.getElementById('tc-importe').value)||0;const con=document.getElementById('tc-concepto').value;const {error}=await sb.from('clientes').update({importe_total:imp,servicios_interes:con}).eq('id',id);if(error){toast('Error: '+error.message,'err');return;}closeModal('modal-total-contratado');await loadAllData();try{renderClientes();renderDashboard();renderCobros();}catch(e){}if(fichaClienteId===id){const cc=CLIENTES.find(x=>x.id===id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}toast('Total contratado actualizado');}
+function editarTotalContratado(id){const c=CLIENTES.find(x=>x.id===id);if(!c)return;const ov=_totalOv(id);document.getElementById('tc-cliente-id').value=id;document.getElementById('tc-importe').value=(ov&&ov.importe!=null&&ov.importe!=='')?ov.importe:(c.importe_total||'');document.getElementById('tc-concepto').value=conceptoContratado(c);openModal('modal-total-contratado');}
+async function guardarTotalContratado(){const id=document.getElementById('tc-cliente-id').value;const imp=parseFloat(document.getElementById('tc-importe').value)||0;const con=document.getElementById('tc-concepto').value;_setTotalOv(id,imp,con);try{await sb.from('clientes').update({importe_total:imp,servicios_interes:con}).eq('id',id);}catch(e){}closeModal('modal-total-contratado');await loadAllData();try{renderClientes();renderDashboard();renderCobros();}catch(e){}if(fichaClienteId===id){const cc=CLIENTES.find(x=>x.id===id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}toast('Total contratado guardado');}
 function estadoPresupuesto(p){const hoy=new Date();hoy.setHours(0,0,0,0);const tieneFac=FACTURAS.some(f=>f.cliente_id===p.cliente_id&&f.tipo==='formal');if(tieneFac)return'aceptado';if(p.validez_hasta&&new Date(p.validez_hasta+'T00:00:00')<hoy)return'caducado';return'pendiente';}
 function badgePresupuesto(p){const e=estadoPresupuesto(p);if(e==='aceptado')return'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Aceptado</span>';if(e==='caducado')return'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Caducado</span>';return'<span class="badge" style="background:#EEEFF2;color:#5B5E68">Pendiente</span>';}
 function renderDashboard(){
@@ -2686,9 +2696,9 @@ function renderCalendarioMes(){
   for(let d=1;d<=daysInMonth;d++){
     const isT=hoy.getDate()===d&&hoy.getMonth()===calMonth-1&&hoy.getFullYear()===calYear;
     const items=eventosByDay[d]||[];
-    html+=`<div onclick="verEventosDia(${d})" style="min-height:72px;background:#fff;border:1px solid ${isT?'var(--brand)':'var(--line)'};border-radius:10px;padding:6px;font-size:12px;cursor:${items.length?'pointer':'default'};transition:box-shadow .15s" onmouseover="if(${items.length})this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+    html+=`<div onclick="verEventosDia(${d})" style="min-height:118px;background:#fff;border:1px solid ${isT?'var(--brand)':'var(--line)'};border-radius:10px;padding:6px;font-size:12px;cursor:${items.length?'pointer':'default'};transition:box-shadow .15s" onmouseover="if(${items.length})this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
       <div style="font-size:11px;${isT?'background:var(--brand);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-weight:700':'color:var(--ink-soft)'}">${d}</div>
-      ${items.slice(0,2).map(item=>{
+      ${items.slice(0,4).map(item=>{
         if(item.tipo==='evento'){
           const ev=item.data;
           const c=CLIENTES.find(x=>x.id===ev.cliente_id);
@@ -2702,7 +2712,7 @@ function renderCalendarioMes(){
           return`<div onclick="event.stopPropagation();crearEventoDesdeCliente('${c.id}')" style="background:${colorMap[e]||'#EEEFF2'};color:${textMap[e]||'#5B5E68'};border-radius:5px;padding:2px 5px;font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;cursor:pointer;border:1px dashed currentColor" title="Clic para crear evento">+ ${c.nombre}</div>`;
         }
       }).join('')}
-      ${items.length>2?`<div style="font-size:10px;color:var(--ink-soft);margin-top:2px">+${items.length-2} más</div>`:''}
+      ${items.length>4?`<div style="font-size:10px;color:var(--ink-soft);margin-top:2px">+${items.length-4} más</div>`:''}
     </div>`;
   }
   document.getElementById('cal-body').innerHTML=html;
@@ -4191,11 +4201,15 @@ async function eliminarEvento(id){
   if(!confirm('¿Eliminar este evento?'))return;
   const _e=EVENTOS.find(x=>x.id===id);
   if(_e)await logActividad(_e.cliente_id,'Evento del '+fmtDate(_e.fecha)+' eliminado','\uD83D\uDDD1\uFE0F');
-  await sb.from('evento_equipo').delete().eq('evento_id',id);
-  await sb.from('evento_personas').delete().eq('evento_id',id);
-  await sb.from('evento_costes').delete().eq('evento_id',id);
-  await sb.from('eventos').delete().eq('id',id);
-  await loadAllData();renderEventos();
+  try{await sb.from('evento_equipo').delete().eq('evento_id',id);await sb.from('evento_personas').delete().eq('evento_id',id);await sb.from('evento_costes').delete().eq('evento_id',id);await sb.from('eventos').delete().eq('id',id);}catch(e){}
+  await loadAllData();
+  if(EVENTOS.find(x=>x.id===id)){
+    try{const a=JSON.parse(localStorage.getItem('ft_deleted_eventos')||'[]');if(!a.includes(id)){a.push(id);localStorage.setItem('ft_deleted_eventos',JSON.stringify(a));}}catch(e){}
+    await loadAllData();
+  }
+  try{renderEventos();}catch(e){}try{renderCalendario();}catch(e){}
+  if(fichaClienteId){const cc=CLIENTES.find(x=>x.id===fichaClienteId);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='eventos')body.innerHTML=renderFichaEventos(cc);}
+  toast('Evento eliminado');
 }
 
 
@@ -4783,7 +4797,7 @@ function renderFichaResumen(c){
         <div style="background:linear-gradient(135deg,var(--brand) 0%,#4A6CF7 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px;color:#fff">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><div style="font-size:11px;opacity:.8;letter-spacing:.03em">TOTAL CONTRATADO</div><button onclick="editarTotalContratado('${c.id}')" title="Editar total contratado" style="background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600">✎ Editar</button></div>
           <div style="font-size:24px;font-weight:800">${fmt(totalContratadoCliente(c))} €</div>
-          ${c.servicios_interes?`<div style="font-size:11px;opacity:.85;margin-top:3px">${c.servicios_interes}</div>`:''}
+          ${conceptoContratado(c)?`<div style="font-size:11px;opacity:.85;margin-top:3px">${conceptoContratado(c)}</div>`:''}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
           <div style="background:#EAF7F0;border-radius:10px;padding:10px 12px">
