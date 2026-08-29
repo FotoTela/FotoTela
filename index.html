@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-P</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-Q</div>
 </nav>
 
 <main class="content">
@@ -530,7 +530,7 @@ tr:hover td{background:#FAFBFF}
 </div>
 
 <div id="cobros" class="page">
-  <div class="page-header"><div><div class="page-title">Cobros</div></div><button class="btn-secondary" onclick="exportarExcel()">⬇ Exportar a Excel</button></div>
+  <div class="page-header"><div><div class="page-title">Cobros</div><div class="page-sub">Los totales de abajo reflejan el filtro/fechas que apliques</div></div><button class="btn-secondary" onclick="exportarExcel()">⬇ Exportar a Excel</button></div>
   <div class="metrics-grid" id="cobros-metrics"></div>
   <div class="list-filter"><input id="cobros-q" class="lf-in" type="text" placeholder="Buscar cliente o nº..." oninput="renderCobros()" style="flex:1;min-width:180px"><span class="lf-lbl">Fecha del</span><input id="cobros-df" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">al</span><input id="cobros-dt" class="lf-in" type="date" onchange="renderCobros()"><span class="lf-lbl">Ordenar</span><select id="cobros-sort" class="lf-in" onchange="renderCobros()"><option value="recientes">Más recientes</option><option value="antiguos">Más antiguos</option><option value="az">A–Z</option><option value="za">Z–A</option><option value="proximos">Próximos (evento)</option></select><button class="btn-secondary" onclick="document.getElementById('cobros-q').value='';document.getElementById('cobros-df').value='';document.getElementById('cobros-dt').value='';document.getElementById('cobros-sort').value='recientes';renderCobros()">Limpiar</button></div>
   <div class="table-wrap"><table>
@@ -2528,7 +2528,8 @@ async function verFactura(id){
 }
 
 function renderCobros(){
-  const _form=FACTURAS.filter(f=>f.tipo!=='efectivo');const _efe=FACTURAS.filter(f=>f.tipo==='efectivo');
+  const _q=_fv('cobros-q').toLowerCase();let _dataCo=FACTURAS.filter(f=>{const c=CLIENTES.find(x=>x.id===f.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(f.numero||''),_q)&&_inRange(f.fecha_factura,_fv('cobros-df'),_fv('cobros-dt'));});_dataCo=_sortList(_dataCo,'cobros-sort',f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.nombre:'';},f=>f.fecha_factura,f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.fecha_evento:'';});
+  const _form=_dataCo.filter(f=>f.tipo!=='efectivo');const _efe=_dataCo.filter(f=>f.tipo==='efectivo');
   const total=_form.reduce((a,f)=>a+Number(f.total||0),0);
   const cobrado=_form.reduce((a,f)=>a+Number(f.cobrado||0),0)+_efe.reduce((a,f)=>a+Number(f.total||0),0);
   const pendiente=_form.reduce((a,f)=>a+Number(f.pendiente||0),0);
@@ -2537,7 +2538,6 @@ function renderCobros(){
     <div class="metric-card"><div class="metric-label">En efectivo</div><div class="metric-value">${fmt(_efe.reduce((a,f)=>a+Number(f.total||0),0))} €</div></div>
     <div class="metric-card"><div class="metric-label">Cobrado (total)</div><div class="metric-value">${fmt(cobrado)} €</div></div>
     <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value">${fmt(pendiente)} €</div></div>`;
-  const _q=_fv('cobros-q').toLowerCase();let _dataCo=FACTURAS.filter(f=>{const c=CLIENTES.find(x=>x.id===f.cliente_id);return _matchTxt((c?c.nombre:'')+' '+(f.numero||''),_q)&&_inRange(f.fecha_factura,_fv('cobros-df'),_fv('cobros-dt'));});_dataCo=_sortList(_dataCo,'cobros-sort',f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.nombre:'';},f=>f.fecha_factura,f=>{const _c=CLIENTES.find(x=>x.id===f.cliente_id);return _c?_c.fecha_evento:'';});
   document.getElementById('cobros-tbody').innerHTML=_dataCo.length?_dataCo.map(f=>{
     const c=CLIENTES.find(x=>x.id===f.cliente_id);
     return`<tr><td style="font-weight:600">${c?c.nombre:'—'}</td><td>${f.numero||'—'}</td><td>${f.tipo==='efectivo'?'<span style="background:#EAF7F0;color:#0F6E56;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">Efectivo</span>':'<span style="background:var(--brand-light);color:var(--brand);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">Factura</span>'}</td><td>${f.fecha_factura?fmtDate(f.fecha_factura):'—'}</td><td>${fmt(f.total)} €</td><td>${fmt(f.cobrado)} €</td><td style="color:${f.pendiente>0?'#A32D2D':'var(--ink-soft)'}">${f.pendiente>0?fmt(f.pendiente)+' €':'—'}</td></tr>`;
@@ -4497,9 +4497,9 @@ function renderDashboard(){
     <div class="metric-card"><div class="metric-label">Eventos ${yearActual}</div><div class="metric-value">${_evEste}</div></div>
     <div class="metric-card"><div class="metric-label">Eventos ${yearActual+1}</div><div class="metric-value">${_evProx}</div></div>`;
   {const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-   const ingMes=new Array(12).fill(0);_formF.forEach(function(f){if(f.fecha_factura){var m=new Date(f.fecha_factura+'T00:00:00');if(m.getFullYear()===yearActual)ingMes[m.getMonth()]+=Number(f.total||0);}});
+   const ingMes=new Array(12).fill(0);FACTURAS.forEach(function(f){if(f.fecha_factura){var m=new Date(f.fecha_factura+'T00:00:00');if(m.getFullYear()===yearActual)ingMes[m.getMonth()]+=(f.tipo==='efectivo'?Number(f.total||0):Number(f.cobrado||0));}});
    const evMes=new Array(12).fill(0);CLIENTES.forEach(function(c){if(c.fecha_evento){var m=new Date(c.fecha_evento+'T00:00:00');if(m.getFullYear()===yearActual)evMes[m.getMonth()]++;}});
-   const dc=document.getElementById('dash-charts');if(dc)dc.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+svgBars('Ingresos por mes ('+yearActual+')',meses,ingMes,'#5C6BC0',true)+svgBars('Eventos por mes ('+yearActual+')',meses,evMes,'#16A34A',false)+'</div>';}
+   const dc=document.getElementById('dash-charts');if(dc)dc.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+svgBars('Cobrado por mes ('+yearActual+')',meses,ingMes,'#5C6BC0',true)+svgBars('Eventos por mes ('+yearActual+')',meses,evMes,'#16A34A',false)+'</div>';}
 
   // Próximos eventos
   const proximos=CLIENTES.filter(c=>calcEstadoCliente(c)==='Futuro'&&c.fecha_evento).map(c=>({...c,diff:Math.ceil((new Date(c.fecha_evento+'T00:00:00')-hoy)/86400000)})).filter(c=>c.diff>=0).sort((a,b)=>a.diff-b.diff).slice(0,5);
