@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-Q</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-R</div>
 </nav>
 
 <main class="content">
@@ -1450,7 +1450,7 @@ async function submitPublicForm(){
   if(!_cons||!_cons.checked){errBox.textContent='Debes aceptar la política de privacidad para continuar';errBox.style.display='block';return;}
   const btn=document.getElementById('pf-submit-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Enviando...';
-  const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),horario:(document.getElementById('pf-hora-ini').value+(document.getElementById('pf-hora-fin').value?' - '+document.getElementById('pf-hora-fin').value:'')),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
+  const payload={nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),horario:(document.getElementById('pf-hora-ini').value+(document.getElementById('pf-hora-fin').value?' - '+document.getElementById('pf-hora-fin').value:'')),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
   const {error}=await sbPublic.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Enviar';
   if(error){errBox.textContent='Ha ocurrido un error. Inténtalo de nuevo.';errBox.style.display='block';console.error(error);return;}
