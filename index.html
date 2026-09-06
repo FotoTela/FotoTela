@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-V</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-W</div>
 </nav>
 
 <main class="content">
@@ -3234,17 +3234,20 @@ function abrirFirmaPrest(ctId){
   },80);
 }
 function limpiarFirmaPrest(){if(!fpCtx)return;const cv=document.getElementById('fp-canvas');fpCtx.clearRect(0,0,cv.width,cv.height);fpVacia=true;}
-function guardarFirmaPrest(){
+async function guardarFirmaPrest(){
   if(fpVacia){toast('Dibuja la firma primero','err');return;}
   const ctId=document.getElementById('fp-ct-id').value;
   const data=document.getElementById('fp-canvas').toDataURL('image/png');
-  try{const m=JSON.parse(localStorage.getItem('ft_firma_prestador')||'{}');m[ctId]={data:data,at:new Date().toISOString()};localStorage.setItem('ft_firma_prestador',JSON.stringify(m));}catch(e){}
+  const at=new Date().toISOString();
+  try{const m=JSON.parse(localStorage.getItem('ft_firma_prestador')||'{}');m[ctId]={data:data,at:at};localStorage.setItem('ft_firma_prestador',JSON.stringify(m));}catch(e){}
+  try{await sb.rpc('firmar_prestador',{p_id:ctId,p_firma:data});}catch(e){}
+  const ct=CONTRATOS.find(x=>x.id===ctId);if(ct){ct.firma_prestador=data;ct.firma_prestador_at=at;}
   closeModal('modal-firma-prest');toast('Firma guardada');
-  const ct=CONTRATOS.find(x=>x.id===ctId);if(ct){const c=CLIENTES.find(x=>x.id===ct.cliente_id);const pv=document.getElementById('pdf-preview');if(pv&&activeDocType==='contrato'&&activeDoc&&activeDoc.doc&&activeDoc.doc.id===ctId)pv.innerHTML=buildContratoHTML(ct,c);}
+  {const _ct=CONTRATOS.find(x=>x.id===ctId);if(_ct){const c=CLIENTES.find(x=>x.id===_ct.cliente_id);const pv=document.getElementById('pdf-preview');if(pv&&activeDocType==='contrato'&&activeDoc&&activeDoc.doc&&activeDoc.doc.id===ctId)pv.innerHTML=buildContratoHTML(_ct,c);}}
   try{refrescarFichaDocs();}catch(e){}
 }
 function buildContratoHTML(ct,c){
-  const _fp=_firmaPrest(ct.id);
+  const _fp=(ct.firma_prestador?{data:ct.firma_prestador,at:ct.firma_prestador_at}:_firmaPrest(ct.id));
   const emisorData={
     Henry:Object.assign({pronombre:'EL PRESTADOR'},emisorCfg('Henry')),
     Nuria:Object.assign({pronombre:'LA PRESTADORA'},emisorCfg('Nuria'))
