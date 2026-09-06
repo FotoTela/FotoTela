@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-R</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-T</div>
 </nav>
 
 <main class="content">
@@ -829,6 +829,18 @@ tr:hover td{background:#FAFBFF}
 
 <!-- MODAL FACTURA -->
 <!-- MODAL COBRO EN EFECTIVO -->
+<div id="modal-firma-prest" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-firma-prest')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Firmar contrato (nosotros)</span><button class="btn-icon" onclick="closeModal('modal-firma-prest')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="fp-ct-id">
+      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px">Dibuja aquí la firma del prestador (con el dedo o el ratón):</div>
+      <canvas id="fp-canvas" width="440" height="180" style="border:1px dashed var(--line);border-radius:10px;width:100%;touch-action:none;background:#fff"></canvas>
+      <button class="btn-secondary" onclick="limpiarFirmaPrest()" style="margin-top:8px">Limpiar</button>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-firma-prest')">Cancelar</button><button class="btn-primary" onclick="guardarFirmaPrest()">Guardar firma</button></div>
+  </div>
+</div>
 <div id="modal-total-contratado" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-total-contratado')">
   <div class="modal">
     <div class="modal-header"><span class="modal-title">Total contratado</span><button class="btn-icon" onclick="closeModal('modal-total-contratado')">✕</button></div>
@@ -1396,6 +1408,7 @@ tr:hover td{background:#FAFBFF}
     <div class="modal-header">
       <span class="modal-title" id="pdf-modal-title">Documento</span>
       <div style="display:flex;gap:8px">
+        <button class="btn-secondary" id="pdf-firmar-prest-btn" style="display:none">✍ Firmar (nosotros)</button>
         <button class="btn-secondary" id="pdf-firmar-btn" style="display:none">✍ Enviar a firmar</button>
         <button class="btn-primary" onclick="downloadPDF()">⬇ Descargar PDF</button>
         <button class="btn-icon" onclick="closeModal('modal-pdf')">✕</button>
@@ -1450,10 +1463,10 @@ async function submitPublicForm(){
   if(!_cons||!_cons.checked){errBox.textContent='Debes aceptar la política de privacidad para continuar';errBox.style.display='block';return;}
   const btn=document.getElementById('pf-submit-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Enviando...';
-  const payload={nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),horario:(document.getElementById('pf-hora-ini').value+(document.getElementById('pf-hora-fin').value?' - '+document.getElementById('pf-hora-fin').value:'')),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
+  const payload={user_id:null,nombre,dni:document.getElementById('pf-dni').value.trim(),telefono:tel,email:document.getElementById('pf-email').value.trim(),direccion:document.getElementById('pf-dir').value.trim(),ciudad:document.getElementById('pf-ciudad').value.trim(),cp:document.getElementById('pf-cp').value.trim(),tipo_evento:document.getElementById('pf-tipo').value,fecha_evento:document.getElementById('pf-fecha').value||null,ubicacion_evento:document.getElementById('pf-ubicacion').value.trim(),horario:(document.getElementById('pf-hora-ini').value+(document.getElementById('pf-hora-fin').value?' - '+document.getElementById('pf-hora-fin').value:'')),notas:document.getElementById('pf-notas').value.trim(),estado:'Potencial',estado_forzado:null,origen:'formulario_publico'};
   const {error}=await sbPublic.from('clientes').insert(payload);
   btn.disabled=false;btn.textContent='Enviar';
-  if(error){errBox.textContent='Ha ocurrido un error. Inténtalo de nuevo.';errBox.style.display='block';console.error(error);return;}
+  if(error){errBox.textContent='Error: '+(error.message||error.hint||'Inténtalo de nuevo.');errBox.style.display='block';console.error(error);return;}
   document.getElementById('public-form-inner').style.display='none';
   document.getElementById('public-success').classList.add('show');
 }
@@ -1688,7 +1701,7 @@ function toggleSidebar(){var sb=document.getElementById('sidebar');if(!sb)return
 try{if(localStorage.getItem('ft_sidebar')==='1'){window.addEventListener('DOMContentLoaded',function(){var sb=document.getElementById('sidebar');if(sb)sb.classList.add('collapsed');var b=document.getElementById('sidebar-open-btn');if(b)b.style.display='flex';});}}catch(e){}
 function openModal(id){
   document.getElementById(id).style.display='flex';
-  if(id==='modal-pdf'){const _fb=document.getElementById('pdf-firmar-btn');if(_fb)_fb.style.display='none';}
+  if(id==='modal-pdf'){const _fb=document.getElementById('pdf-firmar-btn');if(_fb)_fb.style.display='none';const _fp2=document.getElementById('pdf-firmar-prest-btn');if(_fp2)_fp2.style.display='none';}
   if(id==='modal-cliente')poblarSelectorContacto();
 }
 function closeModal(id){document.getElementById(id).style.display='none';}
@@ -3202,9 +3215,35 @@ async function verContrato(id){
   document.getElementById('pdf-preview').innerHTML=buildContratoHTML(ct,c);
   openModal('modal-pdf');
   {const _fb=document.getElementById('pdf-firmar-btn');if(_fb&&!ct.firmado_at){_fb.style.display='';_fb.onclick=function(){closeModal('modal-pdf');enviarAFirmar(ct.id);};}}
+  {const _fp2=document.getElementById('pdf-firmar-prest-btn');if(_fp2){_fp2.style.display='';_fp2.onclick=function(){abrirFirmaPrest(ct.id);};}}
 }
 
+let fpCtx=null,fpVacia=true,fpDibujando=false;
+function _firmaPrest(ctId){try{const m=JSON.parse(localStorage.getItem('ft_firma_prestador')||'{}');return m[ctId]||null;}catch(e){return null;}}
+function abrirFirmaPrest(ctId){
+  document.getElementById('fp-ct-id').value=ctId;
+  openModal('modal-firma-prest');
+  setTimeout(function(){
+    const cv=document.getElementById('fp-canvas');if(!cv)return;fpCtx=cv.getContext('2d');fpCtx.lineWidth=2.2;fpCtx.lineCap='round';fpCtx.strokeStyle='#111';fpVacia=true;fpCtx.clearRect(0,0,cv.width,cv.height);
+    const pos=function(e){const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*(cv.width/r.width),y:(t.clientY-r.top)*(cv.height/r.height)};};
+    const start=function(e){fpDibujando=true;fpVacia=false;const q=pos(e);fpCtx.beginPath();fpCtx.moveTo(q.x,q.y);e.preventDefault();};
+    const move=function(e){if(!fpDibujando)return;const q=pos(e);fpCtx.lineTo(q.x,q.y);fpCtx.stroke();e.preventDefault();};
+    const end=function(){fpDibujando=false;};
+    cv.onmousedown=start;cv.onmousemove=move;window.onmouseup=end;cv.ontouchstart=start;cv.ontouchmove=move;cv.ontouchend=end;
+  },80);
+}
+function limpiarFirmaPrest(){if(!fpCtx)return;const cv=document.getElementById('fp-canvas');fpCtx.clearRect(0,0,cv.width,cv.height);fpVacia=true;}
+function guardarFirmaPrest(){
+  if(fpVacia){toast('Dibuja la firma primero','err');return;}
+  const ctId=document.getElementById('fp-ct-id').value;
+  const data=document.getElementById('fp-canvas').toDataURL('image/png');
+  try{const m=JSON.parse(localStorage.getItem('ft_firma_prestador')||'{}');m[ctId]={data:data,at:new Date().toISOString()};localStorage.setItem('ft_firma_prestador',JSON.stringify(m));}catch(e){}
+  closeModal('modal-firma-prest');toast('Firma guardada');
+  const ct=CONTRATOS.find(x=>x.id===ctId);if(ct){const c=CLIENTES.find(x=>x.id===ct.cliente_id);const pv=document.getElementById('pdf-preview');if(pv&&activeDocType==='contrato'&&activeDoc&&activeDoc.doc&&activeDoc.doc.id===ctId)pv.innerHTML=buildContratoHTML(ct,c);}
+  try{refrescarFichaDocs();}catch(e){}
+}
 function buildContratoHTML(ct,c){
+  const _fp=_firmaPrest(ct.id);
   const emisorData={
     Henry:Object.assign({pronombre:'EL PRESTADOR'},emisorCfg('Henry')),
     Nuria:Object.assign({pronombre:'LA PRESTADORA'},emisorCfg('Nuria'))
@@ -3249,7 +3288,7 @@ function buildContratoHTML(ct,c){
   +'<div class="ct-seccion" style="margin-top:8px"><div class="ct-seccion-num">Aceptación</div>'
   +'<div class="ct-parrafo">Ambas partes aceptan el presente contrato en todos sus términos y condiciones.</div>'
   +'<div class="ct-parrafo">En Barcelona, a <strong>'+fechaFirma+'</strong>.</div></div>'
-  +'<div class="ct-firmas"><div class="ct-firma-box"><div class="ct-firma-linea">Firma '+em.pronombre+'</div><div class="ct-firma-nombre">'+em.nombre+'</div><div class="ct-firma-nif">NIF '+em.nif+'</div></div>'
+  +'<div class="ct-firmas"><div class="ct-firma-box">'+(_fp?'<img src="'+_fp.data+'" style="height:58px;max-width:210px;object-fit:contain;display:block;margin:0 auto -4px" alt="firma">':'')+'<div class="ct-firma-linea">Firma '+em.pronombre+'</div><div class="ct-firma-nombre">'+em.nombre+'</div><div class="ct-firma-nif">NIF '+em.nif+'</div>'+(_fp?'<div class="ct-firma-nif" style="margin-top:5px;color:#0F6E56">✓ Firmado el '+new Date(_fp.at).toLocaleString('es-ES')+'</div>':'')+'</div>'
   +'<div class="ct-firma-box">'
   +(ct.firma_data?'<img src="'+ct.firma_data+'" style="height:58px;max-width:210px;object-fit:contain;display:block;margin:0 auto -4px" alt="firma">':'')
   +'<div class="ct-firma-linea">Firma EL CLIENTE</div>'
