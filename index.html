@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-T</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-U</div>
 </nav>
 
 <main class="content">
@@ -1635,7 +1635,7 @@ function descargarContratoFirmado(){
   const c={nombre:firmaContratoActual.cliente_nombre,dni:firmaContratoActual.cliente_dni};
   const html=buildContratoHTML(firmaContratoActual,c);
   const w=window.open('','_blank'); if(!w)return;
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Contrato '+(firmaContratoActual.numero||'')+'</title><style>body{margin:0;padding:24px;background:#fff}@media print{body{padding:0}}</style></head><body>'+html+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Contrato '+(firmaContratoActual.numero||'')+'</title><style>body{margin:0;padding:24px;background:#fff}'+pdfStyles()+'@media print{body{padding:0}}</style></head><body>'+html+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>');
   w.document.close();
 }
 
@@ -3057,6 +3057,7 @@ function renderContratos(){
       <td>${badgeCt}</td>
       <td style="white-space:nowrap">
         <button class="btn-icon blue" onclick="verContrato('${ct.id}')">Ver PDF</button>
+        <button class="btn-icon green" onclick="abrirFirmaPrest('${ct.id}')" style="margin-left:4px">✍️ Firmar (nosotros)</button>
         ${ct.firmado_at?'':`<button class="btn-icon green" onclick="enviarAFirmar('${ct.id}')" style="margin-left:4px">${ICO.sign} Enviar a firmar</button>`}
         <button class="btn-icon ${ct.estado==='Firmado'?'gray':'green'}" onclick="toggleFirmado('${ct.id}','${ct.estado}')" style="margin-left:4px">${ct.estado==='Firmado'?'Desmarcar':'Marcar firmado'}</button>
         <button class="btn-icon red" onclick="eliminarContrato('${ct.id}')" style="margin-left:4px">Borrar</button>
@@ -4978,7 +4979,8 @@ function renderFichaDocumentos(c){
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${ct.estado==='Firmado'?'#E8F8F0':'#F5F5F5'};color:${ct.estado==='Firmado'?'#0F6E56':'#9CA0AA'}">${ct.estado||'Borrador'}</span>
-        ${!ct.firmado_at?`<button class="btn-icon green" title="Enviar a firmar" onclick="event.stopPropagation();enviarAFirmar('${ct.id}')">${ICO.sign}</button>`:''}
+        <button class="btn-icon" title="Firmar (nosotros)" style="color:#0F6E56" onclick="event.stopPropagation();abrirFirmaPrest('${ct.id}')">✍️</button>
+        ${!ct.firmado_at?`<button class="btn-icon green" title="Enviar a firmar (cliente)" onclick="event.stopPropagation();enviarAFirmar('${ct.id}')">${ICO.sign}</button>`:''}
         <button class="btn-icon green" title="Cambiar estado (firmado/pendiente)" onclick="event.stopPropagation();toggleEstadoContrato('${ct.id}')">${ICO.cycle}</button>
         <button class="btn-icon blue" title="Editar" onclick="event.stopPropagation();editarContrato('${ct.id}')">${ICO.edit}</button>
         <button class="btn-icon red" title="Borrar" onclick="event.stopPropagation();eliminarContrato('${ct.id}')">${ICO.trash}</button>
