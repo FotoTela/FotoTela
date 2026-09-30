@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-W</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-X</div>
 </nav>
 
 <main class="content">
@@ -1840,7 +1840,20 @@ function estadoPagoCliente(c){const ov=_pagoOv(c.id);if(ov==='pagado')return'pag
 function badgePago(c){const est=estadoPagoCliente(c);const pend=pendienteCliente(c);const inner=est==='pagado'?'Pagado':(est==='pendiente'?(pend>0?'Falta '+fmt(pend):'Pendiente'):'Marcar pago');const style=est==='pagado'?'background:#E1F5EE;color:#0F6E56':(est==='pendiente'?'background:#FCEBEB;color:#A32D2D':'background:#F0F0F5;color:#9CA0AA');return'<span class="badge" onclick="event.stopPropagation();togglePagoCliente(\''+c.id+'\')" title="Clic para cambiar Pagado/Pendiente" style="cursor:pointer;'+style+'">'+inner+'</span>';}
 function togglePagoCliente(id){const c=CLIENTES.find(x=>x.id===id);if(!c)return;const est=estadoPagoCliente(c);_setPagoOv(id, est==='pagado'?'pendiente':'pagado');try{renderClientes();}catch(e){}try{renderDashboard();}catch(e){}try{renderCobros();}catch(e){}if(fichaClienteId===id){const cc=CLIENTES.find(x=>x.id===id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}toast('Pago: '+(est==='pagado'?'Pendiente':'Pagado'));}
 function editarTotalContratado(id){const c=CLIENTES.find(x=>x.id===id);if(!c)return;const ov=_totalOv(id);document.getElementById('tc-cliente-id').value=id;document.getElementById('tc-importe').value=(ov&&ov.importe!=null&&ov.importe!=='')?ov.importe:(c.importe_total||'');document.getElementById('tc-concepto').value=conceptoContratado(c);openModal('modal-total-contratado');}
-async function guardarTotalContratado(){const id=document.getElementById('tc-cliente-id').value;const imp=parseFloat(document.getElementById('tc-importe').value)||0;const con=document.getElementById('tc-concepto').value;_setTotalOv(id,imp,con);try{await sb.from('clientes').update({importe_total:imp,servicios_interes:con}).eq('id',id);}catch(e){}closeModal('modal-total-contratado');await loadAllData();try{renderClientes();renderDashboard();renderCobros();}catch(e){}if(fichaClienteId===id){const cc=CLIENTES.find(x=>x.id===id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}toast('Total contratado guardado');}
+async function guardarTotalContratado(){
+  const id=document.getElementById('tc-cliente-id').value;
+  const imp=parseFloat(document.getElementById('tc-importe').value)||0;
+  const con=document.getElementById('tc-concepto').value;
+  let okDB=false;
+  try{const r=await sb.rpc('set_total_contratado',{p_id:id,p_importe:imp,p_concepto:con});okDB=!!(r&&!r.error&&r.data);}catch(e){okDB=false;}
+  if(!okDB){try{const u=await sb.from('clientes').update({importe_total:imp,servicios_interes:con}).eq('id',id).select();okDB=!!(u&&!u.error&&u.data&&u.data.length);}catch(e){okDB=false;}}
+  if(okDB){_setTotalOv(id,'','');}else{_setTotalOv(id,imp,con);}
+  closeModal('modal-total-contratado');
+  await loadAllData();
+  try{renderClientes();renderDashboard();renderCobros();}catch(e){}
+  if(fichaClienteId===id){const cc=CLIENTES.find(x=>x.id===id);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='resumen')body.innerHTML=renderFichaResumen(cc);}
+  toast(okDB?'Total contratado guardado':'Guardado en este equipo (ejecuta set_total_contratado.sql para guardarlo en la nube)');
+}
 function estadoPresupuesto(p){const hoy=new Date();hoy.setHours(0,0,0,0);const tieneFac=FACTURAS.some(f=>f.cliente_id===p.cliente_id&&f.tipo==='formal');if(tieneFac)return'aceptado';if(p.validez_hasta&&new Date(p.validez_hasta+'T00:00:00')<hoy)return'caducado';return'pendiente';}
 function badgePresupuesto(p){const e=estadoPresupuesto(p);if(e==='aceptado')return'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Aceptado</span>';if(e==='caducado')return'<span class="badge" style="background:#FCEBEB;color:#A32D2D">Caducado</span>';return'<span class="badge" style="background:#EEEFF2;color:#5B5E68">Pendiente</span>';}
 function renderDashboard(){
