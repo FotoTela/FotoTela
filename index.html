@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-X</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-Y</div>
 </nav>
 
 <main class="content">
@@ -2242,7 +2242,8 @@ async function guardarPresupuesto(){
   const btn=document.getElementById('save-pres-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
   const numero='P'+new Date().getFullYear()+String(PRESUPUESTOS.length+1).padStart(2,'0');
-  const payload={user_id:currentUser.id,numero,cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_dias:parseInt(document.getElementById('p-validez').value)||15,notas:document.getElementById('p-notas').value,estado:'Pendiente'};
+  const _emiP=(document.getElementById('p-emisor')||{}).value||'Henry';const _resP=isNaN(parseFloat(document.getElementById('p-reserva').value))?getReservaSenal():parseFloat(document.getElementById('p-reserva').value);
+  const payload={user_id:currentUser.id,numero,cliente_id:clienteId,fecha_evento:document.getElementById('p-fecha').value||null,lugar:document.getElementById('p-lugar').value,base:base,iva_pct:ivaPct,iva_eur:ivaEur,total,validez_dias:parseInt(document.getElementById('p-validez').value)||15,notas:document.getElementById('p-notas').value,estado:'Pendiente',emisor:_emiP,reserva_senal:_resP};
   const {data,error}=await sb.from('presupuestos').insert(payload).select().single();
   if(error){btn.disabled=false;btn.textContent='Guardar y ver presupuesto';toast('Error: '+error.message,'err');return;}
   const lineasFinalP=descEurP>0?lineasValidas.concat([{descripcion:'Descuento '+descPctP+'%',detalle:'',precio_unitario:-descEurP,unidades:1}]):lineasValidas;
@@ -2944,8 +2945,8 @@ function buildFacturaHTML(f,c,lineas){
   </div>`;
 }
 
-function _reservaPres(id,numero){try{const m=JSON.parse(localStorage.getItem('ft_reserva_pres')||'{}');if(id&&m[id]!=null)return Number(m[id]);if(numero&&m['n:'+numero]!=null)return Number(m['n:'+numero]);}catch(e){}return RESERVA_SENAL;}
-function _emisorPres(id,numero){try{const m=JSON.parse(localStorage.getItem('ft_emisor_pres')||'{}');if(id&&m[id])return m[id];if(numero&&m['n:'+numero])return m['n:'+numero];}catch(e){}return 'Henry';}
+function _reservaPres(id,numero){const _p=PRESUPUESTOS.find(x=>x.id===id||(numero&&x.numero===numero));if(_p&&_p.reserva_senal!=null&&_p.reserva_senal!=='')return Number(_p.reserva_senal);try{const m=JSON.parse(localStorage.getItem('ft_reserva_pres')||'{}');if(id&&m[id]!=null)return Number(m[id]);if(numero&&m['n:'+numero]!=null)return Number(m['n:'+numero]);}catch(e){}return getReservaSenal();}
+function _emisorPres(id,numero){const _p=PRESUPUESTOS.find(x=>x.id===id||(numero&&x.numero===numero));if(_p&&_p.emisor)return _p.emisor;try{const m=JSON.parse(localStorage.getItem('ft_emisor_pres')||'{}');if(id&&m[id])return m[id];if(numero&&m['n:'+numero])return m['n:'+numero];}catch(e){}return 'Henry';}
 function _setEmisorPres(id,numero,val){try{const m=JSON.parse(localStorage.getItem('ft_emisor_pres')||'{}');if(id)m[id]=val;if(numero)m['n:'+numero]=val;localStorage.setItem('ft_emisor_pres',JSON.stringify(m));}catch(e){}}
 function _setReservaPres(id,numero,val){try{const m=JSON.parse(localStorage.getItem('ft_reserva_pres')||'{}');if(id)m[id]=val;if(numero)m['n:'+numero]=val;localStorage.setItem('ft_reserva_pres',JSON.stringify(m));}catch(e){}}
 function buildPresupuestoHTML(p,c,lineas){
@@ -4668,9 +4669,11 @@ async function guardarCliente(){
   const payload={nombre,dni:gv('f-dni'),telefono:gv('f-tel'),email:gv('f-email'),direccion:gv('f-dir'),ciudad:gv('f-ciudad'),cp:gv('f-cp'),tipo_evento:gv('f-tipo')||'Boda',fecha_evento:gv('f-fecha')||null,horario:horarioFinal,ubicacion_evento:gv('f-ubicacion'),homenajeado:gv('f-homenajeado'),servicios_interes:gv('f-servicios'),notas:gv('f-notas'),contacto_potencial_id:gv('f-contacto')||null};
   const editId=document.getElementById('f-cliente-id').value;
   const _old=editId?(CLIENTES.find(x=>x.id===editId)||{}):null;
-  let error;
+  let error,okUpd=false;
   if(editId){
-    ({error}=await sb.from('clientes').update(payload).eq('id',editId));
+    try{const r=await sb.rpc('actualizar_cliente',{p_id:editId,p_data:payload});okUpd=!!(r&&!r.error&&r.data);}catch(e){okUpd=false;}
+    if(!okUpd){const u=await sb.from('clientes').update(payload).eq('id',editId).select();okUpd=!!(u&&!u.error&&u.data&&u.data.length);if(u&&u.error)error=u.error;}
+    if(!okUpd&&!error){error={message:'No se pudieron guardar los cambios (permisos de la base de datos). Ejecuta el archivo guardar_cliente_y_emisor.sql en Supabase.'};}
   } else {
     ({error}=await sb.from('clientes').insert({...payload,user_id:currentUser.id,estado:'Potencial',estado_forzado:null,origen:'manual'}));
   }
@@ -4739,7 +4742,7 @@ async function actualizarPresupuesto(id){
   btn.disabled=false;btn.textContent='Guardar presupuesto';
   btn.onclick=()=>guardarPresupuesto();
   closeModal('modal-presupuesto');
-  {const _p=PRESUPUESTOS.find(x=>x.id===id);const _rv=parseFloat(document.getElementById('p-reserva').value);_setReservaPres(id,(_p&&_p.numero),isNaN(_rv)?RESERVA_SENAL:_rv);_setEmisorPres(id,(_p&&_p.numero),(document.getElementById('p-emisor')||{}).value||'Henry');await logActividad(clienteId,'Presupuesto '+((_p&&_p.numero)||'')+' editado','\u270F\uFE0F');}
+  {const _p=PRESUPUESTOS.find(x=>x.id===id);const _rv=parseFloat(document.getElementById('p-reserva').value);const _emi=(document.getElementById('p-emisor')||{}).value||'Henry';const _res=isNaN(_rv)?RESERVA_SENAL:_rv;_setReservaPres(id,(_p&&_p.numero),_res);_setEmisorPres(id,(_p&&_p.numero),_emi);try{await sb.rpc('set_presupuesto_meta',{p_id:id,p_emisor:_emi,p_reserva:_res});}catch(e){}if(_p){_p.emisor=_emi;_p.reserva_senal=_res;}await logActividad(clienteId,'Presupuesto '+((_p&&_p.numero)||'')+' editado','\u270F\uFE0F');}
   await refrescarFichaDocs();
 }
 
