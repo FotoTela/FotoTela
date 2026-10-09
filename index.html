@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-Y</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0810-Z</div>
 </nav>
 
 <main class="content">
@@ -5095,11 +5095,13 @@ function renderFichaNotas(c){
 
 async function guardarNotaFicha(clienteId){
   const notas = document.getElementById('ficha-notas-txt').value;
-  await sb.from('clientes').update({notas}).eq('id',clienteId);
-  await loadAllData();
+  let ok=false;
+  try{const r=await sb.rpc('actualizar_cliente',{p_id:clienteId,p_data:{notas:notas}});ok=!!(r&&!r.error&&r.data);}catch(e){ok=false;}
+  if(!ok){try{const u=await sb.from('clientes').update({notas}).eq('id',clienteId).select();ok=!!(u&&!u.error&&u.data&&u.data.length);}catch(e){ok=false;}}
   const c = CLIENTES.find(x=>x.id===clienteId);
   if(c) c.notas = notas;
-  toast('Notas guardadas');
+  await loadAllData();
+  toast(ok?'Notas guardadas':'No se pudieron guardar (permisos). Ejecuta guardar_cliente_y_emisor.sql en Supabase.', ok?undefined:'err');
 }
 
 async function subirArchivoFicha(files, clienteId){
