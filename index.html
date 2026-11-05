@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-G</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-H</div>
 </nav>
 
 <main class="content">
@@ -3503,6 +3503,20 @@ function _periodoRango(sel){
   if(sel==='ano'){return [y+'-01-01', y+'-12-31'];}
   return [null,null];
 }
+async function asignarEventoATrab(){
+  const id=_fichaTrabId;
+  const evId=(document.getElementById('trab-add-evento')||{}).value;
+  if(!evId){toast('Elige un evento','err');return;}
+  if(EVENTO_PERSONAS.some(e=>e.evento_id===evId&&e.persona_id===id)){toast('Ya está asignado a ese evento','err');return;}
+  const per=PERSONAS.find(p=>p.id===id);
+  const vRaw=(document.getElementById('trab-add-importe')||{}).value;
+  const importe=(vRaw===''||vRaw==null)?((per&&per.coste_por_evento)||0):(parseFloat(vRaw)||0);
+  try{await sb.from('evento_personas').insert({user_id:currentUser.id,evento_id:evId,persona_id:id,importe:importe,pagado:false});}catch(e){}
+  await loadAllData();
+  renderFichaTrabajador();
+  try{renderPersonas();}catch(e){}
+  toast('Añadido al evento');
+}
 function renderFichaTrabajador(){
   const id=_fichaTrabId; const per=PERSONAS.find(p=>p.id===id); if(!per) return;
   const sel=(document.getElementById('trab-periodo')||{}).value||'todo';
@@ -3523,7 +3537,16 @@ function renderFichaTrabajador(){
     <td style="text-align:right;font-weight:600">${fmt(x.ap.importe||0)} €</td>
     <td>${x.ap.pagado?'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Pagado</span>':'<span class="badge" style="background:#FEF3E2;color:#92400E">Pendiente</span>'}</td>
   </tr>`).join('');
+  const yaAsig=new Set(EVENTO_PERSONAS.filter(e=>e.persona_id===id).map(e=>e.evento_id));
+  const evOpts=EVENTOS.filter(e=>!yaAsig.has(e.id)).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))).map(e=>{const cli=CLIENTES.find(c=>c.id===e.cliente_id);return '<option value="'+e.id+'">'+(cli?cli.nombre:'—')+' — '+(fmtDate(e.fecha)||'sin fecha')+'</option>';}).join('');
+  const _tarifa=(per.coste_por_evento!=null?per.coste_por_evento:'');
   document.getElementById('modal-trabajador-body').innerHTML=`
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:600">Añadir a un evento:</span>
+      <select id="trab-add-evento" class="finput" style="flex:1;min-width:180px;font-size:13px;padding:6px 10px"><option value="">Elige evento...</option>${evOpts}</select>
+      <input id="trab-add-importe" type="number" class="finput" placeholder="€" value="${_tarifa}" style="width:90px;font-size:13px;padding:6px 10px">
+      <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="asignarEventoATrab()">+ Añadir</button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
       <div class="metric-card accent"><div class="metric-label">Ganado</div><div class="metric-value">${fmt(ganado)} €</div></div>
       <div class="metric-card"><div class="metric-label">Pagado</div><div class="metric-value" style="color:#0F6E56">${fmt(pagado)} €</div></div>
