@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-B</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-C</div>
 </nav>
 
 <main class="content">
@@ -4158,14 +4158,19 @@ async function guardarEvento(){
   if(editandoEventoId){
     await sb.from('eventos').update(payload).eq('id',editandoEventoId);
     await sb.from('evento_equipo').delete().eq('evento_id',editandoEventoId);
-    await sb.from('evento_personas').delete().eq('evento_id',editandoEventoId);
     await sb.from('evento_costes').delete().eq('evento_id',editandoEventoId);
+    const _prev=EVENTO_PERSONAS.filter(e=>e.evento_id===editandoEventoId);
+    const _prevIds=_prev.map(e=>e.persona_id);
+    const _quitar=_prev.filter(e=>!personaIds.includes(e.persona_id)).map(e=>e.persona_id);
+    const _anadir=personaIds.filter(pid=>!_prevIds.includes(pid));
+    if(_quitar.length)await sb.from('evento_personas').delete().eq('evento_id',editandoEventoId).in('persona_id',_quitar);
+    if(_anadir.length)await sb.from('evento_personas').insert(_anadir.map(pid=>{const per=PERSONAS.find(x=>x.id===pid);return{user_id:currentUser.id,evento_id:editandoEventoId,persona_id:pid,importe:(per&&per.coste_por_evento)||0,pagado:false};}));
   } else {
     const {data}=await sb.from('eventos').insert({...payload,user_id:currentUser.id}).select().single();
     eventoId=data.id;
+    if(personaIds.length)await sb.from('evento_personas').insert(personaIds.map(pid=>{const per=PERSONAS.find(x=>x.id===pid);return{user_id:currentUser.id,evento_id:eventoId,persona_id:pid,importe:(per&&per.coste_por_evento)||0,pagado:false};}));
   }
   if(equipoIds.length)await sb.from('evento_equipo').insert(equipoIds.map(id=>({user_id:currentUser.id,evento_id:eventoId,equipo_id:id})));
-  if(personaIds.length)await sb.from('evento_personas').insert(personaIds.map(id=>({user_id:currentUser.id,evento_id:eventoId,persona_id:id})));
   const costesValidos=costeRows.filter(r=>r.concepto&&r.importe>0);
   if(costesValidos.length){
     await sb.from('evento_costes').insert(costesValidos.map(r=>({user_id:currentUser.id,evento_id:eventoId,concepto:r.concepto,importe:r.importe})));
@@ -4239,6 +4244,37 @@ async function editarEvento(id){
   openModal('modal-evento');
 }
 
+function renderTrabajadoresEvento(id){
+  const aps=EVENTO_PERSONAS.filter(e=>e.evento_id===id);
+  if(!aps.length) return '';
+  const filas=aps.map(ap=>{
+    const per=PERSONAS.find(x=>x.id===ap.persona_id);
+    const nom=per?per.nombre:'—';
+    const imp=(ap.importe!=null?ap.importe:'');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border-radius:8px;padding:8px 12px">
+      <span style="font-weight:600;font-size:13px">${nom}</span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <input type="number" value="${imp}" onchange="actualizarImporteTrab('${id}','${ap.persona_id}',this.value)" style="width:85px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;text-align:right"> €
+        <button onclick="togglePagadoTrab('${id}','${ap.persona_id}')" style="border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;background:${ap.pagado?'#E1F5EE':'#FEF3E2'};color:${ap.pagado?'#0F6E56':'#92400E'}">${ap.pagado?'Pagado':'Pendiente'}</button>
+      </span>
+    </div>`;
+  }).join('');
+  return `<div class="flabel" style="margin-bottom:6px">Trabajadores</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">${filas}</div>`;
+}
+async function actualizarImporteTrab(eventoId, personaId, val){
+  const v=(val===''||val==null)?null:(parseFloat(val)||0);
+  try{await sb.from('evento_personas').update({importe:v}).eq('evento_id',eventoId).eq('persona_id',personaId);}catch(e){}
+  const ap=EVENTO_PERSONAS.find(e=>e.evento_id===eventoId&&e.persona_id===personaId);if(ap)ap.importe=v;
+  verEventoFull(eventoId);
+}
+async function togglePagadoTrab(eventoId, personaId){
+  const ap=EVENTO_PERSONAS.find(e=>e.evento_id===eventoId&&e.persona_id===personaId);
+  const nuevo=!(ap&&ap.pagado);
+  const hoy=new Date().toISOString().slice(0,10);
+  try{await sb.from('evento_personas').update({pagado:nuevo,fecha_pago:nuevo?hoy:null}).eq('evento_id',eventoId).eq('persona_id',personaId);}catch(e){}
+  if(ap){ap.pagado=nuevo;ap.fecha_pago=nuevo?hoy:null;}
+  verEventoFull(eventoId);
+}
 async function verEventoFull(id){
   const ev=EVENTOS.find(x=>x.id===id);if(!ev)return;
   const c=CLIENTES.find(x=>x.id===ev.cliente_id);
@@ -4247,9 +4283,10 @@ async function verEventoFull(id){
   const perAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===id).map(e=>{const p=PERSONAS.find(x=>x.id===e.persona_id);return p;}).filter(Boolean);
   const costes=EVENTO_COSTES.filter(e=>e.evento_id===id);
   const totalCostes=costes.reduce((a,e)=>a+Number(e.importe||0),0);
-  const costPersonas=perAsig.reduce((a,p)=>a+Number(p.coste_por_evento||0),0);
+  const perAsigFull=EVENTO_PERSONAS.filter(e=>e.evento_id===id);
+  const costPersonas=perAsigFull.reduce((a,ap)=>a+Number(ap.importe||0),0);
   const totalCostesTotal=totalCostes+costPersonas;
-  const ingresos=(c&&Number(c.importe_total)>0)?Number(c.importe_total):(srv?Number(srv.precio_base||0):0);
+  const ingresos=totalEvento(ev);
   const margen=ingresos-totalCostesTotal;
   const facs=FACTURAS.filter(f=>f.cliente_id===ev.cliente_id);
   document.getElementById('evento-full-title').textContent=(c?c.nombre:'Evento')+' — '+fmtDate(ev.fecha);
@@ -4271,13 +4308,13 @@ async function verEventoFull(id){
     </div>
 
     ${eqAsig.length?`<div class="flabel" style="margin-bottom:6px">Equipo asignado</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${eqAsig.map(eq=>'<span class="badge badge-blue">'+eq.nombre+'</span>').join('')}</div>`:''}
-    ${perAsig.length?`<div class="flabel" style="margin-bottom:6px">Personas</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${perAsig.map(p=>'<span class="badge badge-gray">'+p.nombre+(p.coste_por_evento>0?' ('+fmt(p.coste_por_evento)+' €)':'')+' </span>').join('')}</div>`:''}
+    ${renderTrabajadoresEvento(id)}
 
     <div class="flabel" style="margin-bottom:8px">P&L del evento</div>
     <div style="background:var(--surface);border-radius:10px;padding:14px 16px;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>Ingresos contratados</span><span style="font-weight:600">${fmt(ingresos)} €</span></div>
       ${costes.map(co=>'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ink-soft)"><span>'+co.concepto+'</span><span>−'+fmt(co.importe)+' €</span></div>').join('')}
-      ${perAsig.filter(p=>p.coste_por_evento>0).map(p=>'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ink-soft)"><span>'+p.nombre+'</span><span>−'+fmt(p.coste_por_evento)+' €</span></div>').join('')}
+      ${perAsigFull.filter(ap=>Number(ap.importe||0)>0).map(ap=>{const per=PERSONAS.find(x=>x.id===ap.persona_id);return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ink-soft)"><span>'+(per?per.nombre:'—')+(ap.pagado?' ✓':'')+'</span><span>−'+fmt(ap.importe)+' €</span></div>';}).join('')}
       <div style="display:flex;justify-content:space-between;padding:8px 0 4px;font-size:14px;font-weight:700;border-top:1px solid var(--line);margin-top:4px"><span>Margen</span><span style="color:${margen>=0?'#0F6E56':'#A32D2D'}">${fmt(margen)} €</span></div>
     </div>
 
