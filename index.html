@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-A</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-B</div>
 </nav>
 
 <main class="content">
@@ -839,6 +839,17 @@ tr:hover td{background:#FAFBFF}
       <button class="btn-secondary" onclick="limpiarFirmaPrest()" style="margin-top:8px">Limpiar</button>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-firma-prest')">Cancelar</button><button class="btn-primary" onclick="guardarFirmaPrest()">Guardar firma</button></div>
+  </div>
+</div>
+<div id="modal-total-evento" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-total-evento')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Editar total del evento</span><button class="btn-icon" onclick="closeModal('modal-total-evento')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="te-evento-id">
+      <div class="form-row full"><div><label class="flabel">Total del evento (€)</label><input id="te-importe" type="number" class="finput" placeholder="0.00"></div></div>
+      <div style="font-size:11px;color:var(--ink-soft)">Este importe manda sobre el presupuesto. Déjalo vacío para volver al cálculo automático (presupuesto / cobrado).</div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-total-evento')">Cancelar</button><button class="btn-primary" onclick="guardarTotalEvento()">Guardar</button></div>
   </div>
 </div>
 <div id="modal-total-contratado" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-total-contratado')">
@@ -2459,6 +2470,24 @@ async function autoFillFacDesdePres(){
   renderLineasFac();calcFacTotales();
 }
 
+async function crearOvincularEventoFactura(facturaId, clienteId){
+  const cli = CLIENTES.find(x=>x.id===clienteId); if(!cli) return;
+  let evs = EVENTOS.filter(e=>e.cliente_id===clienteId);
+  let eventoId=null;
+  if(evs.length===0){
+    const hoy=new Date().toISOString().slice(0,10);
+    const payload={user_id:currentUser.id,cliente_id:clienteId,fecha:cli.fecha_evento||null,ubicacion:cli.ubicacion_evento||'',titulo:cli.servicios_interes||null,estado:(cli.fecha_evento&&cli.fecha_evento<hoy)?'Completado':'Confirmado',notas:cli.servicios_interes||''};
+    const {data,error}=await sb.from('eventos').insert(payload).select().single();
+    if(error||!data) return;
+    eventoId=data.id;
+    try{await sb.from('presupuestos').update({evento_id:eventoId}).eq('cliente_id',clienteId).is('evento_id',null);}catch(e){}
+    try{await sb.from('contratos').update({evento_id:eventoId}).eq('cliente_id',clienteId).is('evento_id',null);}catch(e){}
+  } else {
+    evs=evs.slice().sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+    eventoId=evs[0].id;
+  }
+  try{await sb.from('facturas').update({evento_id:eventoId}).eq('id',facturaId);}catch(e){}
+}
 async function guardarFactura(){
   const clienteId=document.getElementById('fc-cliente').value;
   const c=CLIENTES.find(x=>x.id===clienteId);
@@ -2482,6 +2511,7 @@ async function guardarFactura(){
   await logActividad(clienteId,'Factura '+payload.numero+' creada ('+fmt(total)+' €)','\uD83E\uDDFE');
   const lineasFinalF=descEurF>0?lineasValidas.concat([{descripcion:'Descuento '+descPctF+'%',detalle:'',precio_unitario:-descEurF,unidades:1}]):lineasValidas;
   await sb.from('factura_lineas').insert(lineasFinalF.map((l,i)=>({user_id:currentUser.id,factura_id:data.id,descripcion:l.descripcion,detalle:l.detalle||'',precio_unitario:l.precio_unitario||0,unidades:l.unidades||1,orden:i})));
+  await crearOvincularEventoFactura(data.id, clienteId);
   // Si es factura formal y el cliente no tiene importe_total, pedirlo
   if(tipo==='formal'){
     const cliente=CLIENTES.find(x=>x.id===clienteId);
@@ -5026,6 +5056,23 @@ function totalEvento(ev){
   if(Number(ev.importe_total||0)>0) return Number(ev.importe_total);
   return cobradoEvento(ev);
 }
+function editarTotalEvento(id){
+  const ev=EVENTOS.find(e=>e.id===id); if(!ev) return;
+  document.getElementById('te-evento-id').value=id;
+  document.getElementById('te-importe').value=(ev.total_forzado!=null&&ev.total_forzado!=='')?ev.total_forzado:'';
+  openModal('modal-total-evento');
+}
+async function guardarTotalEvento(){
+  const id=document.getElementById('te-evento-id').value;
+  const v=document.getElementById('te-importe').value;
+  const val=(v===''||v==null)?null:(parseFloat(v)||0);
+  try{await sb.from('eventos').update({total_forzado:val}).eq('id',id);}catch(e){}
+  const ev=EVENTOS.find(e=>e.id===id); if(ev) ev.total_forzado=val;
+  closeModal('modal-total-evento');
+  await loadAllData();
+  if(fichaClienteId){const cc=CLIENTES.find(x=>x.id===fichaClienteId);const body=document.getElementById('ficha-body');if(cc&&body&&fichaTabActual==='eventos')body.innerHTML=renderFichaEventos(cc);}
+  toast('Total del evento actualizado');
+}
 function renderFichaEventos(c){
   const evs = EVENTOS.filter(e=>e.cliente_id===c.id);
   if(!evs.length) return `
@@ -5055,6 +5102,7 @@ function renderFichaEventos(c){
         <div style="background:#EAF7F0;border-radius:8px;padding:7px 8px"><div style="font-size:9px;color:#0F6E56;text-transform:uppercase;letter-spacing:.03em">Cobrado</div><div style="font-weight:700;font-size:13px;color:#0F6E56">${fmt(_cobr)} €</div></div>
         <div style="background:${_pend>0?'#FDECEC':'#EAF7F0'};border-radius:8px;padding:7px 8px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.03em;color:${_pend>0?'#C0392B':'#0F6E56'}">Pendiente</div><div style="font-weight:700;font-size:13px;color:${_pend>0?'#C0392B':'#0F6E56'}">${fmt(_pend)} €</div></div>
       </div>
+      <div style="margin-top:8px;text-align:right"><button onclick="event.stopPropagation();editarTotalEvento('${ev.id}')" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--ink-soft)">✎ Editar total</button></div>
     </div>`;
   }).join('') + `<div style="margin-top:8px"><button class="btn-secondary" onclick="closeFicha();crearEventoDesdeCliente('${c.id}')">+ Nuevo evento</button></div>`;
 }
