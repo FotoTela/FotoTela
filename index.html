@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-C</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-D</div>
 </nav>
 
 <main class="content">
@@ -839,6 +839,23 @@ tr:hover td{background:#FAFBFF}
       <button class="btn-secondary" onclick="limpiarFirmaPrest()" style="margin-top:8px">Limpiar</button>
     </div>
     <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal-firma-prest')">Cancelar</button><button class="btn-primary" onclick="guardarFirmaPrest()">Guardar firma</button></div>
+  </div>
+</div>
+<div id="modal-trabajador" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-trabajador')">
+  <div class="modal wide">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-trabajador-title">Trabajador</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="trab-periodo" class="finput" style="font-size:12px;padding:6px 10px" onchange="renderFichaTrabajador()">
+          <option value="todo">Todo</option>
+          <option value="mes">Este mes</option>
+          <option value="tri">Este trimestre</option>
+          <option value="ano">Este año</option>
+        </select>
+        <button class="btn-icon" onclick="closeModal('modal-trabajador')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modal-trabajador-body"></div>
   </div>
 </div>
 <div id="modal-total-evento" class="modal-overlay" style="display:none;z-index:800" onclick="if(event.target===this)closeModal('modal-total-evento')">
@@ -3473,6 +3490,53 @@ async function initPersonas(){
   }
 }
 
+let _fichaTrabId=null;
+function verFichaTrabajador(id){
+  _fichaTrabId=id;
+  const per=PERSONAS.find(p=>p.id===id);
+  document.getElementById('modal-trabajador-title').textContent=(per?per.nombre:'Trabajador');
+  const selp=document.getElementById('trab-periodo'); if(selp) selp.value='todo';
+  renderFichaTrabajador();
+  openModal('modal-trabajador');
+}
+function _periodoRango(sel){
+  const hoy=new Date();const y=hoy.getFullYear();const pad=n=>String(n).padStart(2,'0');
+  if(sel==='mes'){const m=hoy.getMonth();return [y+'-'+pad(m+1)+'-01', y+'-'+pad(m+1)+'-31'];}
+  if(sel==='tri'){const m0=Math.floor(hoy.getMonth()/3)*3;return [y+'-'+pad(m0+1)+'-01', y+'-'+pad(m0+3)+'-31'];}
+  if(sel==='ano'){return [y+'-01-01', y+'-12-31'];}
+  return [null,null];
+}
+function renderFichaTrabajador(){
+  const id=_fichaTrabId; const per=PERSONAS.find(p=>p.id===id); if(!per) return;
+  const sel=(document.getElementById('trab-periodo')||{}).value||'todo';
+  const r=_periodoRango(sel); const ini=r[0], fin=r[1];
+  let rows=EVENTO_PERSONAS.filter(e=>e.persona_id===id).map(ap=>{
+    const ev=EVENTOS.find(x=>x.id===ap.evento_id);
+    const cli=ev?CLIENTES.find(c=>c.id===ev.cliente_id):null;
+    return {ap:ap, ev:ev, cli:cli, fecha:(ev?ev.fecha:null)};
+  }).filter(x=>x.ev);
+  if(ini&&fin) rows=rows.filter(x=>x.fecha && x.fecha>=ini && x.fecha<=fin);
+  rows.sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+  const ganado=rows.reduce((a,x)=>a+Number(x.ap.importe||0),0);
+  const pagado=rows.filter(x=>x.ap.pagado).reduce((a,x)=>a+Number(x.ap.importe||0),0);
+  const pend=ganado-pagado;
+  const filas=rows.map(x=>`<tr>
+    <td>${fmtDate(x.fecha)}</td>
+    <td>${x.cli?x.cli.nombre:'—'}</td>
+    <td style="text-align:right;font-weight:600">${fmt(x.ap.importe||0)} €</td>
+    <td>${x.ap.pagado?'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Pagado</span>':'<span class="badge" style="background:#FEF3E2;color:#92400E">Pendiente</span>'}</td>
+  </tr>`).join('');
+  document.getElementById('modal-trabajador-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="metric-card accent"><div class="metric-label">Ganado</div><div class="metric-value">${fmt(ganado)} €</div></div>
+      <div class="metric-card"><div class="metric-label">Pagado</div><div class="metric-value" style="color:#0F6E56">${fmt(pagado)} €</div></div>
+      <div class="metric-card"><div class="metric-label">Pendiente</div><div class="metric-value" style="color:${pend>0?'#C0392B':'#0F6E56'}">${fmt(pend)} €</div></div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Fecha</th><th>Cliente</th><th>Importe</th><th>Estado</th></tr></thead>
+      <tbody>${filas||'<tr><td colspan="4"><div class="empty">Sin eventos en este periodo.</div></td></tr>'}</tbody>
+    </table></div>`;
+}
 function renderPersonas(){
   const activos=PERSONAS.filter(p=>p.activo);
   const inactivos=PERSONAS.filter(p=>!p.activo);
@@ -3490,6 +3554,7 @@ function renderPersonas(){
     <td>${p.coste_por_evento>0?fmt(p.coste_por_evento)+' €/evento':'—'}</td>
     <td>${p.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-gray">Inactivo</span>'}</td>
     <td style="white-space:nowrap">
+      <button class="btn-icon" onclick="verFichaTrabajador('${p.id}')">Ficha</button>
       <button class="btn-icon blue" onclick="editarPersona('${p.id}')">Editar</button>
       <button class="btn-icon red" onclick="eliminarPersona('${p.id}')" style="margin-left:4px">Borrar</button>
     </td>
