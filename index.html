@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-F</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-G</div>
 </nav>
 
 <main class="content">
@@ -5199,13 +5199,17 @@ async function guardarTotalEvento(){
 }
 function _chipsTrabEvento(evId){
   const aps=EVENTO_PERSONAS.filter(e=>e.evento_id===evId);
-  if(!aps.length) return '';
+  const head='<div style="font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px">Trabajadores</div>';
+  if(!aps.length){
+    return `<div style="margin-top:8px">${head}<button onclick="event.stopPropagation();editarEvento('${evId}')" style="background:none;border:1px dashed var(--line);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;color:var(--ink-soft)">+ Asignar trabajador</button></div>`;
+  }
   const chips=aps.map(ap=>{
     const per=PERSONAS.find(x=>x.id===ap.persona_id);
     const col=ap.pagado?'#16A34A':'#E0A800';
-    return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:11px"><span style="width:7px;height:7px;border-radius:50%;background:'+col+'" title="'+(ap.pagado?'Pagado':'Pendiente')+'"></span>'+(per?per.nombre:'—')+(Number(ap.importe||0)?' · '+fmt(ap.importe)+' €':'')+'</span>';
+    const imp=Number(ap.importe||0)?' · '+fmt(ap.importe)+' €':'';
+    return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:11px"><span style="width:7px;height:7px;border-radius:50%;background:${col}" title="${ap.pagado?'Pagado':'Pendiente'}"></span>${per?per.nombre:'—'}${imp}</span>`;
   }).join('');
-  return '<div style="margin-top:8px"><div style="font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px">Trabajadores</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div></div>';
+  return `<div style="margin-top:8px">${head}<div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div></div>`;
 }
 function renderFichaEventos(c){
   const evs = EVENTOS.filter(e=>e.cliente_id===c.id);
