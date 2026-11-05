@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-H</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-I</div>
 </nav>
 
 <main class="content">
@@ -3503,6 +3503,26 @@ function _periodoRango(sel){
   if(sel==='ano'){return [y+'-01-01', y+'-12-31'];}
   return [null,null];
 }
+function trabBuscarEvento(){
+  const q=(document.getElementById('trab-add-buscar').value||'').toLowerCase();
+  document.getElementById('trab-add-evento').value='';
+  const id=_fichaTrabId;
+  const yaAsig=new Set(EVENTO_PERSONAS.filter(e=>e.persona_id===id).map(e=>e.evento_id));
+  let evs=EVENTOS.filter(e=>!yaAsig.has(e.id)).map(e=>{const cli=CLIENTES.find(c=>c.id===e.cliente_id);return {id:e.id,fecha:e.fecha,label:(cli?cli.nombre:'—')+' — '+(fmtDate(e.fecha)||'sin fecha')};});
+  if(q)evs=evs.filter(x=>x.label.toLowerCase().includes(q));
+  evs=evs.sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))).slice(0,30);
+  const box=document.getElementById('trab-add-results'); if(!box)return;
+  if(!q){box.style.display='none';box.innerHTML='';return;}
+  box.style.display='block';
+  box.innerHTML=evs.length?evs.map(x=>`<div style="padding:7px 10px;cursor:pointer;font-size:13px;border-radius:6px" onmousedown="trabSelEvento('${x.id}')" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background=''">${x.label}</div>`).join(''):'<div style="padding:8px;font-size:12px;color:var(--ink-soft)">Sin resultados</div>';
+}
+function trabSelEvento(evId){
+  const e=EVENTOS.find(x=>x.id===evId); const cli=e?CLIENTES.find(c=>c.id===e.cliente_id):null;
+  const label=(cli?cli.nombre:'—')+' — '+(e?(fmtDate(e.fecha)||'sin fecha'):'');
+  document.getElementById('trab-add-evento').value=evId;
+  document.getElementById('trab-add-buscar').value=label;
+  const box=document.getElementById('trab-add-results');box.style.display='none';box.innerHTML='';
+}
 async function asignarEventoATrab(){
   const id=_fichaTrabId;
   const evId=(document.getElementById('trab-add-evento')||{}).value;
@@ -3537,13 +3557,15 @@ function renderFichaTrabajador(){
     <td style="text-align:right;font-weight:600">${fmt(x.ap.importe||0)} €</td>
     <td>${x.ap.pagado?'<span class="badge" style="background:#E1F5EE;color:#0F6E56">Pagado</span>':'<span class="badge" style="background:#FEF3E2;color:#92400E">Pendiente</span>'}</td>
   </tr>`).join('');
-  const yaAsig=new Set(EVENTO_PERSONAS.filter(e=>e.persona_id===id).map(e=>e.evento_id));
-  const evOpts=EVENTOS.filter(e=>!yaAsig.has(e.id)).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))).map(e=>{const cli=CLIENTES.find(c=>c.id===e.cliente_id);return '<option value="'+e.id+'">'+(cli?cli.nombre:'—')+' — '+(fmtDate(e.fecha)||'sin fecha')+'</option>';}).join('');
   const _tarifa=(per.coste_por_evento!=null?per.coste_por_evento:'');
   document.getElementById('modal-trabajador-body').innerHTML=`
-    <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:12px;font-weight:600">Añadir a un evento:</span>
-      <select id="trab-add-evento" class="finput" style="flex:1;min-width:180px;font-size:13px;padding:6px 10px"><option value="">Elige evento...</option>${evOpts}</select>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:600;padding-top:7px">Añadir a un evento:</span>
+      <div style="position:relative;flex:1;min-width:200px">
+        <input id="trab-add-buscar" class="finput" placeholder="Busca cliente o fecha..." autocomplete="off" oninput="trabBuscarEvento()" onblur="setTimeout(function(){var b=document.getElementById('trab-add-results');if(b)b.style.display='none';},200)" style="font-size:13px;padding:6px 10px;width:100%">
+        <input type="hidden" id="trab-add-evento">
+        <div id="trab-add-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:8px;max-height:220px;overflow-y:auto;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.12);margin-top:2px;padding:4px"></div>
+      </div>
       <input id="trab-add-importe" type="number" class="finput" placeholder="€" value="${_tarifa}" style="width:90px;font-size:13px;padding:6px 10px">
       <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="asignarEventoATrab()">+ Añadir</button>
     </div>
