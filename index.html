@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-O</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-P</div>
 </nav>
 
 <main class="content">
@@ -1236,6 +1236,7 @@ tr:hover td{background:#FAFBFF}
           </select>
         </div>
       </div>
+      <div class="form-row full"><div><label class="flabel">Importe total del evento (€)</label><input id="ev-importe-total" type="number" step="0.01" class="finput" placeholder="Precio final acordado (lo que manda)"></div></div>
       <div class="form-row">
         <div><label class="flabel">Fecha *</label><input id="ev-fecha" type="date" class="finput"></div>
         <div><label class="flabel">Hora inicio</label><input id="ev-hora-ini" type="time" class="finput" onchange="actualizarHorarioEvento()"></div>
@@ -4221,7 +4222,7 @@ function abrirNuevoEvento(clienteIdPref){
   // Poblar servicio
   const srvSel=document.getElementById('ev-servicio');
   srvSel.innerHTML='<option value="">Sin servicio</option>';
-  SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);
+  SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre}</option>`);
   document.getElementById('ev-fecha').value='';
   document.getElementById('ev-ubicacion').value='';
   document.getElementById('ev-notas').value='';
@@ -4229,6 +4230,7 @@ function abrirNuevoEvento(clienteIdPref){
   const efh=document.getElementById('ev-hora-fin');if(efh)efh.value='';
   document.getElementById('ev-estado').value='Confirmado';
   document.getElementById('ev-servicio').value='';
+  {const _itn=document.getElementById('ev-importe-total');if(_itn){_itn.value='';_itn.placeholder='Precio final acordado (lo que manda)';}}
   document.getElementById('ev-conflicto').style.display='none';
   renderEquipoChecksEvento([]);
   renderPersonasChecksEvento([]);
@@ -4357,7 +4359,8 @@ async function guardarEvento(){
   const iniH=document.getElementById('ev-hora-ini').value;
   const finH=document.getElementById('ev-hora-fin').value;
   const horarioFinal=iniH&&finH?iniH+' - '+finH:iniH||finH||'';
-  const payload={cliente_id:clienteId,servicio_id:document.getElementById('ev-servicio').value||null,fecha,horario:horarioFinal,ubicacion:document.getElementById('ev-ubicacion').value,estado:document.getElementById('ev-estado').value,notas:document.getElementById('ev-notas').value};
+  const _impEv=document.getElementById('ev-importe-total');const _impVal=(_impEv&&_impEv.value!==''&&_impEv.value!=null)?(parseFloat(_impEv.value)||0):null;
+  const payload={cliente_id:clienteId,servicio_id:document.getElementById('ev-servicio').value||null,fecha,horario:horarioFinal,ubicacion:document.getElementById('ev-ubicacion').value,estado:document.getElementById('ev-estado').value,notas:document.getElementById('ev-notas').value,total_forzado:_impVal};
   let eventoId=editandoEventoId;
   if(editandoEventoId){
     await sb.from('eventos').update(payload).eq('id',editandoEventoId);
@@ -4428,7 +4431,7 @@ async function editarEvento(id){
   sel.value=ev.cliente_id||'';
   const srvSel=document.getElementById('ev-servicio');
   srvSel.innerHTML='<option value="">Sin servicio</option>';
-  SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre} — ${fmt(s.precio_base)} €</option>`);
+  SERVICIOS.filter(s=>s.activo).forEach(s=>srvSel.innerHTML+=`<option value="${s.id}">${s.nombre}</option>`);
   srvSel.value=ev.servicio_id||'';
   document.getElementById('ev-fecha').value=ev.fecha||'';
   // Rellenar hora inicio/fin desde el campo horario guardado
@@ -4438,6 +4441,7 @@ async function editarEvento(id){
   document.getElementById('ev-ubicacion').value=ev.ubicacion||'';
   document.getElementById('ev-estado').value=ev.estado||'Confirmado';
   document.getElementById('ev-notas').value=ev.notas||'';
+  {const _it=document.getElementById('ev-importe-total');if(_it){_it.value=(ev.total_forzado!=null&&ev.total_forzado!=='')?ev.total_forzado:'';_it.placeholder=fmt(totalEvento(ev))+' € (total actual)';}}
   document.getElementById('ev-conflicto').style.display='none';
   const equipoAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===id).map(e=>e.equipo_id);
   const personasAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===id).map(e=>e.persona_id);
