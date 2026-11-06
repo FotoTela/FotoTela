@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-J</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-K</div>
 </nav>
 
 <main class="content">
@@ -1852,8 +1852,8 @@ function _totalOv(id){try{const m=JSON.parse(localStorage.getItem('ft_total')||'
 function _setTotalOv(id,imp,con){try{const m=JSON.parse(localStorage.getItem('ft_total')||'{}');m[id]={importe:imp,concepto:con};localStorage.setItem('ft_total',JSON.stringify(m));}catch(e){}}
 function conceptoContratado(c){const ov=_totalOv(c.id);return (ov&&ov.concepto!=null&&ov.concepto!=='')?ov.concepto:(c.servicios_interes||'');}
 function totalContratadoCliente(c){
-  const ct=CONTRATOS.find(x=>x.cliente_id===c.id&&Number(x.importe_total)>0);
-  if(ct)return Number(ct.importe_total);
+  const evs=EVENTOS.filter(e=>e.cliente_id===c.id);
+  if(evs.length) return evs.reduce((a,ev)=>a+totalEvento(ev),0);
   const ov=_totalOv(c.id);
   if(ov&&ov.importe!=null&&ov.importe!=='')return Number(ov.importe);
   return Number(c.importe_total||0);
@@ -5087,10 +5087,10 @@ function renderFichaResumen(c){
         <div class="ficha-card-title">Resumen financiero</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <span style="background:${estadoColor[estado]||'#F5F5F5'};color:${estadoText[estado]||'#9CA0AA'};padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600">${estado}</span>
-          <span onclick="togglePagoCliente('${c.id}')" title="Clic para marcar Pagado / Pendiente" style="cursor:pointer;font-size:13px;font-weight:600;color:${estadoPagoCliente(c)==='pagado'?'#0F6E56':(estadoPagoCliente(c)==='pendiente'?'#C0392B':'#9CA0AA')}">${estadoPagoCliente(c)==='pagado'?'✓ Pagado':(estadoPagoCliente(c)==='pendiente'?(pend>0?'Falta '+fmt(pend)+' €':'Pendiente ▸'):'Marcar pago ▸')}</span>
+          <span style="font-size:13px;font-weight:600;color:${pend<=0?'#0F6E56':'#C0392B'}">${pend<=0?'✓ Pagado':'Falta '+fmt(pend)+' €'}</span>
         </div>
         <div style="background:linear-gradient(135deg,var(--brand) 0%,#4A6CF7 100%);border-radius:12px;padding:14px 16px;margin-bottom:12px;color:#fff">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><div style="font-size:11px;opacity:.8;letter-spacing:.03em">TOTAL CONTRATADO</div><button onclick="editarTotalContratado('${c.id}')" title="Editar total contratado" style="background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600">✎ Editar</button></div>
+          <div style="font-size:11px;opacity:.8;letter-spacing:.03em;margin-bottom:2px">TOTAL CONTRATADO</div>
           <div style="font-size:24px;font-weight:800">${fmt(totalContratadoCliente(c))} €</div>
           ${conceptoContratado(c)?`<div style="font-size:11px;opacity:.85;margin-top:3px">${conceptoContratado(c)}</div>`:''}
         </div>
