@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-P</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-Q</div>
 </nav>
 
 <main class="content">
@@ -1243,6 +1243,7 @@ tr:hover td{background:#FAFBFF}
       </div>
       <div class="form-row">
         <div><label class="flabel">Hora fin</label><input id="ev-hora-fin" type="time" class="finput" onchange="actualizarHorarioEvento()"></div>
+        <div><label class="flabel">Duración</label><input id="ev-duracion" class="finput" placeholder="Ej: 3h"></div>
       </div>
       <div class="form-row full"><div><label class="flabel">Ubicación</label><input id="ev-ubicacion" class="finput"></div></div>
 
@@ -4231,6 +4232,7 @@ function abrirNuevoEvento(clienteIdPref){
   document.getElementById('ev-estado').value='Confirmado';
   document.getElementById('ev-servicio').value='';
   {const _itn=document.getElementById('ev-importe-total');if(_itn){_itn.value='';_itn.placeholder='Precio final acordado (lo que manda)';}}
+  {const _dn=document.getElementById('ev-duracion');if(_dn)_dn.value='';}
   document.getElementById('ev-conflicto').style.display='none';
   renderEquipoChecksEvento([]);
   renderPersonasChecksEvento([]);
@@ -4360,7 +4362,7 @@ async function guardarEvento(){
   const finH=document.getElementById('ev-hora-fin').value;
   const horarioFinal=iniH&&finH?iniH+' - '+finH:iniH||finH||'';
   const _impEv=document.getElementById('ev-importe-total');const _impVal=(_impEv&&_impEv.value!==''&&_impEv.value!=null)?(parseFloat(_impEv.value)||0):null;
-  const payload={cliente_id:clienteId,servicio_id:document.getElementById('ev-servicio').value||null,fecha,horario:horarioFinal,ubicacion:document.getElementById('ev-ubicacion').value,estado:document.getElementById('ev-estado').value,notas:document.getElementById('ev-notas').value,total_forzado:_impVal};
+  const payload={cliente_id:clienteId,servicio_id:document.getElementById('ev-servicio').value||null,fecha,horario:horarioFinal,ubicacion:document.getElementById('ev-ubicacion').value,estado:document.getElementById('ev-estado').value,notas:document.getElementById('ev-notas').value,total_forzado:_impVal,duracion:(document.getElementById('ev-duracion')?document.getElementById('ev-duracion').value:null)};
   let eventoId=editandoEventoId;
   if(editandoEventoId){
     await sb.from('eventos').update(payload).eq('id',editandoEventoId);
@@ -4442,6 +4444,7 @@ async function editarEvento(id){
   document.getElementById('ev-estado').value=ev.estado||'Confirmado';
   document.getElementById('ev-notas').value=ev.notas||'';
   {const _it=document.getElementById('ev-importe-total');if(_it){_it.value=(ev.total_forzado!=null&&ev.total_forzado!=='')?ev.total_forzado:'';_it.placeholder=fmt(totalEvento(ev))+' € (total actual)';}}
+  {const _d=document.getElementById('ev-duracion');if(_d)_d.value=ev.duracion||'';}
   document.getElementById('ev-conflicto').style.display='none';
   const equipoAsig=EVENTO_EQUIPO.filter(e=>e.evento_id===id).map(e=>e.equipo_id);
   const personasAsig=EVENTO_PERSONAS.filter(e=>e.evento_id===id).map(e=>e.persona_id);
@@ -4530,7 +4533,7 @@ async function verEventoFull(id){
         ${srv?'<div style="font-size:12px;color:var(--ink-soft)">'+fmt(srv.precio_base)+' € base</div>':''}
       </div>
       <div><div class="flabel">Fecha</div><div style="font-weight:600">${fmtDate(ev.fecha)}</div></div>
-      <div><div class="flabel">Horario</div><div>${ev.horario||'—'}</div></div>
+      <div><div class="flabel">Horario</div><div>${ev.horario||'—'}${ev.duracion?' · '+ev.duracion:''}</div></div>
       <div style="grid-column:1/-1"><div class="flabel">Ubicación</div><div>${ev.ubicacion||'—'}</div></div>
     </div>
 
@@ -5373,7 +5376,7 @@ function renderFichaEventos(c){
         <div><div style="font-weight:700">${fmtDate(ev.fecha)}</div><div style="font-size:12px;color:var(--brand)">${srv?srv.nombre:'Sin servicio'}</div></div>
         <span class="badge badge-blue">${ev.estado}</span>
       </div>
-      ${ev.horario?'<div style="font-size:12px;color:var(--ink-soft)">🕐 '+ev.horario+'</div>':''}
+      ${(ev.horario||ev.duracion)?'<div style="font-size:12px;color:var(--ink-soft)">🕐 '+(ev.horario||'')+(ev.duracion?' · '+ev.duracion:'')+'</div>':''}
       ${ev.ubicacion?'<div style="font-size:12px;color:var(--ink-soft)">📍 '+ev.ubicacion+'</div>':''}
       ${eqAsig.length?'<div style="font-size:12px;color:var(--ink-soft)">🔧 '+eqAsig.join(', ')+'</div>':''}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px">
