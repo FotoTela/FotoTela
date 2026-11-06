@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-N</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-O</div>
 </nav>
 
 <main class="content">
@@ -706,7 +706,7 @@ tr:hover td{background:#FAFBFF}
   <!-- Detalle por trimestre -->
   <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">Por trimestre (estimación 303 / 130)</div>
   <div class="table-wrap" style="margin-bottom:24px"><table>
-    <thead><tr><th>Trimestre</th><th>Facturado</th><th>Gastos</th><th>IVA repercutido</th><th>IVA soportado</th><th>IVA a liquidar</th><th>Beneficio</th></tr></thead>
+    <thead><tr><th>Trimestre</th><th>Facturado</th><th>Gastos</th><th>IVA repercutido</th><th>IVA soportado</th><th>IVA a liquidar</th><th>Trabajadores</th><th>Beneficio</th></tr></thead>
     <tbody id="gan-trimestral"></tbody>
   </table></div>
 
@@ -3933,8 +3933,9 @@ function renderGanancias(){
     const gas=gGas.reduce((a,g)=>a+Number(g.importe||0),0);
     const ivaRep=fFac.filter(f=>f.tipo==='formal').reduce((a,f)=>a+Number(f.iva_eur||0),0);
     const ivaSop=gGas.reduce((a,g)=>a+Number(g.iva||0),0);
-    const ivaLiq=ivaRep-ivaSop, ben=fac-gas;
-    if(fac===0&&gas===0)return'';
+    const trabQ=EVENTO_PERSONAS.reduce((a,ap)=>{const ev=EVENTOS.find(e=>e.id===ap.evento_id);const d=ev&&ev.fecha?new Date(ev.fecha+'T00:00:00'):null;return a+((d&&d.getFullYear()===year&&inQ(d))?Number(ap.importe||0):0);},0);
+    const ivaLiq=ivaRep-ivaSop, ben=fac-gas-trabQ;
+    if(fac===0&&gas===0&&trabQ===0)return'';
     return`<tr>
       <td style="font-weight:600">T${qn} ${year}</td>
       <td>${fmt(fac)} €</td>
@@ -3942,10 +3943,11 @@ function renderGanancias(){
       <td>${fmt(ivaRep)} €</td>
       <td style="color:var(--ink-soft)">${fmt(ivaSop)} €</td>
       <td style="font-weight:600;color:${ivaLiq>=0?'#A32D2D':'#0F6E56'}">${fmt(ivaLiq)} €</td>
+      <td style="color:#A32D2D">${trabQ>0?'−'+fmt(trabQ)+' €':'—'}</td>
       <td style="font-weight:600;color:${ben>=0?'#0F6E56':'#A32D2D'}">${fmt(ben)} €</td>
     </tr>`;
   }).filter(Boolean);
-  document.getElementById('gan-trimestral').innerHTML=triFilas.length?triFilas.join(''):'<tr><td colspan="7"><div class="empty">Sin datos para '+year+'.</div></td></tr>';
+  document.getElementById('gan-trimestral').innerHTML=triFilas.length?triFilas.join(''):'<tr><td colspan="8"><div class="empty">Sin datos para '+year+'.</div></td></tr>';
 
   // === RESUMEN FISCAL ===
   const ivaDevH=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.iva_eur||0),0);
