@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-K</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-L</div>
 </nav>
 
 <main class="content">
@@ -3874,6 +3874,7 @@ function renderGanancias(){
   const gastNuria=gastosAno.filter(g=>g.asignado_a==='Nuria').reduce((a,g)=>a+Number(g.importe||0),0);
   const gastEmpresa=gastosAno.filter(g=>g.asignado_a==='empresa').reduce((a,g)=>a+Number(g.importe||0),0);
   const gastTotal=gastHenry+gastNuria+gastEmpresa;
+  const costeTrabAno=EVENTO_PERSONAS.reduce((a,ap)=>{const ev=EVENTOS.find(e=>e.id===ap.evento_id);const d=ev&&ev.fecha?new Date(ev.fecha+'T00:00:00'):null;return a+((d&&d.getFullYear()===year)?Number(ap.importe||0):0);},0);
 
   const ganHenry=facHenry-gastHenry;
   const ganNuria=facNuria-gastNuria;
@@ -3885,7 +3886,9 @@ function renderGanancias(){
     <div class="metric-card"><div class="metric-label">Ganancias Henry</div><div class="metric-value" style="${colorGan(ganHenry)}">${fmt(ganHenry)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos Henry: ${fmt(gastHenry)} €</div></div>
     <div class="metric-card"><div class="metric-label">Ganancias Núria</div><div class="metric-value" style="${colorGan(ganNuria)}">${fmt(ganNuria)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos Núria: ${fmt(gastNuria)} €</div></div>
     <div class="metric-card"><div class="metric-label">Caja común</div><div class="metric-value" style="${colorGan(ganComun)}">${fmt(ganComun)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos empresa: ${fmt(gastEmpresa)} €</div></div>
-    <div class="metric-card accent"><div class="metric-label">Total neto ${year}</div><div class="metric-value">${fmt(ganTotal)} €</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px">Gastos totales: ${fmt(gastTotal)} €</div></div>`;
+    <div class="metric-card"><div class="metric-label">Neto (fact. − gastos)</div><div class="metric-value" style="${colorGan(ganTotal)}">${fmt(ganTotal)} €</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">Gastos: ${fmt(gastTotal)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Pago a trabajadores</div><div class="metric-value" style="color:#A32D2D">−${fmt(costeTrabAno)} €</div></div>
+    <div class="metric-card accent"><div class="metric-label">Beneficio final ${year}</div><div class="metric-value">${fmt(ganTotal-costeTrabAno)} €</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px">Tras pagar al equipo</div></div>`;
 
   // === DETALLE MENSUAL ===
   const filasMes=meses.map((mes,i)=>{
