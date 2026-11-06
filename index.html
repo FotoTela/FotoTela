@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-L</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-M</div>
 </nav>
 
 <main class="content">
@@ -4424,6 +4424,25 @@ async function verEventoFull(id){
   const ingresos=totalEvento(ev);
   const margen=ingresos-totalCostesTotal;
   const facs=FACTURAS.filter(f=>f.cliente_id===ev.cliente_id);
+  // Fase 2b · desglose de servicios desde el documento vinculado
+  let lineasDesglose=[], fuenteDesglose='';
+  const presEv=PRESUPUESTOS.filter(p=>p.evento_id===id);
+  if(presEv.length){
+    const acept=presEv.filter(p=>String(p.estado||'').toLowerCase().includes('acept'));
+    const psel=(acept.length?acept:presEv).reduce((a,b)=>Number(b.total||0)>Number(a.total||0)?b:a);
+    try{const {data}=await sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',psel.id).order('orden');lineasDesglose=data||[];fuenteDesglose='Presupuesto '+(psel.numero||'');}catch(e){}
+  }
+  if(!lineasDesglose.length){
+    const facEv=FACTURAS.filter(f=>f.evento_id===id&&f.tipo!=='efectivo');
+    if(facEv.length){const fsel=facEv.reduce((a,b)=>Number(b.total||0)>Number(a.total||0)?b:a);try{const {data}=await sb.from('factura_lineas').select('*').eq('factura_id',fsel.id).order('orden');lineasDesglose=data||[];fuenteDesglose='Factura '+(fsel.numero||'');}catch(e){}}
+  }
+  const _sub=l=>Number(l.precio_unitario||0)*Number(l.unidades||1);
+  const desgloseHtml=lineasDesglose.length?`
+    <div class="flabel" style="margin-bottom:6px">Servicios contratados <span style="font-weight:400;color:var(--ink-soft)">· ${fuenteDesglose}</span></div>
+    <div style="background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      ${lineasDesglose.map(l=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)"><span><span style="font-weight:600">${l.descripcion||'—'}</span>${Number(l.unidades||1)>1?' <span style="color:var(--ink-soft)">×'+l.unidades+'</span>':''}${l.detalle?'<div style=\'font-size:11px;color:var(--ink-soft)\'>'+l.detalle+'</div>':''}</span><span style="font-weight:600;white-space:nowrap">${fmt(_sub(l))} €</span></div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:9px 0 2px;font-size:13px;font-weight:700"><span>Total servicios</span><span>${fmt(lineasDesglose.reduce((a,l)=>a+_sub(l),0))} €</span></div>
+    </div>`:'';
   document.getElementById('evento-full-title').textContent=(c?c.nombre:'Evento')+' — '+fmtDate(ev.fecha);
   document.getElementById('evento-full-edit-btn').onclick=()=>{closeModal('modal-evento-full');editarEvento(id);};
   {var _db=document.getElementById('evento-full-del-btn');if(_db)_db.onclick=function(){closeModal('modal-evento-full');eliminarEvento(id);};}
@@ -4442,6 +4461,7 @@ async function verEventoFull(id){
       <div style="grid-column:1/-1"><div class="flabel">Ubicación</div><div>${ev.ubicacion||'—'}</div></div>
     </div>
 
+    ${desgloseHtml}
     ${eqAsig.length?`<div class="flabel" style="margin-bottom:6px">Equipo asignado</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${eqAsig.map(eq=>'<span class="badge badge-blue">'+eq.nombre+'</span>').join('')}</div>`:''}
     ${renderTrabajadoresEvento(id)}
 
