@@ -446,7 +446,7 @@ tr:hover td{background:#FAFBFF}
     <span class="user-email" id="user-email-display"></span>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">⏻</button>
   </div>
-  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-M</div>
+  <div style="margin-top:auto;padding:12px 16px;font-size:10px;color:#4A4D56;letter-spacing:.02em">FotoTela CRM · build 0811-N</div>
 </nav>
 
 <main class="content">
@@ -657,11 +657,15 @@ tr:hover td{background:#FAFBFF}
     <div class="tab" id="gtab-inversiones" onclick="switchGastosTab('inversiones',this)">Inversiones</div>
   </div>
   <div id="gastos-section">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center">
+      <input id="gf-q" class="finput" placeholder="Buscar concepto o proveedor…" oninput="renderGastos()" style="flex:1;min-width:180px;max-width:280px;font-size:13px;padding:8px 12px">
+      <select id="gf-anio" class="finput" onchange="renderGastos()" style="width:auto;font-size:13px;padding:8px 12px"><option value="todos" selected>Todos los años</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option></select>
+      <select id="gf-tri" class="finput" onchange="renderGastos()" style="width:auto;font-size:13px;padding:8px 12px"><option value="todos">Todo el año</option><option value="1">T1 (ene-mar)</option><option value="2">T2 (abr-jun)</option><option value="3">T3 (jul-sep)</option><option value="4">T4 (oct-dic)</option></select>
+      <select id="gf-cat" class="finput" onchange="renderGastos()" style="width:auto;font-size:13px;padding:8px 12px"><option value="todas">Todas las categorías</option><option value="recurrente-fijo">Recurrente / fijo</option><option value="evento">Coste de evento</option><option value="stock">Compra de stock</option><option value="otros">Otros</option></select>
+      <select id="gf-asig" class="finput" onchange="renderGastos()" style="width:auto;font-size:13px;padding:8px 12px"><option value="todos">Todos</option><option value="empresa">Empresa</option><option value="Henry">Henry</option><option value="Nuria">Núria</option></select>
+    </div>
     <div class="metrics-grid" id="gastos-metrics"></div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Asignado a</th><th>Importe</th><th></th></tr></thead>
-      <tbody id="gastos-tbody"></tbody>
-    </table></div>
+    <div id="gastos-tabla" style="margin-top:16px"></div>
   </div>
   <div id="inversiones-section" style="display:none">
     <div class="metrics-grid" id="inv-metrics"></div>
@@ -697,6 +701,13 @@ tr:hover td{background:#FAFBFF}
   <div class="table-wrap" style="margin-bottom:24px"><table>
     <thead><tr><th>Mes</th><th>Henry</th><th>Núria</th><th>Efectivo</th><th>Total facturado</th><th>Gastos</th><th>Margen</th></tr></thead>
     <tbody id="gan-mensual"></tbody>
+  </table></div>
+
+  <!-- Detalle por trimestre -->
+  <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:12px">Por trimestre (estimación 303 / 130)</div>
+  <div class="table-wrap" style="margin-bottom:24px"><table>
+    <thead><tr><th>Trimestre</th><th>Facturado</th><th>Gastos</th><th>IVA repercutido</th><th>IVA soportado</th><th>IVA a liquidar</th><th>Beneficio</th></tr></thead>
+    <tbody id="gan-trimestral"></tbody>
   </table></div>
 
   <!-- Resumen fiscal -->
@@ -3912,6 +3923,29 @@ function renderGanancias(){
   }).filter(Boolean);
 
   document.getElementById('gan-mensual').innerHTML=filasMes.length?filasMes.join('')+'<tr style="background:#FAFAFB;font-weight:600"><td>TOTAL</td><td>'+fmt(facHenry)+' €</td><td>'+fmt(facNuria)+' €</td><td>'+fmt(facEfectivo)+' €</td><td>'+fmt(facTotal)+' €</td><td style="color:#A32D2D">'+fmt(gastTotal)+' €</td><td style="color:'+(ganTotal>=0?'#0F6E56':'#A32D2D')+'">'+fmt(ganTotal)+' €</td></tr>':'<tr><td colspan="7"><div class="empty">Sin datos para '+year+'.</div></td></tr>';
+  // === POR TRIMESTRE (estimación 303/130) ===
+  const triFilas=[1,2,3,4].map(qn=>{
+    const mlo=(qn-1)*3,mhi=qn*3-1;
+    const inQ=d=>{const mm=d.getMonth();return mm>=mlo&&mm<=mhi;};
+    const fFac=facsAno.filter(f=>f.fecha_factura&&inQ(new Date(f.fecha_factura+'T00:00:00')));
+    const gGas=gastosAno.filter(g=>g.fecha&&inQ(new Date(g.fecha+'T00:00:00')));
+    const fac=fFac.reduce((a,f)=>a+Number(f.total||0),0);
+    const gas=gGas.reduce((a,g)=>a+Number(g.importe||0),0);
+    const ivaRep=fFac.filter(f=>f.tipo==='formal').reduce((a,f)=>a+Number(f.iva_eur||0),0);
+    const ivaSop=gGas.reduce((a,g)=>a+Number(g.iva||0),0);
+    const ivaLiq=ivaRep-ivaSop, ben=fac-gas;
+    if(fac===0&&gas===0)return'';
+    return`<tr>
+      <td style="font-weight:600">T${qn} ${year}</td>
+      <td>${fmt(fac)} €</td>
+      <td style="color:#A32D2D">${fmt(gas)} €</td>
+      <td>${fmt(ivaRep)} €</td>
+      <td style="color:var(--ink-soft)">${fmt(ivaSop)} €</td>
+      <td style="font-weight:600;color:${ivaLiq>=0?'#A32D2D':'#0F6E56'}">${fmt(ivaLiq)} €</td>
+      <td style="font-weight:600;color:${ben>=0?'#0F6E56':'#A32D2D'}">${fmt(ben)} €</td>
+    </tr>`;
+  }).filter(Boolean);
+  document.getElementById('gan-trimestral').innerHTML=triFilas.length?triFilas.join(''):'<tr><td colspan="7"><div class="empty">Sin datos para '+year+'.</div></td></tr>';
 
   // === RESUMEN FISCAL ===
   const ivaDevH=facsAno.filter(f=>f.tipo==='formal'&&f.emisor==='Henry').reduce((a,f)=>a+Number(f.iva_eur||0),0);
@@ -3945,24 +3979,57 @@ function renderGanancias(){
 
 // ======= GASTOS =======
 function renderGastos(){
-  const totalEmp=GASTOS.filter(g=>g.asignado_a==='empresa').reduce((a,g)=>a+Number(g.importe||0),0);
-  const totalH=GASTOS.filter(g=>g.asignado_a==='Henry').reduce((a,g)=>a+Number(g.importe||0),0);
-  const totalN=GASTOS.filter(g=>g.asignado_a==='Nuria').reduce((a,g)=>a+Number(g.importe||0),0);
+  const gv=id=>{const e=document.getElementById(id);return e?e.value:null;};
+  const anio=gv('gf-anio')||'todos', tri=gv('gf-tri')||'todos', cat=gv('gf-cat')||'todas', asig=gv('gf-asig')||'todos';
+  const q=(gv('gf-q')||'').trim().toLowerCase();
+  const triDe=m=>Math.floor(m/3)+1;
+  const list=GASTOS.filter(g=>{
+    const d=g.fecha?new Date(g.fecha+'T00:00:00'):null;
+    if(anio!=='todos'&&(!d||d.getFullYear()!==parseInt(anio)))return false;
+    if(tri!=='todos'&&(!d||triDe(d.getMonth())!==parseInt(tri)))return false;
+    if(cat!=='todas'&&(g.categoria||'otros')!==cat)return false;
+    if(asig!=='todos'&&(g.asignado_a||'empresa')!==asig)return false;
+    if(q){const hay=((g.concepto||'')+' '+(g.proveedor||'')+' '+(g.categoria_detalle||'')).toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
+  const sTotal=list.reduce((a,g)=>a+Number(g.importe||0),0);
+  const sBase=list.reduce((a,g)=>a+Number(g.base||0),0);
+  const sIva=list.reduce((a,g)=>a+Number(g.iva||0),0);
+  const sDed=list.reduce((a,g)=>a+Number(g.gasto_deducible!=null?g.gasto_deducible:0),0);
   document.getElementById('gastos-metrics').innerHTML=`
-    <div class="metric-card accent"><div class="metric-label">Total gastos</div><div class="metric-value">${fmt(totalEmp+totalH+totalN)} €</div></div>
-    <div class="metric-card"><div class="metric-label">Empresa</div><div class="metric-value">${fmt(totalEmp)} €</div></div>
-    <div class="metric-card"><div class="metric-label">Henry</div><div class="metric-value">${fmt(totalH)} €</div></div>
-    <div class="metric-card"><div class="metric-label">Núria</div><div class="metric-value">${fmt(totalN)} €</div></div>`;
-  document.getElementById('gastos-tbody').innerHTML=GASTOS.length?GASTOS.map(g=>`<tr>
-    <td>${fmtDate(g.fecha)}</td>
-    <td style="font-weight:600">${g.concepto}</td>
-    <td><span class="badge badge-gray">${g.categoria||'—'}</span></td>
-    <td><span class="badge ${g.asignado_a==='Henry'?'badge-blue':g.asignado_a==='Nuria'?'badge-purple':'badge-gray'}">${g.asignado_a||'empresa'}</span></td>
-    <td style="font-weight:600">${fmt(g.importe)} €</td>
-    <td><button class="btn-icon red" onclick="eliminarGasto('${g.id}')">${ICO.trash}</button></td>
-  </tr>`).join(''):'<tr><td colspan="6"><div class="empty">Sin gastos registrados todavía.</div></td></tr>';
+    <div class="metric-card accent"><div class="metric-label">Total${list.length?' ('+list.length+')':''}</div><div class="metric-value">${fmt(sTotal)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Base</div><div class="metric-value">${fmt(sBase)} €</div></div>
+    <div class="metric-card"><div class="metric-label">IVA soportado</div><div class="metric-value">${fmt(sIva)} €</div></div>
+    <div class="metric-card"><div class="metric-label">Gasto deducible</div><div class="metric-value">${fmt(sDed)} €</div></div>`;
+  const cont=document.getElementById('gastos-tabla');
+  if(!list.length){cont.innerHTML='<div class="empty" style="padding:30px">Sin gastos para este filtro.</div>';return;}
+  const groups={};
+  list.forEach(g=>{const d=new Date(g.fecha+'T00:00:00');const k=d.getFullYear()+' · T'+triDe(d.getMonth());(groups[k]=groups[k]||[]).push(g);});
+  const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const dedBadge=v=>{const x=String(v||'').toUpperCase();if(x.startsWith('S'))return '<span class="badge badge-green">Sí</span>';if(x.startsWith('N'))return '<span class="badge badge-gray">No</span>';if(x)return '<span class="badge badge-amber">'+v+'</span>';return '—';};
+  let html='';
+  keys.forEach(k=>{
+    const rows=groups[k].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    const gt=rows.reduce((a,g)=>a+Number(g.importe||0),0);
+    html+=`<div class="table-wrap" style="margin-bottom:18px"><table>
+      <thead>
+        <tr><th colspan="9" style="background:var(--brand-light);color:var(--brand-dark);font-size:13px">${k} — ${rows.length} gastos · ${fmt(gt)} €</th></tr>
+        <tr><th>Fecha</th><th>Concepto</th><th>Proveedor</th><th style="text-align:right">Base</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th><th>Deduc.</th><th>Asig.</th><th></th></tr>
+      </thead>
+      <tbody>`+rows.map(g=>`<tr>
+        <td style="white-space:nowrap">${fmtDate(g.fecha)}</td>
+        <td><div style="font-weight:600">${g.concepto||'—'}</div>${g.categoria_detalle?'<span class="badge badge-gray" style="font-size:9px">'+g.categoria_detalle+'</span>':''}</td>
+        <td style="font-size:12px;color:var(--ink-soft)">${g.proveedor||'—'}</td>
+        <td style="text-align:right">${g.base!=null?fmt(g.base)+' €':'—'}</td>
+        <td style="text-align:right;color:var(--ink-soft)">${g.iva!=null?fmt(g.iva)+' €':'—'}</td>
+        <td style="text-align:right;font-weight:600">${fmt(g.importe)} €</td>
+        <td>${dedBadge(g.deducible)}</td>
+        <td><span class="badge ${g.asignado_a==='Henry'?'badge-blue':g.asignado_a==='Nuria'?'badge-purple':'badge-gray'}">${g.asignado_a||'empresa'}</span></td>
+        <td><button class="btn-icon red" onclick="eliminarGasto('${g.id}')">${ICO.trash}</button></td>
+      </tr>`).join('')+`</tbody></table></div>`;
+  });
+  cont.innerHTML=html;
 }
-
 async function guardarGasto(){
   const concepto=document.getElementById('g-concepto').value.trim();
   const fecha=document.getElementById('g-fecha').value;
